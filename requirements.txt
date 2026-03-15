@@ -1,0 +1,29 @@
+# Core trading APIs
+alpaca-trade-api>=3.0.0
+alpaca-py>=0.8.0
+
+# Data processing
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Environment and configuration
+python-dotenv>=1.0.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Financial data
+yfinance>=0.2.0
+
+# Machine learning
+scikit-learn>=1.0.0
+
+# Time zone handling
+pytz>=2023.3
+
+# Scheduling (for automated traders)
+schedule>=1.2.0
+
+# Optional: GUI support (if you plan to create dashboards)
+matplotlib>=3.7.0
+tkinter-page>=0.1.0
