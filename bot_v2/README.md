@@ -1,79 +1,76 @@
-# LiteBotX V2 - Clean Modular Architecture
+# LiteBot V2
 
-## ⚠️ Development Status
-**This is a refactored version of the trading bot - NOT yet production ready**
+`bot_v2` is the current modular strategy engine used in this repository.
+It includes signal generation, risk management, execution, reporting, and
+continuous-session orchestration.
 
-Use `traders/short_cycle_trader.py` for actual trading.
+## Major Components
 
-## 🎯 Goals
-1. **Modularity**: Each file <500 lines, focused single responsibility
-2. **Testability**: Unit tests for all modules
-3. **Maintainability**: Easy to understand and modify
-4. **Functional Equivalence**: Same behavior as original bot
+- `launcher.py`
+    - Primary continuous loop with market-phase scheduling.
+    - Runs prefilter, signal generation, entry/exit execution, and reporting.
+- `signal_generation/`
+    - Strategy signal logic and rejection diagnostics.
+- `core/pre_filter.py`
+    - Multi-stage candidate filtering with pass/rejection telemetry.
+- `execution/`
+    - Order placement and exit handling.
+- `risk_management/`
+    - Stop logic, position sizing, and portfolio safety controls.
+- `reporting/`
+    - Daily summaries and PnL tracking artifacts.
+- `utils/enhanced_logger.py`
+    - Structured operational logs and daily JSON summaries.
 
-## 📁 Structure
+## Running V2
 
-```
-bot_v2/
-├── main.py                 # Entry point
-├── config/                 # Configuration
-│   ├── trading_config.py   # ShortCycleConfig
-│   └── risk_config.py      # Risk parameters
-├── models/                 # Data models
-│   ├── signals.py          # AISignal
-│   ├── positions.py        # ShortCyclePosition
-│   └── enums.py            # TradingDay, PositionStatus
-├── signal_generation/      # Signal generation
-│   ├── signal_generator.py
-│   ├── technical_analyzer.py
-│   └── confidence_scorer.py
-├── risk_management/        # Risk management
-│   ├── stop_loss_manager.py
-│   ├── position_sizer.py
-│   └── portfolio_risk_manager.py
-├── execution/              # Order execution
-│   ├── order_manager.py
-│   └── exit_manager.py
-└── core/                   # Core trading logic
-    ├── trading_engine.py
-    ├── entry_handler.py
-    └── exit_handler.py
-```
+From repository root:
 
-## 🚀 Quick Start (Developers)
-
-### Run V2 (when ready)
 ```bash
-cd bot_v2
-python3 main.py
+python3 bot_v2/launcher.py
 ```
 
-### Run Tests
+Other supported runners:
+
 ```bash
-pytest tests/bot_v2/
+python3 run_bot_v2.py
+python3 run_bot_v2_continuous.py
 ```
 
-### Compare with Original
+## Configuration
+
+- Runtime credentials are loaded from `.env`.
+- Strategy/risk config lives in `bot_v2/config/trading_config.py`.
+- Pre-filter config is in `bot_v2/config/prefilter_config.py`.
+
+## Observability
+
+- Daily summary files: `logs/daily_summary_YYYYMMDD.json`
+- Activity and debug logs: `logs/`
+- Historical daily stats: `bot_v2/data/daily_stats.json`
+
+Recent telemetry hardening includes:
+
+- Reason-level rejection tracking in session summaries.
+- Normalized exit reason tags (`FAST_EXIT`, `STOP_LOSS`, `TRAILING_STOP`, `TARGET`, `TIME_EXIT`).
+- Daily stats dedupe by `date_iso` to reduce duplicate/noisy records.
+
+## Testing
+
+Run focused observability regression tests:
+
 ```bash
-python3 scripts/compare_bots.py
+pytest -q tests/bot_v2/test_phase_a_observability.py
 ```
 
-## 📋 Refactoring Progress
+Run package-level integration checks:
 
-- [x] Directory structure created
-- [ ] Data models extracted
-- [ ] Config extracted
-- [ ] Risk management modules extracted
-- [ ] Signal generation refactored
-- [ ] Main engine refactored
-- [ ] Full test coverage
-- [ ] Production validation
+```bash
+pytest -q bot_v2/tests
+```
 
-## 🔧 Development Guidelines
+## Safety Notes
 
-1. **Never modify `traders/short_cycle_trader.py`**
-2. Copy code, don't move it
-3. Test after each extraction
-4. Keep functional equivalence
-5. One module per file
-6. Clear naming conventions
+- Prefer Alpaca paper mode while tuning.
+- Do not commit `.env` or API keys.
+- Validate telemetry quality before making parameter changes.

@@ -2,6 +2,10 @@
 .env
 *.env
 
+# OS/editor noise
+.DS_Store
+._.DS_Store
+
 # Python
 __pycache__/
 *.pyc
@@ -22,3 +26,5 @@ cache/
 bot_v2/data/*.json
 !bot_v2/data/mid_cap_universe.json
 !bot_v2/data/fallback_universe.py
+bot_v2/data/.last_universe_check
+bot_v2/data/*.bak_*
