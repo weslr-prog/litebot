@@ -4,20 +4,19 @@ bot_v2 Main Launcher - Continuous Trading Loop
 ================================================
 
 Modular implementation of ShortCycleTrader with clean architecture.
-Supports DUAL-STRATEGY system: Gap & Go (70%) + Fade/Short (30%)
+Supports the configurable bot_v2 strategy stack.
 
 Features:
 - Post-market watchlist refresh (4:00 PM)
 - Premarket portfolio summary + gap scan (9:00 AM)
-- Gap & Go scanning (9:35 AM) - Morning gap entries
-- Fade/Short scanning (10:00 AM - 2:00 PM) - Overbought reversals
+- Entry scanning with prefilter and signal generation
+- Optional late-entry scanning (1:00 PM - 2:30 PM)
 - Exit monitoring (continuous during market hours)
-- Friday 3:45 PM force exit
-- D+1 forced exit system
+- Config-driven risk management and force-exit behavior
 
 Author: LiteBotX Team
-Version: 2.0 (Dual-Strategy - Jan 8, 2026: Gap & Go + Fade/Short)
-Date: January 8, 2026
+Version: 2.0
+Date: March 16, 2026
 """
 
 import os
@@ -50,6 +49,7 @@ sys.path.insert(0, str(project_root))
 
 # Import bot_v2 modules
 from bot_v2.config.trading_config import ShortCycleConfig
+from bot_v2.config.settings_verifier import verify_settings_on_startup
 from bot_v2.signal_generation.signal_generator import AISignalGenerator
 from bot_v2.portfolio.portfolio_manager import AIPortfolioManager
 from bot_v2.execution.position_tracker import AIPositionTracker
@@ -96,6 +96,9 @@ class BotV2Launcher:
         
         # Initialize timezone
         self.tz = pytz.timezone('America/New_York')
+        
+        # ✅ Startup Settings Verification (prevents config drift)
+        verify_settings_on_startup(self.logger)
         
         # Initialize core components
         self._initialize_components()
@@ -2047,25 +2050,36 @@ class BotV2Launcher:
 def main():
     """Main entry point"""
     print("=" * 80)
-    print("🚀 bot_v2 DUAL-STRATEGY - Gap & Go + Fade/Short")
+    # Initialize config first so startup output reflects the actual active settings.
+    config = ShortCycleConfig()
+    from bot_v2.config.prefilter_config import SIMPLE_PREFILTER_CONFIG
+
+    strategy_labels = []
+    if config.enable_gap_and_go:
+        strategy_labels.append("Gap & Go")
+    if config.enable_fade_short:
+        strategy_labels.append("Fade/Short")
+    if config.enable_momentum:
+        strategy_labels.append("Momentum")
+
+    active_strategies = ", ".join(strategy_labels) if strategy_labels else "None"
+
+    print(f"🚀 bot_v2 Launcher - Active Strategies: {active_strategies}")
     print("=" * 80)
     print("")
     print("Configuration:")
-    print("  - PRIMARY: Gap & Go (70% capital, +830% backtest, 54.3% WR)")
-    print("  - BACKUP: Fade/Short (30% capital, +174% backtest, 62.8% WR)")
-    print("  - Combined Target: +633% monthly PnL")
-    print("  - Universe: 67 curated mid-cap stocks")
-    print("  - Max Positions: 12 concurrent")
-    print("  - Gap Scan: 9:35 AM (2-8% gaps, RSI < 75)")
-    print("  - Fade Scan: 10:00 AM - 2:00 PM (RSI > 70, 10%+ above SMA)")
-    print("  - Force Exit: 2:30 PM Day+1 (overnight hold required)")
-    
-    # Initialize config to get actual threshold
-    config = ShortCycleConfig()
+    print(f"  - Universe Limit: {config.max_universe_size} symbols")
+    print(f"  - Max Positions: {config.max_positions_per_day} concurrent")
+    print(f"  - Max Daily Entries: {config.max_daily_entries}")
     print(f"  - Confidence: {config.confidence_threshold:.0%} threshold")
-    print("  - Expected: 1,618 trades/month (5.9% conflict rate)")
+    print(
+        f"  - PreFilter: ${SIMPLE_PREFILTER_CONFIG['min_price']:.0f}-${SIMPLE_PREFILTER_CONFIG['max_price']:.0f}, "
+        f"vol {SIMPLE_PREFILTER_CONFIG['min_volume']:,}-{SIMPLE_PREFILTER_CONFIG['max_volume']:,}, "
+        f"ATR {SIMPLE_PREFILTER_CONFIG['min_atr_pct']:.1%}-{SIMPLE_PREFILTER_CONFIG['max_atr_pct']:.1%}"
+    )
+    print(f"  - Late Entry Enabled: {config.enable_late_entry}")
+    print(f"  - Exit Time: {config.exit_time}")
     
-    # Run bot with config
     # Run bot with config
     print("")
     print("=" * 80)

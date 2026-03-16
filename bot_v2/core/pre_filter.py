@@ -157,15 +157,14 @@ class PreFilter:
             "rejection_reasons": {},
             "stage_counts": {},
         }
-        # Preferred filter constants (OPTIMIZED - Dec 29, 2025)
-        # Updated for optimal 24-hour mean reversion performance
-        self.MIN_AVG_DOLLAR_VOL = 25_000_000  # $25M minimum dollar volume (30d avg, excluding today)
-        self.MIN_AVG_VOL = 2_000_000  # 2M shares minimum volume (eliminates slow movers)
-        self.MAX_AVG_VOL = 20_000_000  # 20M shares maximum volume (avoids too-stable stocks)
-        self.MIN_PRICE = 8.0  # $8 minimum (quality stocks, avoid penny territory)
-        self.MAX_PRICE = 35.0  # $35 max (sweet spot for fast mean reversion)
-        self.MIN_ATR = 0.025  # 2.5% minimum volatility (ensures 2% profit achievable in 24h)
-        self.MAX_ATR = 0.055  # 5.5% max daily range (fast but not chaotic)
+        # Mirror the active config so helper fallbacks cannot silently drift.
+        self.MIN_AVG_DOLLAR_VOL = self.config.get('min_dollar_volume', 30_000_000)
+        self.MIN_AVG_VOL = self.config.get('min_volume', 3_000_000)
+        self.MAX_AVG_VOL = self.config.get('max_volume', 30_000_000)
+        self.MIN_PRICE = self.config.get('min_price', 5.0)
+        self.MAX_PRICE = self.config.get('max_price', 50.0)
+        self.MIN_ATR = self.config.get('min_atr_pct', 0.035)
+        self.MAX_ATR = self.config.get('max_atr_pct', 0.060)
         self.MIN_MOMENTUM_RETURN = 0.02  # 2% minimum momentum
         self.MIN_VOLUME_SURGE = 0.5  # Allow below-average volume days
         self.MIN_SURVIVORS = 6  # Accept 6+ stocks on slow days
@@ -431,7 +430,7 @@ class PreFilter:
             logging.warning("No 'symbol' column found in the data completeness filter result.")
         return sufficient_data
 
-    def liquidity_filter(self, df, min_avg_volume=100_000, min_dollar_volume=1_000_000, max_avg_volume=None):
+    def liquidity_filter(self, df, min_avg_volume=None, min_dollar_volume=None, max_avg_volume=None):
         """Filter based on volume and dollar volume.
         
         IMPORTANT: Calculates 30-day average EXCLUDING today's volume to avoid
@@ -440,6 +439,9 @@ class PreFilter:
         Args:
             max_avg_volume: Optional maximum volume to exclude mega-caps (too stable for mean reversion)
         """
+        min_avg_volume = self.MIN_AVG_VOL if min_avg_volume is None else min_avg_volume
+        min_dollar_volume = self.MIN_AVG_DOLLAR_VOL if min_dollar_volume is None else min_dollar_volume
+        max_avg_volume = self.MAX_AVG_VOL if max_avg_volume is None else max_avg_volume
         volume_range = f"{min_avg_volume:,}"
         if max_avg_volume:
             volume_range = f"{min_avg_volume:,}-{max_avg_volume:,}"
@@ -474,8 +476,10 @@ class PreFilter:
         self._maybe_sleep(2)
         return filtered
 
-    def price_range_filter(self, df, min_price=10, max_price=40):
+    def price_range_filter(self, df, min_price=None, max_price=None):
         """Gate by latest close and return full history for eligible symbols."""
+        min_price = self.MIN_PRICE if min_price is None else min_price
+        max_price = self.MAX_PRICE if max_price is None else max_price
         logging.info(f"Applying price range filter: ${min_price}-${max_price}")
         if df.empty:
             return df
@@ -488,8 +492,10 @@ class PreFilter:
         self._maybe_sleep(2)
         return filtered
 
-    def volatility_filter(self, df, min_volatility=0.010, max_volatility=0.08):
+    def volatility_filter(self, df, min_volatility=None, max_volatility=None):
         """Filter based on volatility using ATR% for robust short-window behavior."""
+        min_volatility = self.MIN_ATR if min_volatility is None else min_volatility
+        max_volatility = self.MAX_ATR if max_volatility is None else max_volatility
         logging.info(f"Applying volatility filter (ATR%): {min_volatility:.1%}-{max_volatility:.1%}")
         logging.info(f"DataFrame shape: {df.shape}")
         logging.info(f"Columns: {df.columns.tolist()}")
@@ -1036,7 +1042,7 @@ class PreFilter:
         logging.info("Adaptive fallback: using momentum-ranked candidates without breakout gate")
         base = self.data_completeness_filter(df, min_rows=15)  # FREE DATA: Reduced from 90 to work with Alpaca free tier
         base = self.liquidity_filter(base, min_avg_volume=30_000, min_dollar_volume=300_000)
-        base = self.price_range_filter(base, min_price=10, max_price=30)
+        base = self.price_range_filter(base, min_price=self.MIN_PRICE, max_price=self.MAX_PRICE)
         base = self.volatility_filter(base, min_volatility=0.015, max_volatility=0.35)
         base = self.momentum_filter(base, lookback=4, min_momentum=0.02, max_momentum=0.30)
         ranked = self._rank_candidates(base)

@@ -15,9 +15,9 @@ Date: January 8, 2026
 # Simple 3-Stage PreFilter Configuration (DUAL-STRATEGY OPTIMIZED)
 SIMPLE_PREFILTER_CONFIG = {
     # Stage 1: Price Range (Gap & Go optimized)
-    # Jan 8: Expanded to $10-$50 for gap continuations
-    # Higher prices = more institutional interest = better gap follow-through
-    'min_price': 10.0,          # $10 minimum (avoid penny stock gaps)
+    # Jan 8: Expanded to $5-$50 for gap continuations
+    # Lower bound allows quality $5-10 stocks; upper avoids penny gaps
+    'min_price': 5.0,           # $5 minimum (quality mid-caps, avoid penny stock gaps)
     'max_price': 50.0,          # $50 max (sweet spot for gaps with momentum)
     
     # Stage 2: Volume (strict liquidity for gaps and fades)
