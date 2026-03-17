@@ -57,11 +57,11 @@ class SettingsVerifier:
             # Determine active strategies
             active_strategies = []
             if hasattr(config, 'enable_gap_and_go') and config.enable_gap_and_go:
-                active_strategies.append('Gap & Go (70%)')
+                active_strategies.append(self._format_strategy_label('Gap & Go', getattr(config, 'gap_and_go_allocation', 0.0)))
             if hasattr(config, 'enable_fade_short') and config.enable_fade_short:
-                active_strategies.append('Fade/Short (15%)')
+                active_strategies.append(self._format_strategy_label('Fade/Short', getattr(config, 'fade_short_allocation', 0.0)))
             if hasattr(config, 'enable_momentum') and config.enable_momentum:
-                active_strategies.append('Momentum (15%)')
+                active_strategies.append(self._format_strategy_label('Momentum', getattr(config, 'momentum_allocation', 0.0)))
             
             return {
                 "active_strategies": active_strategies if active_strategies else ["NONE - Check enable_* flags"],
@@ -82,6 +82,12 @@ class SettingsVerifier:
         except Exception as e:
             self.logger.error(f"Failed to capture trading config: {e}")
             return {"error": str(e), "source": "trading_config.py"}
+
+    def _format_strategy_label(self, strategy_name: str, allocation: float) -> str:
+        """Format a strategy label with the current configured allocation."""
+        if allocation is None:
+            return strategy_name
+        return f"{strategy_name} ({allocation:.0%})"
     
     def _log_settings_report(self, snapshot: Dict[str, Any]) -> None:
         """Log a formatted settings report"""

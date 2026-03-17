@@ -151,13 +151,14 @@ class ShortCycleConfig:
     fade_scan_end: str = "14:00"  # Stop scanning before close
     
     # Momentum Strategy parameters (Jan 13, 2026 - Trend Continuation)
-    # Entry: Price above SMA20, RSI 45-65 (healthy trend, not overbought), ADR > 2%
+    # March 17, 2026: Relaxed slightly for momentum-only operation.
+    # Entry: Price above SMA20, RSI 45-70, ADR > 2%
     # Best for: Stocks with established uptrend, looking for continuation
     momentum_sma_period: int = 20  # SMA for trend confirmation
     momentum_rsi_min: float = 45.0  # RSI floor (not oversold)
-    momentum_rsi_max: float = 65.0  # RSI ceiling (not overbought)
+    momentum_rsi_max: float = 70.0  # RSI ceiling relaxed for momentum-only mode
     momentum_min_adr_pct: float = 0.02  # Minimum 2% ADR for volatility
-    momentum_min_5d_return: float = 0.03  # Must be up 3%+ in last 5 days
+    momentum_min_5d_return: float = 0.02  # Allow earlier trend continuations (+2% in 5 days)
     momentum_max_5d_return: float = 0.15  # Not more than 15% (avoid chasing)
     momentum_scan_start: str = "10:30"  # Start after initial volatility settles
     momentum_scan_end: str = "14:30"  # End before close
