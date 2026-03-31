@@ -287,6 +287,46 @@ class TestAISignalGenerator:
 
         assert result is None
 
+    def test_momentum_signal_uses_support_aware_stop(self, monkeypatch):
+        """
+        Phase 2: when a support level is identified at entry, the signal stop_price
+        should be placed just below that support level rather than a flat percentage.
+        """
+        config = ShortCycleConfig(portfolio_value=1000.0, confidence_threshold=0.35)
+        generator = AISignalGenerator(config)
+        monkeypatch.setattr(signal_generator_module, "datetime", FixedDateTime)
+
+        close = [100.0, 100.4, 100.8, 101.3, 101.9, 102.5, 103.1, 103.7, 104.2, 104.8,
+                 105.3, 105.8, 106.2, 106.7, 107.1, 107.6, 108.0, 108.4, 108.9, 109.3,
+                 106.4, 107.2, 106.8, 108.4, 109.0]
+        open_ = [price - 0.2 for price in close]
+        high = [price + 1.0 for price in close]
+        low = [price - 1.8 for price in close]
+        volume = [1_000_000] * 20 + [760_000, 700_000, 650_000, 1_120_000, 1_180_000]
+        data = pd.DataFrame({"open": open_, "high": high, "low": low, "close": close, "volume": volume})
+
+        result = generator._check_momentum("AAPL", data, current_rsi=56.0)
+        assert result is not None, "Fixture must produce a valid momentum signal"
+        assert 'support_price' in result
+        sp = result['support_price']
+        assert sp > 0
+
+        # Verify the support_price produces a tighter stop than the flat % stop
+        entry_price = close[-1]  # 109.0
+        buffer = getattr(config, 'support_stop_buffer_pct', 0.01)
+        support_stop = sp * (1 - buffer)
+        flat_stop = entry_price * (1 - config.stop_loss_pct)
+
+        # Support-aware stop should be above the flat-% floor when near support
+        # (it provides a tighter, more precise stop placement)
+        assert support_stop > flat_stop, (
+            f"Support stop {support_stop:.2f} should be above flat stop {flat_stop:.2f} "
+            f"when entry is near support (support={sp:.2f}, entry={entry_price:.2f})"
+        )
+        assert support_stop < entry_price, (
+            f"Support stop {support_stop:.2f} must be below entry {entry_price:.2f}"
+        )
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

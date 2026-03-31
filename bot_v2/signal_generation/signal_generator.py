@@ -1097,9 +1097,40 @@ class AISignalGenerator:
                     else:
                         stop_loss_pct = self.config.stop_loss_pct
                         profit_target_pct = self.config.profit_target_pct
-                
-                # Calculate actual prices
-                stop_price = realtime_price * (1 - stop_loss_pct)
+
+                # Support-aware stop placement (Phase 2)
+                # When a support level was identified during entry analysis, place the stop
+                # just below that level.  This produces a tighter, more meaningful stop than
+                # a flat percentage when price is near support.  The result is capped at the
+                # configured stop_loss_pct so account-risk hard limits are never exceeded.
+                support_stop_used = False
+                support_price_at_entry = None
+                if best_strategy in ('MOMENTUM', 'SWING_PULLBACK'):
+                    result_with_support = (
+                        momentum_signal_result if best_strategy == 'MOMENTUM' and momentum_signal_result
+                        else pullback_result if best_strategy == 'SWING_PULLBACK' and pullback_result
+                        else None
+                    )
+                    if result_with_support and result_with_support.get('support_price'):
+                        sp = result_with_support['support_price']
+                        buffer = getattr(self.config, 'support_stop_buffer_pct', 0.01)
+                        candidate_stop = sp * (1 - buffer)
+                        hard_stop_floor = realtime_price * (1 - stop_loss_pct)
+                        if candidate_stop > hard_stop_floor and candidate_stop < realtime_price:
+                            stop_price = candidate_stop
+                            support_stop_used = True
+                            support_price_at_entry = sp
+                            self.logger.debug(
+                                f"{symbol}: Support-aware stop ${stop_price:.2f} "
+                                f"(support {sp:.2f}, {((realtime_price - stop_price) / realtime_price):.1%} risk)"
+                            )
+                        else:
+                            stop_price = realtime_price * (1 - stop_loss_pct)
+                    else:
+                        stop_price = realtime_price * (1 - stop_loss_pct)
+                else:
+                    stop_price = realtime_price * (1 - stop_loss_pct)
+
                 target_price = realtime_price * (1 + profit_target_pct)
                 
                 # Calculate position size
@@ -1155,6 +1186,9 @@ class AISignalGenerator:
                             else pullback_result['extension_pct'] if best_strategy == 'SWING_PULLBACK' and pullback_result
                             else None
                         ),
+                        # Support-aware stop metadata (Phase 2)
+                        "support_stop_used": support_stop_used,
+                        "support_price_at_entry": support_price_at_entry,
                         # Adaptive parameters
                         "adaptive_stop_loss_pct": stop_loss_pct if self.adaptive_params_enabled else None,
                         "adaptive_profit_target_pct": profit_target_pct if self.adaptive_params_enabled else None,
@@ -1553,6 +1587,7 @@ class AISignalGenerator:
                 'price_vs_sma': price_vs_sma,
                 'adr': adr,
                 'volume_ratio': volume_ratio,
+                'support_price': support_context['support_price'],
                 'support_distance': support_context['support_distance'],
                 'support_name': support_context['support_name'],
                 'pullback_volume_ratio': pullback_volume['ratio'],
@@ -1786,6 +1821,7 @@ class AISignalGenerator:
                 'five_day_return': five_day_return,
                 'adr': adr,
                 'volume_ratio': volume_ratio,
+                'support_price': support_context['support_price'],
                 'support_distance': support_context['support_distance'],
                 'support_name': support_context['support_name'],
                 'pullback_from_high': pullback_from_high,

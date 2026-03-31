@@ -180,6 +180,12 @@ class ShortCycleConfig:
     # Single source of truth - wider stops survive mid-cap volatility
     profit_target_pct: float = 0.06  # 6% profit target (raised from 4%)
     stop_loss_pct: float = 0.04  # 4% stop loss (raised from 2% - key fix for bleeding)
+
+    # Support-aware stop placement (Phase 2: align exits with support-based entries)
+    # When a support level is known at entry time, place the stop just below that level
+    # rather than using a flat percentage from entry.  The calculated stop is capped at
+    # stop_loss_pct so account-risk hard limits are never exceeded.
+    support_stop_buffer_pct: float = 0.01  # 1% below the identified support level
     
     # Trailing Stop Parameters
     # TIER 1 FIX (Feb 25, 2026): RE-ENABLED trailing stops.
