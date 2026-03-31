@@ -532,6 +532,7 @@ class AIOrderManager:
         }
         
         self._save_explanation_log(explanation)
+        self._log_setup_telemetry_entry(position)
     
     def log_exit_explanation(self, position):
         """Log exit decision explanation for regulatory compliance"""
@@ -550,6 +551,116 @@ class AIOrderManager:
         }
         
         self._save_explanation_log(explanation)
+        self._log_setup_telemetry_exit(position)
+
+    def _confidence_tier(self, confidence: float) -> str:
+        """Bucket confidence into a named tier for expectancy analysis."""
+        if confidence >= 0.80:
+            return "TIER_A"
+        elif confidence >= 0.65:
+            return "TIER_B"
+        elif confidence >= 0.50:
+            return "TIER_C"
+        else:
+            return "TIER_D"
+
+    def _log_setup_telemetry_entry(self, position):
+        """
+        Phase 3 telemetry: write a structured entry record to setup_telemetry.jsonl.
+        Captures setup label, confidence tier, support/stop context, and execution quality.
+        Appended to logs/setup_telemetry.jsonl — one JSON object per line.
+        """
+        try:
+            features = position.ai_signal.features_used if position.ai_signal else {}
+            confidence = position.ai_signal.confidence if position.ai_signal else 0.0
+            strategy = features.get("strategy", "unknown")
+            entry_price = position.entry_price
+            stop_price = position.stop_price
+            stop_distance_pct = (
+                (entry_price - stop_price) / entry_price if entry_price and stop_price else None
+            )
+
+            # Calculate entry slippage vs signal price
+            signal_price = position.ai_signal.entry_price if position.ai_signal else entry_price
+            entry_slippage_pct = (
+                (entry_price - signal_price) / signal_price if signal_price else None
+            )
+
+            record = {
+                "event": "ENTRY",
+                "trade_id": f"{position.symbol}_{position.entry_date.isoformat()}",
+                "symbol": position.symbol,
+                "entry_date": position.entry_date.isoformat(),
+                "entry_price": entry_price,
+                "signal_price": signal_price,
+                "entry_slippage_pct": round(entry_slippage_pct, 5) if entry_slippage_pct is not None else None,
+                "stop_price": stop_price,
+                "stop_distance_pct": round(stop_distance_pct, 5) if stop_distance_pct is not None else None,
+                "stop_type": "support_aware" if features.get("support_stop_used") else "flat_pct",
+                "target_price": position.target_price if hasattr(position, 'target_price') else None,
+                "setup_label": strategy,
+                "confidence": round(confidence, 4),
+                "confidence_tier": self._confidence_tier(confidence),
+                "support_name": features.get("support_name"),
+                "support_distance": features.get("support_distance"),
+                "support_price": features.get("support_price_at_entry"),
+                "pullback_volume_ratio": features.get("pullback_volume_ratio"),
+                "bounce_volume_ratio": features.get("bounce_volume_ratio"),
+                "extension_pct": features.get("extension_pct"),
+                "position_size_shares": position.position_size_shares,
+                "position_size_dollars": position.position_size_dollars,
+            }
+
+            self._save_telemetry_record(record)
+        except Exception as e:
+            self.logger.debug(f"Setup telemetry entry failed: {e}")
+
+    def _log_setup_telemetry_exit(self, position):
+        """
+        Phase 3 telemetry: write a structured exit record to setup_telemetry.jsonl.
+        Captures realized P&L, setup label, confidence tier, hold duration, exit reason.
+        """
+        try:
+            features = position.ai_signal.features_used if position.ai_signal else {}
+            confidence = position.ai_signal.confidence if position.ai_signal else 0.0
+            strategy = features.get("strategy", "unknown")
+            entry_price = position.entry_price
+            exit_price = getattr(position, 'exit_price', None)
+            return_pct = (
+                (exit_price - entry_price) / entry_price if exit_price and entry_price else None
+            )
+
+            record = {
+                "event": "EXIT",
+                "trade_id": f"{position.symbol}_{position.entry_date.isoformat()}",
+                "symbol": position.symbol,
+                "entry_date": position.entry_date.isoformat(),
+                "exit_date": position.exit_date.isoformat() if getattr(position, 'exit_date', None) else None,
+                "hold_days": getattr(position, 'hold_days', None),
+                "entry_price": entry_price,
+                "exit_price": exit_price,
+                "return_pct": round(return_pct, 5) if return_pct is not None else None,
+                "realized_pnl": getattr(position, 'realized_pnl', None),
+                "setup_label": strategy,
+                "confidence": round(confidence, 4),
+                "confidence_tier": self._confidence_tier(confidence),
+                "exit_reason": getattr(position, 'exit_reason', None),
+                "stop_type": "support_aware" if features.get("support_stop_used") else "flat_pct",
+                "support_name": features.get("support_name"),
+            }
+
+            self._save_telemetry_record(record)
+        except Exception as e:
+            self.logger.debug(f"Setup telemetry exit failed: {e}")
+
+    def _save_telemetry_record(self, record: Dict[str, Any]):
+        """Append a telemetry record to logs/setup_telemetry.jsonl."""
+        try:
+            os.makedirs("logs", exist_ok=True)
+            with open("logs/setup_telemetry.jsonl", "a") as f:
+                f.write(json.dumps(record, default=str) + "\n")
+        except Exception as e:
+            self.logger.debug(f"Failed to save telemetry record: {e}")
     
     def _save_explanation_log(self, explanation: Dict[str, Any]):
         """Save explanation to JSON log for regulatory compliance"""
