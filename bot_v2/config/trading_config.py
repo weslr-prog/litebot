@@ -160,12 +160,21 @@ class ShortCycleConfig:
     momentum_min_5d_return: float = 0.02  # Allow earlier trend continuation (+2% in 5 days)
     momentum_max_5d_return: float = 0.15  # Not more than 15% (avoid chasing)
     momentum_min_volume_ratio: float = 1.05  # Keep volume confirmation while reducing over-filtering
+    momentum_pullback_ema_tolerance: float = 0.02  # Pullback should stay near 9/20 EMA support
+    momentum_support_tolerance: float = 0.03  # Allow modest distance from nearby price support
+    momentum_pullback_volume_max_ratio: float = 0.95  # Pullback should contract versus prior advance
+    momentum_bounce_volume_min_ratio: float = 1.05  # Bounce should re-expand volume above pullback average
+    momentum_extension_reject_pct: float = 0.06  # Reject entries already too extended from support
     momentum_scan_start: str = "10:30"  # Start after initial volatility settles
     momentum_scan_end: str = "14:30"  # End before close
 
     # Swing pullback fallback (for choppy / weak-trend regimes)
     enable_swing_pullback: bool = True
     swing_pullback_min_volume_ratio: float = 0.85  # Allow slightly softer volume than momentum
+    swing_pullback_support_tolerance: float = 0.035  # Support can be slightly wider in choppy tape
+    swing_pullback_volume_max_ratio: float = 1.05  # Pullback volume should stay controlled, not distributive
+    swing_pullback_bounce_volume_min_ratio: float = 1.0  # Bounce should show at least modest volume improvement
+    swing_pullback_extension_reject_pct: float = 0.05  # Reject bounce-chase entries too far from support
     
     # Default targets (SWING FIX Feb 13, 2026: UNIFIED for weekly swing strategy)
     # Single source of truth - wider stops survive mid-cap volatility

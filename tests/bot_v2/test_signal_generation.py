@@ -11,6 +11,13 @@ from bot_v2.config.trading_config import ShortCycleConfig
 from bot_v2.models.signals import AISignal
 from bot_v2.models.positions import ShortCyclePosition, PositionStatus
 from bot_v2.signal_generation import AISignalGenerator
+import bot_v2.signal_generation.signal_generator as signal_generator_module
+
+
+class FixedDateTime(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return cls(2026, 3, 31, 11, 0, 0)
 
 
 class TestAISignalGenerator:
@@ -239,6 +246,46 @@ class TestAISignalGenerator:
         # Only AAPL should pass (0.85 >= 0.80)
         assert len(signals) == 1
         assert signals[0].symbol == "AAPL"
+
+    def test_check_momentum_requires_support_reversal_and_volume_confirmation(self, monkeypatch):
+        config = ShortCycleConfig(portfolio_value=1000.0, confidence_threshold=0.35)
+        generator = AISignalGenerator(config)
+        monkeypatch.setattr(signal_generator_module, "datetime", FixedDateTime)
+
+        close = [100.0, 100.4, 100.8, 101.3, 101.9, 102.5, 103.1, 103.7, 104.2, 104.8,
+                 105.3, 105.8, 106.2, 106.7, 107.1, 107.6, 108.0, 108.4, 108.9, 109.3,
+                 106.4, 107.2, 106.8, 108.4, 109.0]
+        open_ = [price - 0.2 for price in close]
+        high = [price + 1.0 for price in close]
+        low = [price - 1.8 for price in close]
+        volume = [1_000_000] * 20 + [760_000, 700_000, 650_000, 1_120_000, 1_180_000]
+        data = pd.DataFrame({"open": open_, "high": high, "low": low, "close": close, "volume": volume})
+
+        result = generator._check_momentum("AAPL", data, current_rsi=56.0)
+
+        assert result is not None
+        assert result["support_name"] in {"ema9", "ema20", "sma20", "swing_low"}
+        assert result["pullback_volume_ratio"] < 1.0
+        assert result["bounce_volume_ratio"] >= config.momentum_bounce_volume_min_ratio
+        assert result["extension_pct"] <= config.momentum_extension_reject_pct
+
+    def test_check_swing_pullback_rejects_missing_bounce_volume(self, monkeypatch):
+        config = ShortCycleConfig(portfolio_value=1000.0, confidence_threshold=0.35)
+        generator = AISignalGenerator(config)
+        monkeypatch.setattr(signal_generator_module, "datetime", FixedDateTime)
+
+        close = [100.0, 100.2, 100.1, 100.3, 100.0, 100.1, 99.9, 100.0, 99.8, 100.1,
+                 99.9, 100.0, 100.2, 99.8, 100.0, 99.7, 99.8, 99.4, 99.1, 98.8,
+                 98.4, 98.0, 97.7, 97.9, 98.2]
+        open_ = [price - 0.1 for price in close]
+        high = [price + 1.0 for price in close]
+        low = [price - 1.8 for price in close]
+        volume = [900_000] * 20 + [820_000, 780_000, 740_000, 760_000, 780_000]
+        data = pd.DataFrame({"open": open_, "high": high, "low": low, "close": close, "volume": volume})
+
+        result = generator._check_swing_pullback("AAPL", data, current_rsi=45.0)
+
+        assert result is None
 
 
 if __name__ == "__main__":

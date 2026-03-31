@@ -653,7 +653,8 @@ class AISignalGenerator:
                     self.logger.info(
                         f"   ✅ {symbol} MOMENTUM: 5d return +{momentum_signal_result['five_day_return']*100:.1f}%, "
                         f"RSI {momentum_signal_result['rsi']:.1f}, ADR {momentum_signal_result['adr']*100:.1f}%, "
-                        f"Vol {momentum_signal_result['volume_ratio']:.2f}x, "
+                        f"support {momentum_signal_result['support_name']} ({momentum_signal_result['support_distance']*100:.1f}%), "
+                        f"pullback vol {momentum_signal_result['pullback_volume_ratio']:.2f}x, bounce vol {momentum_signal_result['bounce_volume_ratio']:.2f}x, "
                         f"conf={momentum_confidence:.2f}"
                     )
 
@@ -671,7 +672,8 @@ class AISignalGenerator:
                         self.logger.info(
                             f"   ✅ {symbol} SWING PULLBACK: RSI {pullback_result['rsi']:.1f}, "
                             f"3d return {pullback_result['three_day_return']*100:+.1f}%, "
-                            f"dist-to-SMA {pullback_result['price_vs_sma']*100:+.1f}%, "
+                            f"support {pullback_result['support_name']} ({pullback_result['support_distance']*100:.1f}%), "
+                            f"pullback vol {pullback_result['pullback_volume_ratio']:.2f}x, bounce vol {pullback_result['bounce_volume_ratio']:.2f}x, "
                             f"conf={swing_pullback_confidence:.2f}"
                         )
             
@@ -1128,6 +1130,31 @@ class AISignalGenerator:
                         "fade_short_conf": fade_short_confidence,
                         "momentum_conf": momentum_confidence,
                         "swing_pullback_conf": swing_pullback_confidence,
+                        "support_distance": (
+                            momentum_signal_result['support_distance'] if best_strategy == 'MOMENTUM' and momentum_signal_result
+                            else pullback_result['support_distance'] if best_strategy == 'SWING_PULLBACK' and pullback_result
+                            else None
+                        ),
+                        "support_name": (
+                            momentum_signal_result['support_name'] if best_strategy == 'MOMENTUM' and momentum_signal_result
+                            else pullback_result['support_name'] if best_strategy == 'SWING_PULLBACK' and pullback_result
+                            else None
+                        ),
+                        "pullback_volume_ratio": (
+                            momentum_signal_result['pullback_volume_ratio'] if best_strategy == 'MOMENTUM' and momentum_signal_result
+                            else pullback_result['pullback_volume_ratio'] if best_strategy == 'SWING_PULLBACK' and pullback_result
+                            else None
+                        ),
+                        "bounce_volume_ratio": (
+                            momentum_signal_result['bounce_volume_ratio'] if best_strategy == 'MOMENTUM' and momentum_signal_result
+                            else pullback_result['bounce_volume_ratio'] if best_strategy == 'SWING_PULLBACK' and pullback_result
+                            else None
+                        ),
+                        "extension_pct": (
+                            momentum_signal_result['extension_pct'] if best_strategy == 'MOMENTUM' and momentum_signal_result
+                            else pullback_result['extension_pct'] if best_strategy == 'SWING_PULLBACK' and pullback_result
+                            else None
+                        ),
                         # Adaptive parameters
                         "adaptive_stop_loss_pct": stop_loss_pct if self.adaptive_params_enabled else None,
                         "adaptive_profit_target_pct": profit_target_pct if self.adaptive_params_enabled else None,
@@ -1288,16 +1315,156 @@ class AISignalGenerator:
         except Exception:
             return False
 
-    def _check_swing_pullback(self, symbol: str, data: pd.DataFrame, current_rsi: float) -> Optional[dict]:
-        """
-        Fallback long setup for weak-trend/choppy conditions.
+    def _build_support_context(
+        self,
+        data: pd.DataFrame,
+        support_tolerance_attr: str,
+        ema_tolerance_attr: Optional[str] = None,
+    ) -> Optional[dict]:
+        try:
+            if len(data) < 20:
+                return None
 
-        Criteria:
-        - RSI mildly weak but not broken (38-52)
-        - Recent pullback (3-day return between -8% and -0.5%)
-        - Price near/just below SMA20 (mean-revert zone)
-        - Minimum volatility and baseline liquidity confirmation
-        """
+            current_price = data['close'].iloc[-1]
+            ema9 = data['close'].ewm(span=9, adjust=False).mean().iloc[-1]
+            ema20 = data['close'].ewm(span=20, adjust=False).mean().iloc[-1]
+            sma20 = data['close'].rolling(20).mean().iloc[-1]
+            swing_low = data['low'].tail(10).min()
+
+            levels = {
+                'ema9': ema9,
+                'ema20': ema20,
+                'sma20': sma20,
+                'swing_low': swing_low,
+            }
+            valid_levels = {
+                name: price for name, price in levels.items() if pd.notna(price) and price > 0
+            }
+            if not valid_levels:
+                return None
+
+            support_name, support_price = min(
+                valid_levels.items(),
+                key=lambda item: abs((current_price - item[1]) / item[1]),
+            )
+
+            support_distance = abs((current_price - support_price) / support_price)
+            ema_distance = min(
+                abs((current_price - ema9) / ema9) if ema9 > 0 else 1.0,
+                abs((current_price - ema20) / ema20) if ema20 > 0 else 1.0,
+            )
+            support_tolerance = getattr(self.config, support_tolerance_attr, 0.03)
+            ema_tolerance = getattr(self.config, ema_tolerance_attr, support_tolerance)
+
+            return {
+                'support_name': support_name,
+                'support_price': support_price,
+                'support_distance': support_distance,
+                'ema9': ema9,
+                'ema20': ema20,
+                'sma20': sma20,
+                'ema_distance': ema_distance,
+                'near_support': support_distance <= support_tolerance,
+                'near_ema': ema_distance <= ema_tolerance,
+            }
+        except Exception:
+            return None
+
+    def _check_pullback_volume_contraction(self, data: pd.DataFrame, max_ratio: float) -> Optional[dict]:
+        try:
+            if len(data) < 8 or 'volume' not in data.columns:
+                return None
+
+            pullback_volumes = data['volume'].iloc[-4:-1]
+            baseline_volumes = data['volume'].iloc[-8:-4]
+            if len(pullback_volumes) < 3 or len(baseline_volumes) < 4:
+                return None
+
+            pullback_avg = pullback_volumes.mean()
+            baseline_avg = baseline_volumes.mean()
+            if baseline_avg <= 0:
+                return None
+
+            ratio = pullback_avg / baseline_avg
+            pullback_price_change = (
+                (data['close'].iloc[-2] - data['close'].iloc[-4]) / data['close'].iloc[-4]
+            )
+
+            return {
+                'passed': ratio <= max_ratio and pullback_price_change <= 0.015,
+                'ratio': ratio,
+                'pullback_price_change': pullback_price_change,
+            }
+        except Exception:
+            return None
+
+    def _check_bounce_volume_expansion(self, data: pd.DataFrame, min_ratio: float) -> Optional[dict]:
+        try:
+            if len(data) < 4 or 'volume' not in data.columns:
+                return None
+
+            pullback_volumes = data['volume'].iloc[-4:-1]
+            pullback_avg = pullback_volumes.mean()
+            if pullback_avg <= 0:
+                return None
+
+            current_volume = data['volume'].iloc[-1]
+            ratio = current_volume / pullback_avg
+            current_close = data['close'].iloc[-1]
+            previous_close = data['close'].iloc[-2]
+            candle_range = max(data['high'].iloc[-1] - data['low'].iloc[-1], 1e-6)
+            close_location = (current_close - data['low'].iloc[-1]) / candle_range
+
+            return {
+                'passed': ratio >= min_ratio and current_close > previous_close and close_location >= 0.55,
+                'ratio': ratio,
+                'close_location': close_location,
+            }
+        except Exception:
+            return None
+
+    def _check_reversal_confirmation(self, data: pd.DataFrame, support_context: dict) -> Optional[dict]:
+        try:
+            if len(data) < 2:
+                return None
+
+            current_open = data['open'].iloc[-1] if 'open' in data.columns else data['close'].iloc[-2]
+            current_close = data['close'].iloc[-1]
+            previous_close = data['close'].iloc[-2]
+            current_high = data['high'].iloc[-1]
+            current_low = data['low'].iloc[-1]
+            candle_range = max(current_high - current_low, 1e-6)
+            support_price = support_context['support_price']
+
+            bullish_close = current_close > previous_close and current_close >= current_open
+            close_location = (current_close - current_low) / candle_range
+            tested_support = current_low <= support_price * 1.015
+            reclaimed_support = current_close >= support_price * 0.995
+
+            return {
+                'passed': bullish_close and close_location >= 0.55 and tested_support and reclaimed_support,
+                'close_location': close_location,
+                'tested_support': tested_support,
+                'reclaimed_support': reclaimed_support,
+            }
+        except Exception:
+            return None
+
+    def _check_extension_from_support(self, current_price: float, support_context: dict, max_extension_pct: float) -> Optional[dict]:
+        try:
+            support_price = support_context['support_price']
+            if support_price <= 0:
+                return None
+
+            extension_pct = (current_price - support_price) / support_price
+            return {
+                'passed': extension_pct <= max_extension_pct,
+                'extension_pct': extension_pct,
+            }
+        except Exception:
+            return None
+
+    def _check_swing_pullback(self, symbol: str, data: pd.DataFrame, current_rsi: float) -> Optional[dict]:
         try:
             if len(data) < 20:
                 return None
@@ -1307,16 +1474,17 @@ class AISignalGenerator:
                 return None
 
             current_price = data['close'].iloc[-1]
-            sma20 = data['close'].rolling(20).mean().iloc[-1]
+            support_context = self._build_support_context(data, 'swing_pullback_support_tolerance')
+            if not support_context or not support_context['near_support']:
+                return None
+
+            sma20 = support_context['sma20']
             if sma20 <= 0:
                 return None
 
-            # Mildly oversold-to-neutral zone.
             if not (38.0 <= current_rsi <= 52.0):
                 return None
 
-            if len(data) < 3:
-                return None
             three_day_return = (current_price - data['close'].iloc[-3]) / data['close'].iloc[-3]
             if not (-0.08 <= three_day_return <= -0.005):
                 return None
@@ -1336,11 +1504,48 @@ class AISignalGenerator:
             if volume_ratio < min_volume_ratio:
                 return None
 
-            # Confidence favors moderate pullbacks and RSI near mid-40s.
+            pullback_volume = self._check_pullback_volume_contraction(
+                data,
+                getattr(self.config, 'swing_pullback_volume_max_ratio', 1.05),
+            )
+            if not pullback_volume or not pullback_volume['passed']:
+                return None
+
+            reversal = self._check_reversal_confirmation(data, support_context)
+            if not reversal or not reversal['passed']:
+                return None
+
+            bounce = self._check_bounce_volume_expansion(
+                data,
+                getattr(self.config, 'swing_pullback_bounce_volume_min_ratio', 1.0),
+            )
+            if not bounce or not bounce['passed']:
+                return None
+
+            extension = self._check_extension_from_support(
+                current_price,
+                support_context,
+                getattr(self.config, 'swing_pullback_extension_reject_pct', 0.05),
+            )
+            if not extension or not extension['passed']:
+                return None
+
             rsi_score = 1.0 - min(abs(current_rsi - 45.0) / 15.0, 1.0)
             pullback_score = min(max((-three_day_return - 0.005) / 0.075, 0.0), 1.0)
             proximity_score = 1.0 - min(abs(price_vs_sma) / 0.03, 1.0)
-            confidence = min(0.25 + rsi_score * 0.30 + pullback_score * 0.30 + proximity_score * 0.25, 1.0)
+            reversal_score = reversal['close_location']
+            bounce_score = min(max((bounce['ratio'] - 1.0) / 0.5, 0.0), 1.0)
+            volume_score = 1.0 - min(max(pullback_volume['ratio'] - 1.0, 0.0), 1.0)
+            confidence = min(
+                0.20
+                + rsi_score * 0.20
+                + pullback_score * 0.20
+                + proximity_score * 0.15
+                + reversal_score * 0.15
+                + bounce_score * 0.15
+                + volume_score * 0.10,
+                1.0,
+            )
 
             return {
                 'rsi': current_rsi,
@@ -1348,6 +1553,11 @@ class AISignalGenerator:
                 'price_vs_sma': price_vs_sma,
                 'adr': adr,
                 'volume_ratio': volume_ratio,
+                'support_distance': support_context['support_distance'],
+                'support_name': support_context['support_name'],
+                'pullback_volume_ratio': pullback_volume['ratio'],
+                'bounce_volume_ratio': bounce['ratio'],
+                'extension_pct': extension['extension_pct'],
                 'confidence': confidence,
             }
         except Exception as e:
@@ -1465,37 +1675,14 @@ class AISignalGenerator:
             return None
 
     def _check_momentum(self, symbol: str, data: pd.DataFrame, current_rsi: float) -> Optional[dict]:
-        """
-        Momentum Strategy Detection (Jan 13, 2026 - Trend Continuation)
-        
-        Entry: Stock in established uptrend, looking for continuation
-        - Price above SMA20 (confirming trend)
-        - RSI 45-65 (healthy, not overbought)
-        - 5-day return +3% to +15% (trending but not exhausted)
-        - ADR > 2% (sufficient volatility)
-        
-        Best for: Mid-day entries when morning strategies didn't trigger
-        Target: 2.5% profit, 1.5% stop loss
-        
-        Args:
-            symbol: Stock symbol
-            data: Price data (normalized columns)
-            current_rsi: Pre-calculated RSI value
-            
-        Returns:
-            dict with momentum info if valid signal, None otherwise
-        """
         try:
-            # Check if we're in trading window (10:30 AM - 2:30 PM)
             now = datetime.now()
             if not (10 <= now.hour < 14 or (now.hour == 14 and now.minute <= 30)):
                 return None
-            
-            # Need at least 20 days of data for SMA
+
             if len(data) < 20:
                 return None
-            
-            # Get config parameters (with defaults)
+
             sma_period = getattr(self.config, 'momentum_sma_period', 20)
             rsi_min = getattr(self.config, 'momentum_rsi_min', 45.0)
             rsi_max = getattr(self.config, 'momentum_rsi_max', 65.0)
@@ -1503,78 +1690,95 @@ class AISignalGenerator:
             min_5d_return = getattr(self.config, 'momentum_min_5d_return', 0.03)
             max_5d_return = getattr(self.config, 'momentum_max_5d_return', 0.15)
             min_volume_ratio = getattr(self.config, 'momentum_min_volume_ratio', 1.0)
-            
-            # RSI must be in "healthy trend" range (45-65)
+
             if not (rsi_min <= current_rsi <= rsi_max):
                 return None
-            
-            # Calculate 20-day SMA
-            sma = data['close'].rolling(sma_period).mean().iloc[-1]
+
             current_price = data['close'].iloc[-1]
-            
-            # Price must be ABOVE SMA (confirming uptrend)
-            if current_price < sma:
+            sma = data['close'].rolling(sma_period).mean().iloc[-1]
+            ema9 = data['close'].ewm(span=9, adjust=False).mean().iloc[-1]
+            ema20 = data['close'].ewm(span=20, adjust=False).mean().iloc[-1]
+            if current_price < sma or ema9 < ema20 or current_price < ema20:
                 return None
-            
+
             price_vs_sma = (current_price - sma) / sma
-            
-            # Calculate 5-day return
-            if len(data) >= 5:
-                five_day_ago = data['close'].iloc[-5]
-                five_day_return = (current_price - five_day_ago) / five_day_ago
-            else:
-                return None
-            
-            # 5-day return must be positive but not extreme
+            five_day_ago = data['close'].iloc[-5]
+            five_day_return = (current_price - five_day_ago) / five_day_ago
             if not (min_5d_return <= five_day_return <= max_5d_return):
                 return None
-            
-            # Calculate ADR (Average Daily Range)
-            if len(data) >= 14:
-                adr = ((data['high'] - data['low']) / data['close']).tail(14).mean()
-            else:
-                adr = ((data['high'] - data['low']) / data['close']).mean()
-            
-            # ADR must be above threshold
+
+            adr = ((data['high'] - data['low']) / data['close']).tail(14).mean()
             if adr < min_adr:
                 return None
 
-            # Volume must be at least baseline average for momentum continuation quality.
             avg_volume_20d = data['volume'].tail(20).mean()
             current_volume = data['volume'].iloc[-1]
             volume_ratio = (current_volume / avg_volume_20d) if avg_volume_20d > 0 else 0.0
             if volume_ratio < min_volume_ratio:
                 return None
-            
-            # Calculate confidence
-            # Higher confidence for:
-            # - RSI in middle of range (55 is optimal)
-            # - Higher 5-day return (more momentum)
-            # - Price moderately above SMA (not too extended)
-            
-            # RSI score: peak at 55
-            rsi_score = 1.0 - abs(current_rsi - 55) / 20  # 0.5 to 1.0
-            
-            # Return score: higher return = more confidence
-            return_score = (five_day_return - min_5d_return) / (max_5d_return - min_5d_return)
-            return_score = min(return_score, 1.0)
-            
-            # Extension score: moderate extension is better (1-5% above SMA)
-            if 0.01 <= price_vs_sma <= 0.05:
-                extension_score = 1.0
-            elif 0.05 < price_vs_sma <= 0.08:
-                extension_score = 0.8
-            elif price_vs_sma < 0.01:
-                extension_score = 0.7
-            else:
-                extension_score = 0.6  # Too extended
-            
-            # ADR bonus: higher volatility = more potential
-            adr_bonus = min((adr - min_adr) / 0.02, 0.2)  # Up to 20% bonus
-            
-            confidence = (rsi_score * 0.3 + return_score * 0.4 + extension_score * 0.3) + adr_bonus
-            confidence = min(confidence, 1.0)
-            
+
+            recent_high = data['high'].iloc[-5:-1].max()
+            if recent_high <= 0:
+                return None
+            pullback_from_high = (current_price - recent_high) / recent_high
+            if not (-0.05 <= pullback_from_high <= 0.01):
+                return None
+
+            support_context = self._build_support_context(
+                data,
+                'momentum_support_tolerance',
+                'momentum_pullback_ema_tolerance',
+            )
+            if not support_context or not support_context['near_support'] or not support_context['near_ema']:
+                return None
+
+            pullback_volume = self._check_pullback_volume_contraction(
+                data,
+                getattr(self.config, 'momentum_pullback_volume_max_ratio', 0.95),
+            )
+            if not pullback_volume or not pullback_volume['passed']:
+                return None
+
+            reversal = self._check_reversal_confirmation(data, support_context)
+            if not reversal or not reversal['passed']:
+                return None
+
+            bounce = self._check_bounce_volume_expansion(
+                data,
+                getattr(self.config, 'momentum_bounce_volume_min_ratio', 1.05),
+            )
+            if not bounce or not bounce['passed']:
+                return None
+
+            extension = self._check_extension_from_support(
+                current_price,
+                support_context,
+                getattr(self.config, 'momentum_extension_reject_pct', 0.06),
+            )
+            if not extension or not extension['passed']:
+                return None
+
+            rsi_score = 1.0 - abs(current_rsi - 55) / 20
+            return_score = min((five_day_return - min_5d_return) / (max_5d_return - min_5d_return), 1.0)
+            support_score = 1.0 - min(support_context['support_distance'] / max(getattr(self.config, 'momentum_support_tolerance', 0.03), 1e-6), 1.0)
+            pullback_score = 1.0 - min(abs(pullback_from_high) / 0.05, 1.0)
+            reversal_score = reversal['close_location']
+            bounce_score = min(max((bounce['ratio'] - 1.0) / 0.6, 0.0), 1.0)
+            volume_score = 1.0 - min(pullback_volume['ratio'] / max(getattr(self.config, 'momentum_pullback_volume_max_ratio', 0.95), 1e-6), 1.0)
+            adr_bonus = min((adr - min_adr) / 0.02, 0.15)
+
+            confidence = min(
+                rsi_score * 0.18
+                + return_score * 0.22
+                + support_score * 0.18
+                + pullback_score * 0.12
+                + reversal_score * 0.15
+                + bounce_score * 0.10
+                + volume_score * 0.05
+                + adr_bonus,
+                1.0,
+            )
+
             return {
                 'rsi': current_rsi,
                 'sma': sma,
@@ -1582,9 +1786,15 @@ class AISignalGenerator:
                 'five_day_return': five_day_return,
                 'adr': adr,
                 'volume_ratio': volume_ratio,
-                'confidence': confidence
+                'support_distance': support_context['support_distance'],
+                'support_name': support_context['support_name'],
+                'pullback_from_high': pullback_from_high,
+                'pullback_volume_ratio': pullback_volume['ratio'],
+                'bounce_volume_ratio': bounce['ratio'],
+                'extension_pct': extension['extension_pct'],
+                'confidence': confidence,
             }
-            
+
         except Exception as e:
             self.logger.debug(f"{symbol}: Momentum check failed: {e}")
             return None
