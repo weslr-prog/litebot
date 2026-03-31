@@ -1,0 +1,160 @@
+================================================================================
+MID-CAP MOMENTUM BACKTEST RESULTS (2011-2024)
+Using PreFilter to dynamically select mid-cap stocks ($2B-$10B)
+================================================================================
+
+
+================================================================================
+STRATEGY: Momentum Breakout
+================================================================================
+
+In-Sample:
+  Total Return: +0.02%
+  Total Trades: 340
+  Win Rate: 40.3%
+  Avg Win: +5.71%
+  Avg Loss: -3.84%
+  Win/Loss Ratio: 1.49
+  Profit Factor: 1.00
+
+Validation:
+  Total Return: +0.53%
+  Total Trades: 146
+  Win Rate: 44.5%
+  Avg Win: +4.76%
+  Avg Loss: -3.16%
+  Win/Loss Ratio: 1.51
+  Profit Factor: 0.93
+
+Out-of-Sample:
+  Total Return: +1.88%
+  Total Trades: 348
+  Win Rate: 39.1%
+  Avg Win: +8.75%
+  Avg Loss: -4.72%
+  Win/Loss Ratio: 1.85
+  Profit Factor: 1.24
+
+================================================================================
+STRATEGY: Strong Momentum Breakout
+================================================================================
+
+In-Sample:
+  Total Return: +1.25%
+  Total Trades: 268
+  Win Rate: 41.0%
+  Avg Win: +6.64%
+  Avg Loss: -3.83%
+  Win/Loss Ratio: 1.73
+  Profit Factor: 1.28
+
+Validation:
+  Total Return: +0.39%
+  Total Trades: 123
+  Win Rate: 43.9%
+  Avg Win: +4.82%
+  Avg Loss: -3.21%
+  Win/Loss Ratio: 1.50
+  Profit Factor: 0.77
+
+Out-of-Sample:
+  Total Return: +2.56%
+  Total Trades: 298
+  Win Rate: 39.3%
+  Avg Win: +9.65%
+  Avg Loss: -4.82%
+  Win/Loss Ratio: 2.00
+  Profit Factor: 1.35
+
+================================================================================
+STRATEGY: Price & Volume Surge
+================================================================================
+
+In-Sample:
+  Total Return: +0.02%
+  Total Trades: 152
+  Win Rate: 40.1%
+  Avg Win: +6.25%
+  Avg Loss: -4.17%
+  Win/Loss Ratio: 1.50
+  Profit Factor: 1.01
+
+Validation:
+  Total Return: +0.31%
+  Total Trades: 66
+  Win Rate: 45.5%
+  Avg Win: +5.43%
+  Avg Loss: -3.66%
+  Win/Loss Ratio: 1.49
+  Profit Factor: 0.92
+
+Out-of-Sample:
+  Total Return: +0.90%
+  Total Trades: 144
+  Win Rate: 41.7%
+  Avg Win: +7.87%
+  Avg Loss: -4.55%
+  Win/Loss Ratio: 1.73
+  Profit Factor: 1.30
+
+================================================================================
+STRATEGY: Momentum Tight Stops
+================================================================================
+
+In-Sample:
+  Total Return: +0.53%
+  Total Trades: 365
+  Win Rate: 43.3%
+  Avg Win: +4.79%
+  Avg Loss: -3.40%
+  Win/Loss Ratio: 1.41
+  Profit Factor: 1.03
+
+Validation:
+  Total Return: +0.24%
+  Total Trades: 163
+  Win Rate: 45.4%
+  Avg Win: +3.90%
+  Avg Loss: -2.98%
+  Win/Loss Ratio: 1.31
+  Profit Factor: 0.81
+
+Out-of-Sample:
+  Total Return: +0.53%
+  Total Trades: 365
+  Win Rate: 40.5%
+  Avg Win: +6.74%
+  Avg Loss: -4.35%
+  Win/Loss Ratio: 1.55
+  Profit Factor: 1.00
+
+================================================================================
+STRATEGY: Multi-Timeframe Momentum
+================================================================================
+
+In-Sample:
+  Total Return: +1.33%
+  Total Trades: 259
+  Win Rate: 43.6%
+  Avg Win: +6.36%
+  Avg Loss: -4.01%
+  Win/Loss Ratio: 1.59
+  Profit Factor: 1.07
+
+Validation:
+  Total Return: -0.13%
+  Total Trades: 112
+  Win Rate: 39.3%
+  Avg Win: +5.33%
+  Avg Loss: -3.64%
+  Win/Loss Ratio: 1.46
+  Profit Factor: 0.71
+
+Out-of-Sample:
+  Total Return: +2.05%
+  Total Trades: 275
+  Win Rate: 42.5%
+  Avg Win: +8.50%
+  Avg Loss: -5.00%
+  Win/Loss Ratio: 1.70
+  Profit Factor: 1.04

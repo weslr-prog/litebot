@@ -15,7 +15,7 @@ class ShortCycleConfig:
     # MRNA example: $50 position = $11 profit vs $150 position = $40 profit (same 27% gain)
     # Feb 11: Increased daily deployment from 30% to 45% Mon-Wed for better capital cycles
     portfolio_value: float = None  # Will be fetched from Alpaca account (default: 1000.0 if fetch fails)
-    daily_pool_percent: float = 0.45  # 45% Mon-Wed (ramping to 100% Thu-Fri) - targets 3.5-4.0x capital cycles
+    daily_pool_percent: float = 0.40  # Reduced from 45% after March drawdown to lower daily exposure
     max_risk_per_trade_dollars: float = 30.0  # Risk per trade for position sizing (3% of $1K)
     max_position_dollars: float = 150.0  # Jan 24: Increased from $50 to $150 (15% per position)
     max_loss_per_trade_dollars: float = 30.0  # Hard stop at $30 per trade (3% of portfolio)
@@ -27,7 +27,7 @@ class ShortCycleConfig:
     
     # Position parameters - fewer, larger positions (Jan 24, 2026: 75% utilization strategy)
     max_positions_per_day: int = 5  # 5 positions × $150 = $750 max daily exposure (75% utilization)
-    max_daily_entries: int = 5  # Cap new entries at 5/day (larger positions = fewer needed)
+    max_daily_entries: int = 4  # Reduced entry churn during momentum-only operation
     min_position_size_dollars: float = 50.0  # Minimum $50 per position (meaningful trades only)
     max_position_size_percent: float = 0.15  # 15% max position size per trade
     max_universe_size: int = 500  # Maximum number of symbols in trading universe (scaled for 3-strategy stack)
@@ -39,12 +39,11 @@ class ShortCycleConfig:
     max_concentration_percent_large: float = 0.40  # Max 40% of positions in one symbol (large portfolios)
     portfolio_threshold_large: float = 100000.0  # Threshold for "large" portfolio diversification rules
     
-    # Time parameters (WEEKLY SWING STRATEGY - Feb 11, 2026)
-    # Hold 2-5 days including weekends. No D+1 forced exits.
-    # Analysis: D+3+ = 84% win rate (+1.89%) vs D+1 = 50% win rate (+0.37%)
-    max_hold_days: int = 5  # Allow up to 5 trading days hold
-    default_hold_days: int = 3  # Default D+3 hold (was D+1 / D+2)
-    high_vol_hold_days: int = 5  # High-volatility stocks get D+5 hold
+    # Time parameters (SHORT SWING PROFILE)
+    # Target hold window: 1-3 trading days for faster capital rotation.
+    max_hold_days: int = 3  # Hard cap for standard swing positions
+    default_hold_days: int = 2  # Default target hold around D+2
+    high_vol_hold_days: int = 4  # Allow limited extension for high-vol names only
     trading_days: List[str] = None  # All trading days (Mon-Fri)
     exit_time: str = "15:45"  # 15 minutes before close - safety net only
     d_plus_one_force_exit_time: str = "15:45"  # UNUSED - no D+1 forced exits
@@ -62,7 +61,7 @@ class ShortCycleConfig:
     # Risk parameters (Dual-Strategy System: Gap & Go + Fade/Short)
     max_daily_loss_percent: float = 0.08  # 8% daily loss limit
     max_weekly_loss_percent: float = 0.15   # 15% weekly loss limit
-    confidence_threshold: float = 0.25  # 25% minimum (Phase 3: raise to 0.55 after exit fixes validated)
+    confidence_threshold: float = 0.35  # Raised to 35% to reject low-quality momentum setups
     
     # Triple-Strategy Configuration (Jan 13, 2026: Gap & Go + Fade + Momentum)
     # Gap & Go: 830% return / 748 trades = 1.11% per trade
@@ -133,8 +132,8 @@ class ShortCycleConfig:
     # Winners hold through weekend. Only exit big losers on Friday.
     weekend_hold_enabled: bool = True  # Allow weekend holds
     friday_force_exit_enabled: bool = False  # DISABLED - let winners ride
-    friday_exit_losers_only: bool = True  # Only force exit positions losing >2%
-    friday_loser_threshold: float = -0.02  # Exit if down more than 2% on Friday EOD
+    friday_exit_losers_only: bool = True  # Only force exit positions losing >3%
+    friday_loser_threshold: float = -0.03  # Exit if down more than 3% on Friday EOD
     weekend_early_exit_threshold: float = 0.05  # Only exit early if +5% profit
     
     # Gap & Go parameters
@@ -156,12 +155,17 @@ class ShortCycleConfig:
     # Best for: Stocks with established uptrend, looking for continuation
     momentum_sma_period: int = 20  # SMA for trend confirmation
     momentum_rsi_min: float = 45.0  # RSI floor (not oversold)
-    momentum_rsi_max: float = 70.0  # RSI ceiling relaxed for momentum-only mode
+    momentum_rsi_max: float = 70.0  # Relaxed ceiling to improve momentum-only signal throughput
     momentum_min_adr_pct: float = 0.02  # Minimum 2% ADR for volatility
-    momentum_min_5d_return: float = 0.02  # Allow earlier trend continuations (+2% in 5 days)
+    momentum_min_5d_return: float = 0.02  # Allow earlier trend continuation (+2% in 5 days)
     momentum_max_5d_return: float = 0.15  # Not more than 15% (avoid chasing)
+    momentum_min_volume_ratio: float = 1.05  # Keep volume confirmation while reducing over-filtering
     momentum_scan_start: str = "10:30"  # Start after initial volatility settles
     momentum_scan_end: str = "14:30"  # End before close
+
+    # Swing pullback fallback (for choppy / weak-trend regimes)
+    enable_swing_pullback: bool = True
+    swing_pullback_min_volume_ratio: float = 0.85  # Allow slightly softer volume than momentum
     
     # Default targets (SWING FIX Feb 13, 2026: UNIFIED for weekly swing strategy)
     # Single source of truth - wider stops survive mid-cap volatility
@@ -178,15 +182,24 @@ class ShortCycleConfig:
     trailing_distance_pct: float = 0.02  # Trail 2% below highest price
     trailing_min_profit_pct: float = 0.01  # Lock in minimum +1.0% profit once activated
     trailing_update_interval_sec: int = 60  # Update trailing stops every 60 seconds
+
+    # Fast-exit safety valve
+    # Keep this looser than the structural stop so normal swing noise does not cause churn.
+    fast_exit_threshold_pct: float = 0.015  # 1.5% fast exit threshold (raised from 0.8%)
     
     # Late Entry Parameters (Jan 13, 2026: Afternoon scan for additional opportunities)
     enable_late_entry: bool = True  # Enable afternoon entry scans
     late_entry_start_time: str = "13:00"  # Start late entry scan at 1:00 PM
     late_entry_end_time: str = "14:30"  # End late entry scan at 2:30 PM
-    late_entry_confidence_multiplier: float = 1.2  # Require 20% higher confidence for late entries
-    late_entry_position_size_pct: float = 0.75  # Use 75% of normal position size (reduced risk)
+    late_entry_confidence_multiplier: float = 1.3  # Require 30% higher confidence for late entries
+    late_entry_position_size_pct: float = 0.60  # Reduce late-entry size to 60% of normal position
     late_entry_scan_interval_minutes: int = 15  # Scan every 15 minutes during late window
     late_entry_min_adr_pct: float = 0.025  # Require 2.5% ADR for late entries (more volatility needed)
+
+    # Anti-churn guardrails
+    min_hold_time_minutes: int = 30
+    entry_cooldown_minutes: int = 120
+    duplicate_entry_window_minutes: int = 30
     
     # Backtesting parameters
     enable_forced_d1_exit: bool = False  # DISABLED - no D+1 forced exits (was True)

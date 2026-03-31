@@ -1,0 +1,25 @@
+{
+  "setup_timestamp": "20251008_180739",
+  "backup_manifest": {
+    "timestamp": "20251008_180739",
+    "backup_path": "/home/wes/Desktop/litebotx-usb-deployment/implementation_backups/pre_implementation_backup_20251008_180739",
+    "backed_up_files": [
+      "signal_generator.py",
+      "trade_executor.py",
+      "execution_engine.py",
+      "config.py",
+      "positions.json",
+      "strategic_improvements.py",
+      "traders/short_cycle_trader.py"
+    ],
+    "missing_files": [
+      "automated_momentum_trader_v2.py"
+    ],
+    "total_files": 7,
+    "backup_complete": false
+  },
+  "rollback_script": "/home/wes/Desktop/litebotx-usb-deployment/implementation_backups/emergency_rollback_20251008_180739.sh",
+  "monitor_script": "/home/wes/Desktop/litebotx-usb-deployment/implementation_backups/implementation_monitor_20251008_180739.py",
+  "rollback_tested": true,
+  "safety_level": "MEDIUM"
+}

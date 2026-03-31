@@ -32,7 +32,8 @@ class SmartExitManager:
         self.TRAILING_STOP_TRIGGER = 0.03  # Activate at +3% profit
         self.TRAILING_STOP_DISTANCE = 0.02  # Trail 2% below highest price
         self.MIN_HOLD_HOURS = 48  # CRITICAL FIX: 48h minimum before RSI/signal exits (was 4h)
-        self.MAX_HOLD_HOURS = 120  # 5 trading days max hold
+        # Keep max hold aligned with config profile (e.g., 1-3 day swing mode).
+        self.MAX_HOLD_HOURS = int(getattr(config, 'max_hold_days', 5) * 24)
         
         # Emergency exit thresholds (Feb 13 SWING FIX)
         # Hard stop widened to 4% to survive normal mid-cap daily swings

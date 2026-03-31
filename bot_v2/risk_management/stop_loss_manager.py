@@ -25,8 +25,9 @@ class AIStopLossManager:
         self.max_stop_percent = 0.06  # 6% ceiling (raised from 4% - mid-caps need room)
         self.atr_multiplier = 2.0  # 2.0x ATR (raised from 1.5x for swing holds)
         
-        # Fast exit for small position protection
-        self.fast_exit_threshold = 0.008  # 0.8% fast exit threshold
+        # Fast exit for small position protection.
+        # Pull from config so the emergency threshold stays aligned with swing settings.
+        self.fast_exit_threshold = getattr(self.config, 'fast_exit_threshold_pct', 0.015)
     
     def calculate_optimal_stop(self, signal: AISignal, market_data: pd.DataFrame) -> Tuple[float, float]:
         """

@@ -1,0 +1,541 @@
+================================================================================
+COMPREHENSIVE MID-CAP STRATEGY BACKTEST (2011-2024)
+Tested 15 strategies on mid-cap stocks ($2B-$10B)
+================================================================================
+
+
+================================================================================
+REVERSION STRATEGIES
+================================================================================
+
+Mean Reversion RSI (30):
+----------------------------------------
+
+In-Sample:
+  Total Return: +0.56%
+  Total Trades: 326
+  Win Rate: 51.2%
+  Avg Win: +4.03%
+  Avg Loss: -3.88%
+  Win/Loss Ratio: 1.04
+  Profit Factor: 1.14
+  Max Drawdown: -72.23%
+
+Validation:
+  Total Return: -0.19%
+  Total Trades: 151
+  Win Rate: 45.7%
+  Avg Win: +3.96%
+  Avg Loss: -3.56%
+  Win/Loss Ratio: 1.11
+  Profit Factor: 0.72
+  Max Drawdown: -73.65%
+
+Out-of-Sample:
+  Total Return: +2.62%
+  Total Trades: 240
+  Win Rate: 56.2%
+  Avg Win: +5.97%
+  Avg Loss: -5.18%
+  Win/Loss Ratio: 1.15
+  Profit Factor: 1.54
+  Max Drawdown: -77.91%
+
+Mean Reversion RSI (20):
+----------------------------------------
+
+In-Sample:
+  Total Return: -0.34%
+  Total Trades: 182
+  Win Rate: 51.1%
+  Avg Win: +4.06%
+  Avg Loss: -4.63%
+  Win/Loss Ratio: 0.88
+  Profit Factor: 0.95
+  Max Drawdown: -74.55%
+
+Validation:
+  Total Return: -0.10%
+  Total Trades: 91
+  Win Rate: 41.8%
+  Avg Win: +4.31%
+  Avg Loss: -3.28%
+  Win/Loss Ratio: 1.31
+  Profit Factor: 0.55
+  Max Drawdown: -44.17%
+
+Out-of-Sample:
+  Total Return: +1.22%
+  Total Trades: 147
+  Win Rate: 54.4%
+  Avg Win: +6.08%
+  Avg Loss: -5.44%
+  Win/Loss Ratio: 1.12
+  Profit Factor: 1.41
+  Max Drawdown: -72.20%
+
+Bollinger Band Reversion:
+----------------------------------------
+
+In-Sample:
+  Total Return: -1.13%
+  Total Trades: 184
+  Win Rate: 46.2%
+  Avg Win: +4.38%
+  Avg Loss: -4.91%
+  Win/Loss Ratio: 0.89
+  Profit Factor: 0.80
+  Max Drawdown: -135.22%
+
+Validation:
+  Total Return: -0.37%
+  Total Trades: 88
+  Win Rate: 40.9%
+  Avg Win: +4.71%
+  Avg Loss: -3.97%
+  Win/Loss Ratio: 1.19
+  Profit Factor: 0.66
+  Max Drawdown: -61.20%
+
+Out-of-Sample:
+  Total Return: -0.77%
+  Total Trades: 142
+  Win Rate: 42.3%
+  Avg Win: +6.28%
+  Avg Loss: -5.53%
+  Win/Loss Ratio: 1.14
+  Profit Factor: 0.80
+  Max Drawdown: -106.37%
+
+Double Bottom Reversion:
+----------------------------------------
+
+In-Sample:
+  Total Return: +0.27%
+  Total Trades: 386
+  Win Rate: 46.9%
+  Avg Win: +4.61%
+  Avg Loss: -3.94%
+  Win/Loss Ratio: 1.17
+  Profit Factor: 1.04
+  Max Drawdown: -105.32%
+
+Validation:
+  Total Return: -0.72%
+  Total Trades: 172
+  Win Rate: 41.3%
+  Avg Win: +4.77%
+  Avg Loss: -4.07%
+  Win/Loss Ratio: 1.17
+  Profit Factor: 0.69
+  Max Drawdown: -115.74%
+
+Out-of-Sample:
+  Total Return: +3.17%
+  Total Trades: 289
+  Win Rate: 45.7%
+  Avg Win: +7.59%
+  Avg Loss: -4.36%
+  Win/Loss Ratio: 1.74
+  Profit Factor: 1.38
+  Max Drawdown: -94.70%
+
+================================================================================
+MOMENTUM STRATEGIES
+================================================================================
+
+Momentum Breakout (3%):
+----------------------------------------
+
+In-Sample:
+  Total Return: +0.02%
+  Total Trades: 340
+  Win Rate: 40.3%
+  Avg Win: +5.71%
+  Avg Loss: -3.84%
+  Win/Loss Ratio: 1.49
+  Profit Factor: 1.00
+  Max Drawdown: -154.04%
+
+Validation:
+  Total Return: +0.53%
+  Total Trades: 146
+  Win Rate: 44.5%
+  Avg Win: +4.76%
+  Avg Loss: -3.16%
+  Win/Loss Ratio: 1.51
+  Profit Factor: 0.93
+  Max Drawdown: -38.29%
+
+Out-of-Sample:
+  Total Return: +1.88%
+  Total Trades: 348
+  Win Rate: 39.1%
+  Avg Win: +8.75%
+  Avg Loss: -4.72%
+  Win/Loss Ratio: 1.85
+  Profit Factor: 1.24
+  Max Drawdown: -79.66%
+
+Strong Momentum (5%):
+----------------------------------------
+
+In-Sample:
+  Total Return: +1.25%
+  Total Trades: 268
+  Win Rate: 41.0%
+  Avg Win: +6.64%
+  Avg Loss: -3.83%
+  Win/Loss Ratio: 1.73
+  Profit Factor: 1.28
+  Max Drawdown: -108.29%
+
+Validation:
+  Total Return: +0.39%
+  Total Trades: 123
+  Win Rate: 43.9%
+  Avg Win: +4.82%
+  Avg Loss: -3.21%
+  Win/Loss Ratio: 1.50
+  Profit Factor: 0.77
+  Max Drawdown: -28.80%
+
+Out-of-Sample:
+  Total Return: +2.56%
+  Total Trades: 298
+  Win Rate: 39.3%
+  Avg Win: +9.65%
+  Avg Loss: -4.82%
+  Win/Loss Ratio: 2.00
+  Profit Factor: 1.35
+  Max Drawdown: -88.36%
+
+Relative Strength:
+----------------------------------------
+
+In-Sample:
+  Total Return: -0.06%
+  Total Trades: 330
+  Win Rate: 41.2%
+  Avg Win: +5.86%
+  Avg Loss: -4.14%
+  Win/Loss Ratio: 1.42
+  Profit Factor: 0.97
+  Max Drawdown: -200.77%
+
+Validation:
+  Total Return: +0.40%
+  Total Trades: 152
+  Win Rate: 44.1%
+  Avg Win: +5.19%
+  Avg Loss: -3.62%
+  Win/Loss Ratio: 1.43
+  Profit Factor: 0.92
+  Max Drawdown: -40.24%
+
+Out-of-Sample:
+  Total Return: +2.24%
+  Total Trades: 347
+  Win Rate: 43.5%
+  Avg Win: +8.46%
+  Avg Loss: -5.38%
+  Win/Loss Ratio: 1.57
+  Profit Factor: 1.02
+  Max Drawdown: -103.00%
+
+Breakout + Volume:
+----------------------------------------
+
+In-Sample:
+  Total Return: +0.99%
+  Total Trades: 184
+  Win Rate: 44.0%
+  Avg Win: +6.20%
+  Avg Loss: -3.91%
+  Win/Loss Ratio: 1.58
+  Profit Factor: 1.22
+  Max Drawdown: -50.93%
+
+Validation:
+  Total Return: -0.02%
+  Total Trades: 84
+  Win Rate: 39.3%
+  Avg Win: +4.96%
+  Avg Loss: -3.24%
+  Win/Loss Ratio: 1.53
+  Profit Factor: 0.75
+  Max Drawdown: -38.02%
+
+Out-of-Sample:
+  Total Return: -0.34%
+  Total Trades: 181
+  Win Rate: 35.4%
+  Avg Win: +7.75%
+  Avg Loss: -4.53%
+  Win/Loss Ratio: 1.71
+  Profit Factor: 0.83
+  Max Drawdown: -153.35%
+
+Gap & Go:
+----------------------------------------
+
+In-Sample:
+  Total Return: +2.81%
+  Total Trades: 409
+  Win Rate: 47.9%
+  Avg Win: +4.85%
+  Avg Loss: -3.15%
+  Win/Loss Ratio: 1.54
+  Profit Factor: 1.20
+  Max Drawdown: -80.61%
+
+Validation:
+  Total Return: -0.34%
+  Total Trades: 202
+  Win Rate: 45.0%
+  Avg Win: +3.25%
+  Avg Loss: -2.97%
+  Win/Loss Ratio: 1.09
+  Profit Factor: 0.78
+  Max Drawdown: -75.93%
+
+Out-of-Sample:
+  Total Return: +2.78%
+  Total Trades: 445
+  Win Rate: 45.2%
+  Avg Win: +6.17%
+  Avg Loss: -3.94%
+  Win/Loss Ratio: 1.56
+  Profit Factor: 1.52
+  Max Drawdown: -89.55%
+
+Swing High Breakout:
+----------------------------------------
+
+In-Sample:
+  Total Return: +1.76%
+  Total Trades: 515
+  Win Rate: 42.7%
+  Avg Win: +5.78%
+  Avg Loss: -3.71%
+  Win/Loss Ratio: 1.56
+  Profit Factor: 1.04
+  Max Drawdown: -242.00%
+
+Validation:
+  Total Return: -0.17%
+  Total Trades: 256
+  Win Rate: 41.0%
+  Avg Win: +4.95%
+  Avg Loss: -3.55%
+  Win/Loss Ratio: 1.39
+  Profit Factor: 0.85
+  Max Drawdown: -67.74%
+
+Out-of-Sample:
+  Total Return: +3.96%
+  Total Trades: 584
+  Win Rate: 41.4%
+  Avg Win: +8.66%
+  Avg Loss: -4.97%
+  Win/Loss Ratio: 1.74
+  Profit Factor: 0.88
+  Max Drawdown: -106.18%
+
+================================================================================
+TREND STRATEGIES
+================================================================================
+
+Pullback in Uptrend:
+----------------------------------------
+
+In-Sample:
+  Total Return: -0.36%
+  Total Trades: 156
+  Win Rate: 40.4%
+  Avg Win: +3.16%
+  Avg Loss: -2.53%
+  Win/Loss Ratio: 1.25
+  Profit Factor: 0.94
+  Max Drawdown: -63.48%
+
+Validation:
+  Total Return: -0.56%
+  Total Trades: 74
+  Win Rate: 36.5%
+  Avg Win: +3.93%
+  Avg Loss: -3.46%
+  Win/Loss Ratio: 1.14
+  Profit Factor: 0.72
+  Max Drawdown: -63.89%
+
+Out-of-Sample:
+  Total Return: +0.45%
+  Total Trades: 114
+  Win Rate: 42.1%
+  Avg Win: +5.67%
+  Avg Loss: -3.44%
+  Win/Loss Ratio: 1.65
+  Profit Factor: 0.83
+  Max Drawdown: -44.98%
+
+MA Crossover (10/50):
+----------------------------------------
+
+In-Sample:
+  Total Return: +0.48%
+  Total Trades: 191
+  Win Rate: 42.4%
+  Avg Win: +4.40%
+  Avg Loss: -2.80%
+  Win/Loss Ratio: 1.57
+  Profit Factor: 1.15
+  Max Drawdown: -37.08%
+
+Validation:
+  Total Return: +0.26%
+  Total Trades: 104
+  Win Rate: 43.3%
+  Avg Win: +4.46%
+  Avg Loss: -2.96%
+  Win/Loss Ratio: 1.50
+  Profit Factor: 0.95
+  Max Drawdown: -36.19%
+
+Out-of-Sample:
+  Total Return: -0.90%
+  Total Trades: 172
+  Win Rate: 33.1%
+  Avg Win: +5.64%
+  Avg Loss: -3.58%
+  Win/Loss Ratio: 1.58
+  Profit Factor: 0.62
+  Max Drawdown: -128.94%
+
+================================================================================
+HYBRID STRATEGIES
+================================================================================
+
+Hybrid: RSI + Momentum:
+----------------------------------------
+
+Validation:
+  Total Return: -0.04%
+  Total Trades: 1
+  Win Rate: 0.0%
+  Avg Win: +0.00%
+  Avg Loss: -4.50%
+  Win/Loss Ratio: 0.00
+  Profit Factor: 0.00
+  Max Drawdown: 0.00%
+
+Out-of-Sample:
+  Total Return: +0.01%
+  Total Trades: 4
+  Win Rate: 50.0%
+  Avg Win: +4.84%
+  Avg Loss: -4.15%
+  Win/Loss Ratio: 1.17
+  Profit Factor: 1.15
+  Max Drawdown: -8.30%
+
+Hybrid: Bollinger + Trend:
+----------------------------------------
+
+In-Sample:
+  Total Return: -0.09%
+  Total Trades: 14
+  Win Rate: 35.7%
+  Avg Win: +2.60%
+  Avg Loss: -2.49%
+  Win/Loss Ratio: 1.04
+  Profit Factor: 0.63
+  Max Drawdown: -9.73%
+
+Validation:
+  Total Return: -0.05%
+  Total Trades: 4
+  Win Rate: 25.0%
+  Avg Win: +2.22%
+  Avg Loss: -2.54%
+  Win/Loss Ratio: 0.87
+  Profit Factor: 0.53
+  Max Drawdown: -4.89%
+
+Out-of-Sample:
+  Total Return: +0.06%
+  Total Trades: 5
+  Win Rate: 40.0%
+  Avg Win: +8.50%
+  Avg Loss: -3.52%
+  Win/Loss Ratio: 2.41
+  Profit Factor: 2.88
+  Max Drawdown: -4.08%
+
+Hybrid: Reversion Entry/Momentum Exit:
+----------------------------------------
+
+In-Sample:
+  Total Return: +1.01%
+  Total Trades: 312
+  Win Rate: 45.5%
+  Avg Win: +5.65%
+  Avg Loss: -4.12%
+  Win/Loss Ratio: 1.37
+  Profit Factor: 1.14
+  Max Drawdown: -68.79%
+
+Validation:
+  Total Return: -0.60%
+  Total Trades: 146
+  Win Rate: 33.6%
+  Avg Win: +5.53%
+  Avg Loss: -3.41%
+  Win/Loss Ratio: 1.62
+  Profit Factor: 0.58
+  Max Drawdown: -87.09%
+
+Out-of-Sample:
+  Total Return: +4.00%
+  Total Trades: 235
+  Win Rate: 48.1%
+  Avg Win: +8.29%
+  Avg Loss: -4.39%
+  Win/Loss Ratio: 1.89
+  Profit Factor: 1.60
+  Max Drawdown: -50.15%
+
+
+================================================================================
+TOP 10 STRATEGIES BY OUT-OF-SAMPLE RETURN
+================================================================================
+
+1. Hybrid: Reversion Entry/Momentum Exit (hybrid)
+   Return: +4.00% | Trades: 235 | Win Rate: 48.1% | Profit Factor: 1.60
+
+2. Swing High Breakout (momentum)
+   Return: +3.96% | Trades: 584 | Win Rate: 41.4% | Profit Factor: 0.88
+
+3. Double Bottom Reversion (reversion)
+   Return: +3.17% | Trades: 289 | Win Rate: 45.7% | Profit Factor: 1.38
+
+4. Gap & Go (momentum)
+   Return: +2.78% | Trades: 445 | Win Rate: 45.2% | Profit Factor: 1.52
+
+5. Mean Reversion RSI (30) (reversion)
+   Return: +2.62% | Trades: 240 | Win Rate: 56.2% | Profit Factor: 1.54
+
+6. Strong Momentum (5%) (momentum)
+   Return: +2.56% | Trades: 298 | Win Rate: 39.3% | Profit Factor: 1.35
+
+7. Relative Strength (momentum)
+   Return: +2.24% | Trades: 347 | Win Rate: 43.5% | Profit Factor: 1.02
+
+8. Momentum Breakout (3%) (momentum)
+   Return: +1.88% | Trades: 348 | Win Rate: 39.1% | Profit Factor: 1.24
+
+9. Mean Reversion RSI (20) (reversion)
+   Return: +1.22% | Trades: 147 | Win Rate: 54.4% | Profit Factor: 1.41
+
+10. Pullback in Uptrend (trend)
+   Return: +0.45% | Trades: 114 | Win Rate: 42.1% | Profit Factor: 0.83

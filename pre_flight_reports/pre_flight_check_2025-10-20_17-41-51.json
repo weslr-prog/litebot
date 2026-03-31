@@ -1,0 +1,158 @@
+{
+  "timestamp": "2025-10-20_17-41-51",
+  "total_checks": 33,
+  "passed": 8,
+  "failed": 21,
+  "warned": 4,
+  "status": "FAIL",
+  "issues": [
+    {
+      "check": "Critical Imports",
+      "severity": "CRITICAL",
+      "reason": "Cannot import data_fetcher: No module named 'data_fetcher'",
+      "detail": ""
+    },
+    {
+      "check": "2. Critical Imports",
+      "severity": "CRITICAL",
+      "reason": "Check returned False",
+      "detail": ""
+    },
+    {
+      "check": "API Credentials",
+      "severity": "CRITICAL",
+      "reason": "Missing required: APCA_API_KEY_ID",
+      "detail": ""
+    },
+    {
+      "check": "API Credentials",
+      "severity": "CRITICAL",
+      "reason": "Missing required: APCA_API_SECRET_KEY",
+      "detail": ""
+    },
+    {
+      "check": "3. API Credentials",
+      "severity": "CRITICAL",
+      "reason": "Check returned False",
+      "detail": ""
+    },
+    {
+      "check": "Alpaca Connection",
+      "severity": "CRITICAL",
+      "reason": "API credentials not set",
+      "detail": ""
+    },
+    {
+      "check": "4. Alpaca Connection",
+      "severity": "CRITICAL",
+      "reason": "Check returned False",
+      "detail": ""
+    },
+    {
+      "check": "Configuration",
+      "severity": "CRITICAL",
+      "reason": "Config validation error: cannot import name 'ShortCycleConfig' from 'config' (/home/wes/Desktop/litebotx-usb-deployment/config.py)",
+      "detail": ""
+    },
+    {
+      "check": "6. Configuration Validity",
+      "severity": "CRITICAL",
+      "reason": "Check returned False",
+      "detail": ""
+    },
+    {
+      "check": "Position Loading",
+      "severity": "CRITICAL",
+      "reason": "Cannot load positions: 'list' object has no attribute 'get'",
+      "detail": ""
+    },
+    {
+      "check": "8. Position Loading",
+      "severity": "CRITICAL",
+      "reason": "Check returned False",
+      "detail": ""
+    },
+    {
+      "check": "Signal Generation",
+      "severity": "CRITICAL",
+      "reason": "Signal generation error: cannot import name 'ShortCycleConfig' from 'config' (/home/wes/Desktop/litebotx-usb-deployment/config.py)",
+      "detail": ""
+    },
+    {
+      "check": "9. Signal Generation",
+      "severity": "CRITICAL",
+      "reason": "Check returned False",
+      "detail": ""
+    },
+    {
+      "check": "Pattern Recognition",
+      "severity": "CRITICAL",
+      "reason": "Pattern recognition error: PatternRecognizer.identify_pattern() missing 2 required positional arguments: 'current_price' and 'entry_price'",
+      "detail": ""
+    },
+    {
+      "check": "10. Pattern Recognition",
+      "severity": "CRITICAL",
+      "reason": "Check returned False",
+      "detail": ""
+    },
+    {
+      "check": "Trade Execution",
+      "severity": "CRITICAL",
+      "reason": "Trade execution mock error: cannot import name 'ShortCycleConfig' from 'config' (/home/wes/Desktop/litebotx-usb-deployment/config.py)",
+      "detail": ""
+    },
+    {
+      "check": "11. Trade Execution Mock",
+      "severity": "CRITICAL",
+      "reason": "Check returned False",
+      "detail": ""
+    },
+    {
+      "check": "Exit Logic",
+      "severity": "CRITICAL",
+      "reason": "Exit logic error: cannot import name 'ShortCycleConfig' from 'config' (/home/wes/Desktop/litebotx-usb-deployment/config.py)",
+      "detail": ""
+    },
+    {
+      "check": "12. Exit Logic",
+      "severity": "CRITICAL",
+      "reason": "Check returned False",
+      "detail": ""
+    },
+    {
+      "check": "Data Sources",
+      "severity": "CRITICAL",
+      "reason": "Data source error: No module named 'data_fetcher'",
+      "detail": ""
+    },
+    {
+      "check": "13. Data Sources",
+      "severity": "CRITICAL",
+      "reason": "Check returned False",
+      "detail": ""
+    }
+  ],
+  "warnings": [
+    {
+      "check": "API Credentials",
+      "severity": "WARNING",
+      "reason": "Optional not set: FRED_API_KEY"
+    },
+    {
+      "check": "API Credentials",
+      "severity": "WARNING",
+      "reason": "Optional not set: POLYGON_API_KEY"
+    },
+    {
+      "check": "Log Health",
+      "severity": "WARNING",
+      "reason": "2 CRITICAL messages in recent logs"
+    },
+    {
+      "check": "Market Schedule",
+      "severity": "WARNING",
+      "reason": "Cannot check market schedule: You must supply a method of authentication"
+    }
+  ]
+}

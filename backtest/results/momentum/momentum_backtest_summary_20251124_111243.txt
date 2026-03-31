@@ -1,0 +1,170 @@
+======================================================================
+MOMENTUM STRATEGY BACKTEST RESULTS
+Generated: 2025-11-24 11:12:43
+======================================================================
+
+
+STRATEGY: Momentum_Breakout
+----------------------------------------------------------------------
+
+In-Sample:
+  Total Return: +2.24%
+  Total Trades: 344
+  Win Rate: 40.7%
+  Avg Win: +6.89%
+  Avg Loss: -4.74%
+  Profit Factor: 1.01
+  Max Drawdown: -41.10%
+  Sharpe Ratio: -1.11
+
+Validation:
+  Total Return: +61.93%
+  Total Trades: 169
+  Win Rate: 37.3%
+  Avg Win: +9.41%
+  Avg Loss: -3.89%
+  Profit Factor: 1.45
+  Max Drawdown: -29.36%
+  Sharpe Ratio: -0.22
+
+Out-of-Sample:
+  Total Return: +59.48%
+  Total Trades: 328
+  Win Rate: 41.8%
+  Avg Win: +8.82%
+  Avg Loss: -5.30%
+  Profit Factor: 1.17
+  Max Drawdown: -36.79%
+  Sharpe Ratio: 0.61
+
+STRATEGY: Price_Volume_Surge
+----------------------------------------------------------------------
+
+In-Sample:
+  Total Return: -7.62%
+  Total Trades: 181
+  Win Rate: 39.2%
+  Avg Win: +7.36%
+  Avg Loss: -5.28%
+  Profit Factor: 0.95
+  Max Drawdown: -33.82%
+  Sharpe Ratio: 0.35
+
+Validation:
+  Total Return: +10.58%
+  Total Trades: 106
+  Win Rate: 30.2%
+  Avg Win: +11.68%
+  Avg Loss: -4.41%
+  Profit Factor: 1.10
+  Max Drawdown: -23.73%
+  Sharpe Ratio: -1.31
+
+Out-of-Sample:
+  Total Return: +6.10%
+  Total Trades: 159
+  Win Rate: 37.7%
+  Avg Win: +9.38%
+  Avg Loss: -5.31%
+  Profit Factor: 1.04
+  Max Drawdown: -31.56%
+  Sharpe Ratio: -0.58
+
+STRATEGY: MA_Crossover
+----------------------------------------------------------------------
+
+In-Sample:
+  Total Return: -5.06%
+  Total Trades: 51
+  Win Rate: 49.0%
+  Avg Win: +6.67%
+  Avg Loss: -7.49%
+  Profit Factor: 0.91
+  Max Drawdown: -22.95%
+  Sharpe Ratio: -2.56
+
+Validation:
+  Total Return: -57.79%
+  Total Trades: 38
+  Win Rate: 10.5%
+  Avg Win: +7.36%
+  Avg Loss: -6.53%
+  Profit Factor: 0.14
+  Max Drawdown: -60.52%
+  Sharpe Ratio: -0.69
+
+Out-of-Sample:
+  Total Return: -5.43%
+  Total Trades: 47
+  Win Rate: 46.8%
+  Avg Win: +6.37%
+  Avg Loss: -6.29%
+  Profit Factor: 0.89
+  Max Drawdown: -19.75%
+  Sharpe Ratio: -1.29
+
+STRATEGY: Strong_Momentum_Breakout
+----------------------------------------------------------------------
+
+In-Sample:
+  Total Return: +47.00%
+  Total Trades: 206
+  Win Rate: 35.9%
+  Avg Win: +9.14%
+  Avg Loss: -3.94%
+  Profit Factor: 1.28
+  Max Drawdown: -26.62%
+  Sharpe Ratio: 2.64
+
+Validation:
+  Total Return: +48.69%
+  Total Trades: 115
+  Win Rate: 37.4%
+  Avg Win: +11.29%
+  Avg Loss: -4.66%
+  Profit Factor: 1.44
+  Max Drawdown: -26.80%
+  Sharpe Ratio: 0.58
+
+Out-of-Sample:
+  Total Return: +44.93%
+  Total Trades: 231
+  Win Rate: 37.7%
+  Avg Win: +10.87%
+  Avg Loss: -5.48%
+  Profit Factor: 1.16
+  Max Drawdown: -35.89%
+  Sharpe Ratio: -0.98
+
+STRATEGY: Gap_And_Go
+----------------------------------------------------------------------
+
+In-Sample:
+  Total Return: -9.22%
+  Total Trades: 116
+  Win Rate: 31.9%
+  Avg Win: +9.62%
+  Avg Loss: -4.93%
+  Profit Factor: 0.92
+  Max Drawdown: -33.98%
+  Sharpe Ratio: 1.45
+
+Validation:
+  Total Return: +8.95%
+  Total Trades: 53
+  Win Rate: 24.5%
+  Avg Win: +18.22%
+  Avg Loss: -4.94%
+  Profit Factor: 1.14
+  Max Drawdown: -29.25%
+  Sharpe Ratio: -4.71
+
+Out-of-Sample:
+  Total Return: -12.05%
+  Total Trades: 111
+  Win Rate: 32.4%
+  Avg Win: +8.32%
+  Avg Loss: -4.45%
+  Profit Factor: 0.89
+  Max Drawdown: -38.88%
+  Sharpe Ratio: 2.54

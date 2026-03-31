@@ -1,0 +1,34 @@
+2025-11-18 16:37:24,836 - INFO - Alpaca available: True, yFinance available: False
+===========================================================================
+COMPREHENSIVE BACKTEST ANALYSIS
+===========================================================================
+Stocks: JBLU, AAL, PLUG, FCEL, GEVO, F, CCL, RCL, SBUX, SIRI, CAKE, VCYT, U
+Configurations: 6
+
+
+===========================================================================
+PHASE 1: HISTORICAL DATA (2020, 2021, 2022)
+===========================================================================
+
+===========================================================================
+Testing: Current (5.0%, 0.7x, 1%/-1%) - Historical
+===========================================================================
+Entry: 5.00% momentum, 0.70x volume
+Exit: 1.00% profit target, -1.00% stop loss
+Years: 2020, 2021, 2022
+
+Traceback (most recent call last):
+  File "/home/wes/Desktop/litebotx-usb-deployment/run_comprehensive_backtest.py", line 329, in <module>
+    main()
+  File "/home/wes/Desktop/litebotx-usb-deployment/run_comprehensive_backtest.py", line 127, in main
+    result = run_backtest_config(name, momentum, volume, profit, stop, historical_years, "Historical")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wes/Desktop/litebotx-usb-deployment/run_comprehensive_backtest.py", line 74, in run_backtest_config
+    backtester = StrategyBacktester(config)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wes/Desktop/litebotx-usb-deployment/backtest/strategy_backtest.py", line 288, in __init__
+    self.data_fetcher = DataFetcher(config)
+                        ^^^^^^^^^^^^^^^^^^^
+  File "/home/wes/Desktop/litebotx-usb-deployment/backtest/strategy_backtest.py", line 173, in __init__
+    raise ImportError("No data source available. Install alpaca-trade-api or yfinance")
+ImportError: No data source available. Install alpaca-trade-api or yfinance

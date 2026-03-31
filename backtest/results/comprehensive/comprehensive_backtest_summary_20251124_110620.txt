@@ -1,0 +1,193 @@
+================================================================================
+COMPREHENSIVE 3-PHASE BACKTEST RESULTS
+================================================================================
+
+Generated: 2025-11-24 11:06:20
+Symbols: JBLU, AAL, CCL, RCL, F, GEVO, PLUG, FCEL, SBUX, SIRI, CAKE
+
+Test Phases:
+  In-Sample (2011-2016): Training period for parameter validation
+  Validation (2017-2019): Overfitting check
+  Out-of-Sample (2020-2024): Real-world performance test
+
+================================================================================
+
+
+STRATEGY: Mean Reversion RSI #2852
+--------------------------------------------------------------------------------
+
+In-Sample:
+  Total Return: -10.13%
+  Total Trades: 225
+  Winning Trades: 126
+  Losing Trades: 99
+  Win Rate: 56.0%
+  Average Win: +4.33%
+  Average Loss: -5.67%
+  Win/Loss Ratio: 0.76:1
+  Profit Factor: 0.94
+  Max Drawdown: 40.04%
+  Sharpe Ratio: -0.14
+
+Validation:
+  Total Return: -43.81%
+  Total Trades: 133
+  Winning Trades: 53
+  Losing Trades: 80
+  Win Rate: 39.8%
+  Average Win: +4.69%
+  Average Loss: -5.15%
+  Win/Loss Ratio: 0.91:1
+  Profit Factor: 0.59
+  Max Drawdown: 45.51%
+  Sharpe Ratio: -2.91
+
+Out-of-Sample:
+  Total Return: -12.15%
+  Total Trades: 248
+  Winning Trades: 123
+  Losing Trades: 125
+  Win Rate: 49.6%
+  Average Win: +5.97%
+  Average Loss: -5.98%
+  Win/Loss Ratio: 1.00:1
+  Profit Factor: 0.93
+  Max Drawdown: 51.98%
+  Sharpe Ratio: -0.10
+
+
+STRATEGY: Mean Reversion RSI #3831
+--------------------------------------------------------------------------------
+
+In-Sample:
+  Total Return: -3.55%
+  Total Trades: 74
+  Winning Trades: 39
+  Losing Trades: 35
+  Win Rate: 52.7%
+  Average Win: +6.38%
+  Average Loss: -6.95%
+  Win/Loss Ratio: 0.92:1
+  Profit Factor: 0.95
+  Max Drawdown: 27.05%
+  Sharpe Ratio: 0.12
+
+Validation:
+  Total Return: +23.97%
+  Total Trades: 56
+  Winning Trades: 25
+  Losing Trades: 31
+  Win Rate: 44.6%
+  Average Win: +11.51%
+  Average Loss: -6.28%
+  Win/Loss Ratio: 1.83:1
+  Profit Factor: 1.38
+  Max Drawdown: 22.03%
+  Sharpe Ratio: 1.38
+
+Out-of-Sample:
+  Total Return: -3.20%
+  Total Trades: 97
+  Winning Trades: 46
+  Losing Trades: 51
+  Win Rate: 47.4%
+  Average Win: +9.33%
+  Average Loss: -8.25%
+  Win/Loss Ratio: 1.13:1
+  Profit Factor: 0.97
+  Max Drawdown: 31.17%
+  Sharpe Ratio: 0.13
+
+
+STRATEGY: Hybrid #4872
+--------------------------------------------------------------------------------
+
+In-Sample:
+  Total Return: +47.97%
+  Total Trades: 895
+  Winning Trades: 435
+  Losing Trades: 460
+  Win Rate: 48.6%
+  Average Win: +4.87%
+  Average Loss: -4.20%
+  Win/Loss Ratio: 1.16:1
+  Profit Factor: 1.07
+  Max Drawdown: 59.53%
+  Sharpe Ratio: 0.45
+
+Validation:
+  Total Return: -16.07%
+  Total Trades: 493
+  Winning Trades: 210
+  Losing Trades: 283
+  Win Rate: 42.6%
+  Average Win: +6.33%
+  Average Loss: -4.61%
+  Win/Loss Ratio: 1.37:1
+  Profit Factor: 0.94
+  Max Drawdown: 70.45%
+  Sharpe Ratio: 0.07
+
+Out-of-Sample:
+  Total Return: -8.22%
+  Total Trades: 1148
+  Winning Trades: 507
+  Losing Trades: 641
+  Win Rate: 44.2%
+  Average Win: +6.49%
+  Average Loss: -4.98%
+  Win/Loss Ratio: 1.30:1
+  Profit Factor: 0.99
+  Max Drawdown: 62.10%
+  Sharpe Ratio: 0.17
+
+
+================================================================================
+CROSS-STRATEGY COMPARISON
+================================================================================
+
+
+In-Sample (2011-2016):
+Strategy                                     Return   Trades   Win Rate   Sharpe
+--------------------------------------------------------------------------------
+Mean Reversion RSI #2852                    -10.13%      225      56.0%    -0.14
+Mean Reversion RSI #3831                     -3.55%       74      52.7%     0.12
+Hybrid #4872                                 47.97%      895      48.6%     0.45
+
+
+Validation (2017-2019):
+Strategy                                     Return   Trades   Win Rate   Sharpe
+--------------------------------------------------------------------------------
+Mean Reversion RSI #2852                    -43.81%      133      39.8%    -2.91
+Mean Reversion RSI #3831                     23.97%       56      44.6%     1.38
+Hybrid #4872                                -16.07%      493      42.6%     0.07
+
+
+Out-of-Sample (2020-2024):
+Strategy                                     Return   Trades   Win Rate   Sharpe
+--------------------------------------------------------------------------------
+Mean Reversion RSI #2852                    -12.15%      248      49.6%    -0.10
+Mean Reversion RSI #3831                     -3.20%       97      47.4%     0.13
+Hybrid #4872                                 -8.22%     1148      44.2%     0.17
+
+
+================================================================================
+KEY INSIGHTS
+================================================================================
+
+1. CONSISTENCY CHECK:
+   - Compare In-Sample vs Out-of-Sample returns
+   - If Out-of-Sample < 50% of In-Sample, strategy may be overfit
+
+2. VALIDATION PHASE:
+   - Should show similar performance to In-Sample
+   - Large degradation indicates overfitting
+
+3. WIN RATE STABILITY:
+   - Win rate should remain 45%+ across all phases
+   - Sharp drops indicate regime changes or overfitting
+
+4. SHARPE RATIO:
+   - Target: 1.5+ for all phases
+   - Below 1.0 = poor risk-adjusted returns
+

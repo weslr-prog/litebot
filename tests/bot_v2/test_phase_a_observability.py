@@ -4,7 +4,9 @@ These tests verify rejection telemetry and daily stats hygiene.
 """
 
 import json
+import datetime as dt
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 
@@ -142,3 +144,14 @@ def test_launcher_rejection_and_exit_reason_helpers():
     assert launcher.session_data["rejections"]["liquidity_low"] == 2
     assert tag == "TRAILING_STOP"
     assert launcher.session_data["exit_reasons"]["TRAILING_STOP"] == 1
+
+    launcher._entry_guard_date = dt.date.today()
+    launcher._entered_symbols_today = set()
+    launcher.position_tracker = SimpleNamespace(
+        get_active_positions=lambda: [SimpleNamespace(symbol="ABC")]
+    )
+
+    assert launcher._should_block_entry_symbol("ABC") is True
+    assert launcher._should_block_entry_symbol("XYZ") is False
+    launcher._record_entered_symbol("XYZ")
+    assert launcher._should_block_entry_symbol("XYZ") is True

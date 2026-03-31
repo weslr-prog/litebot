@@ -1,0 +1,1744 @@
+[
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 239.704,
+    "position_size_shares": 5,
+    "position_size_dollars": 1279.05,
+    "stop_price": null,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": null,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5,
+      "time_horizon_days": 1.0,
+      "entry_price": 239.704,
+      "target_price": null,
+      "features_used": {},
+      "timestamp": "2025-09-23T10:09:44.717221"
+    },
+    "exit_price": 252.30999755859375,
+    "exit_reason": "SMART_PROFIT_TAKE",
+    "realized_pnl": 63.02998779296871
+  },
+  {
+    "symbol": "IBM",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.285385,
+    "position_size_shares": 117,
+    "position_size_dollars": 31722.21,
+    "stop_price": null,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": null,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5,
+      "time_horizon_days": 1.0,
+      "entry_price": 256.285385,
+      "target_price": null,
+      "features_used": {},
+      "timestamp": "2025-09-23T10:09:44.717237"
+    },
+    "exit_price": 267.5299987792969,
+    "exit_reason": "SMART_PROFIT_TAKE",
+    "realized_pnl": 1315.619812177732
+  },
+  {
+    "symbol": "MDT",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 94.94,
+    "position_size_shares": 8,
+    "position_size_dollars": 760.48,
+    "stop_price": null,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": null,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5,
+      "time_horizon_days": 1.0,
+      "entry_price": 94.94,
+      "target_price": null,
+      "features_used": {},
+      "timestamp": "2025-09-23T10:09:44.717244"
+    },
+    "exit_price": 95.73999786376953,
+    "exit_reason": "SMART_FINAL_HOUR",
+    "realized_pnl": 6.399982910156268
+  },
+  {
+    "symbol": "MSFT",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 510.145,
+    "position_size_shares": 2,
+    "position_size_dollars": 1025.43,
+    "stop_price": null,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": null,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5,
+      "time_horizon_days": 1.0,
+      "entry_price": 510.145,
+      "target_price": null,
+      "features_used": {},
+      "timestamp": "2025-09-23T10:09:44.717249"
+    },
+    "exit_price": 510.1499938964844,
+    "exit_reason": "SMART_FINAL_HOUR",
+    "realized_pnl": 0.00998779296878638
+  },
+  {
+    "symbol": "TSLA",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 419.695,
+    "position_size_shares": 2,
+    "position_size_dollars": 873.1198,
+    "stop_price": null,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": null,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5,
+      "time_horizon_days": 1.0,
+      "entry_price": 419.695,
+      "target_price": null,
+      "features_used": {},
+      "timestamp": "2025-09-23T10:09:44.717254"
+    },
+    "exit_price": 442.7900085449219,
+    "exit_reason": "SMART_PROFIT_TAKE",
+    "realized_pnl": 46.190017089843764
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.0799865722656,
+    "position_size_shares": 5,
+    "position_size_dollars": 1280.3999328613281,
+    "stop_price": 249.67798690795897,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19121972667512738,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.0799865722656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01602743583270092,
+        "volume_surge": 1.7896162118925478,
+        "confidence_components": [
+          0.01602743583270092,
+          1.1930774745950319
+        ]
+      },
+      "timestamp": "2025-09-23T15:06:22.089482"
+    },
+    "exit_price": 253.81260681152344,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -11.336898803710938
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.0799865722656,
+    "position_size_shares": 5,
+    "position_size_dollars": 1280.3999328613281,
+    "stop_price": 249.67798690795897,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19121972667512738,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.0799865722656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01602743583270092,
+        "volume_surge": 1.7896162118925478,
+        "confidence_components": [
+          0.01602743583270092,
+          1.1930774745950319
+        ]
+      },
+      "timestamp": "2025-09-23T15:06:57.864681"
+    },
+    "exit_price": 253.8800048828125,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -10.999908447265625
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.0799865722656,
+    "position_size_shares": 5,
+    "position_size_dollars": 1280.3999328613281,
+    "stop_price": 249.67798690795897,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19121972667512738,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.0799865722656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01602743583270092,
+        "volume_surge": 1.7896162118925478,
+        "confidence_components": [
+          0.01602743583270092,
+          1.1930774745950319
+        ]
+      },
+      "timestamp": "2025-09-23T15:16:15.802223"
+    },
+    "exit_price": 254.02000427246094,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -10.299911499023438
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.0799865722656,
+    "position_size_shares": 5,
+    "position_size_dollars": 1280.3999328613281,
+    "stop_price": 249.67798690795897,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19121972667512738,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.0799865722656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01602743583270092,
+        "volume_surge": 1.7896162118925478,
+        "confidence_components": [
+          0.01602743583270092,
+          1.1930774745950319
+        ]
+      },
+      "timestamp": "2025-09-23T15:17:21.188885"
+    },
+    "exit_price": 254.02000427246094,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -10.299911499023438
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.0799865722656,
+    "position_size_shares": 5,
+    "position_size_dollars": 1280.3999328613281,
+    "stop_price": 249.67798690795897,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19121972667512738,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.0799865722656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01602743583270092,
+        "volume_surge": 1.7896162118925478,
+        "confidence_components": [
+          0.01602743583270092,
+          1.1930774745950319
+        ]
+      },
+      "timestamp": "2025-09-23T15:18:27.392667"
+    },
+    "exit_price": 254.02000427246094,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -10.299911499023438
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.0799865722656,
+    "position_size_shares": 5,
+    "position_size_dollars": 1280.3999328613281,
+    "stop_price": 249.67798690795897,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19121972667512738,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.0799865722656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01602743583270092,
+        "volume_surge": 1.7896162118925478,
+        "confidence_components": [
+          0.01602743583270092,
+          1.1930774745950319
+        ]
+      },
+      "timestamp": "2025-09-23T15:19:33.333197"
+    },
+    "exit_price": 254.02000427246094,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -10.299911499023438
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.0799865722656,
+    "position_size_shares": 5,
+    "position_size_dollars": 1280.3999328613281,
+    "stop_price": 249.67798690795897,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19121972667512738,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.0799865722656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01602743583270092,
+        "volume_surge": 1.7896162118925478,
+        "confidence_components": [
+          0.01602743583270092,
+          1.1930774745950319
+        ]
+      },
+      "timestamp": "2025-09-23T15:20:39.515382"
+    },
+    "exit_price": 254.02000427246094,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -10.299911499023438
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.0799865722656,
+    "position_size_shares": 5,
+    "position_size_dollars": 1280.3999328613281,
+    "stop_price": 249.67798690795897,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19121972667512738,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.0799865722656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01602743583270092,
+        "volume_surge": 1.7896162118925478,
+        "confidence_components": [
+          0.01602743583270092,
+          1.1930774745950319
+        ]
+      },
+      "timestamp": "2025-09-23T15:21:46.544035"
+    },
+    "exit_price": 254.0,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -10.399932861328125
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.0799865722656,
+    "position_size_shares": 5,
+    "position_size_dollars": 1280.3999328613281,
+    "stop_price": 249.67798690795897,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19121972667512738,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.0799865722656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01602743583270092,
+        "volume_surge": 1.7896162118925478,
+        "confidence_components": [
+          0.01602743583270092,
+          1.1930774745950319
+        ]
+      },
+      "timestamp": "2025-09-23T15:28:26.287009"
+    },
+    "exit_price": 253.91000366210938,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -10.84991455078125
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-23",
+    "exit_date": "2025-09-24",
+    "entry_price": 256.0799865722656,
+    "position_size_shares": 5,
+    "position_size_dollars": 1280.3999328613281,
+    "stop_price": 249.67798690795897,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19121972667512738,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.0799865722656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01602743583270092,
+        "volume_surge": 1.7896162118925478,
+        "confidence_components": [
+          0.01602743583270092,
+          1.1930774745950319
+        ]
+      },
+      "timestamp": "2025-09-23T15:29:31.934555"
+    },
+    "exit_price": 253.91000366210938,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -10.84991455078125
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 252.669561,
+    "position_size_shares": 48,
+    "position_size_dollars": 12128.138928,
+    "stop_price": 246.0022476196289,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 31.25,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 252.669561,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.015088249415689314,
+        "volume_surge": 0.7072844430539984,
+        "volume_ratio": 0.7072844430539984,
+        "confidence_components": [
+          0.015088249415689314,
+          0.7072844430539984
+        ]
+      },
+      "timestamp": "2025-09-25T10:58:51.466342"
+    },
+    "exit_price": 256.23,
+    "exit_reason": "SMART_MORNING_PROFIT",
+    "realized_pnl": 170.90107200000148
+  },
+  {
+    "symbol": "ORCL",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 308.4599914550781,
+    "position_size_shares": 6,
+    "position_size_dollars": 1850.7599487304688,
+    "stop_price": 300.74849166870115,
+    "target_price": null,
+    "status": "stopped_out",
+    "max_risk_dollars": 31.25,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 308.4599914550781,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.010746200282693158,
+        "volume_surge": 0.9800471624945793,
+        "volume_ratio": 0.9800471624945793,
+        "confidence_components": [
+          0.010746200282693158,
+          0.9800471624945793
+        ]
+      },
+      "timestamp": "2025-09-25T10:58:51.467578"
+    },
+    "exit_price": 296.00189208984375,
+    "exit_reason": "STOP_LOSS",
+    "realized_pnl": -74.74859619140625
+  },
+  {
+    "symbol": "TSLA",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 442.7900085449219,
+    "position_size_shares": 4,
+    "position_size_dollars": 1771.1600341796875,
+    "stop_price": 431.7202583312988,
+    "target_price": null,
+    "status": "stopped_out",
+    "max_risk_dollars": 31.25,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 442.7900085449219,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.015437255442182107,
+        "volume_surge": 1.009549749278356,
+        "volume_ratio": 1.009549749278356,
+        "confidence_components": [
+          0.015437255442182107,
+          1.009549749278356
+        ]
+      },
+      "timestamp": "2025-09-25T10:58:51.471822"
+    },
+    "exit_price": 428.8349914550781,
+    "exit_reason": "STOP_LOSS",
+    "realized_pnl": -55.820068359375
+  },
+  {
+    "symbol": "AMD",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 160.8800048828125,
+    "position_size_shares": 7,
+    "position_size_dollars": 1126.1600341796875,
+    "stop_price": 156.85800476074218,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 31.25,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.4847844052147497,
+      "time_horizon_days": 1.5,
+      "entry_price": 160.8800048828125,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.004678743363685844,
+        "volume_surge": 0.863451941991898,
+        "volume_ratio": 0.863451941991898,
+        "confidence_components": [
+          0.004678743363685844,
+          0.863451941991898
+        ]
+      },
+      "timestamp": "2025-09-25T10:58:51.473904"
+    },
+    "exit_price": 158.25999450683594,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -18.340072631835938
+  },
+  {
+    "symbol": "IBM",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 281.026667,
+    "position_size_shares": 15,
+    "position_size_dollars": 4215.4000049999995,
+    "stop_price": 261.08257533482146,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 31.25,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.21380445480558688,
+      "time_horizon_days": 1.5,
+      "entry_price": 281.026667,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.002461053460314333,
+        "volume_surge": 0.7239598077723158,
+        "volume_ratio": 0.7239598077723158,
+        "confidence_components": [
+          0.002461053460314333,
+          0.7239598077723158
+        ]
+      },
+      "timestamp": "2025-09-25T10:58:51.468976"
+    },
+    "exit_price": 285.84000000000003,
+    "exit_reason": "SMART_MORNING_PROFIT",
+    "realized_pnl": 72.19999500000085
+  },
+  {
+    "symbol": "NVDA",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 178.144545,
+    "position_size_shares": 11,
+    "position_size_dollars": 1959.5899949999998,
+    "stop_price": 172.54575119018554,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 31.25,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.11803904716432996,
+      "time_horizon_days": 1.5,
+      "entry_price": 178.144545,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.0013319144778306535,
+        "volume_surge": 0.7385299452345797,
+        "volume_ratio": 0.7385299452345797,
+        "confidence_components": [
+          0.0013319144778306535,
+          0.7385299452345797
+        ]
+      },
+      "timestamp": "2025-09-25T10:58:51.465806"
+    },
+    "exit_price": 176.61,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -16.87999499999978
+  },
+  {
+    "symbol": "ORCL",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 308.4599914550781,
+    "position_size_shares": 38,
+    "position_size_dollars": 11721.479675292969,
+    "stop_price": 300.74849166870115,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 308.4599914550781,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.010746200282693158,
+        "volume_surge": 0.9816424463481133,
+        "volume_ratio": 0.9816424463481133,
+        "confidence_components": [
+          0.010746200282693158,
+          0.9816424463481133
+        ]
+      },
+      "timestamp": "2025-09-25T16:00:43.810320"
+    },
+    "exit_price": 292.425,
+    "exit_reason": "SMART_STOP_LOSS",
+    "realized_pnl": -609.3296752929683
+  },
+  {
+    "symbol": "TSLA",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 442.7900085449219,
+    "position_size_shares": 27,
+    "position_size_dollars": 11955.33023071289,
+    "stop_price": 431.7202583312988,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 442.7900085449219,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.015437255442182107,
+        "volume_surge": 1.0145571282901091,
+        "volume_ratio": 1.0145571282901091,
+        "confidence_components": [
+          0.015437255442182107,
+          1.0145571282901091
+        ]
+      },
+      "timestamp": "2025-09-25T16:00:43.814170"
+    },
+    "exit_price": 426.835,
+    "exit_reason": "SMART_STOP_LOSS",
+    "realized_pnl": -430.7852307128912
+  },
+  {
+    "symbol": "AMD",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 160.8800048828125,
+    "position_size_shares": 48,
+    "position_size_dollars": 7722.240234375,
+    "stop_price": 156.85800476074218,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.4854243986224165,
+      "time_horizon_days": 1.5,
+      "entry_price": 160.8800048828125,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.004678743363685844,
+        "volume_surge": 0.8645918374686659,
+        "volume_ratio": 0.8645918374686659,
+        "confidence_components": [
+          0.004678743363685844,
+          0.8645918374686659
+        ]
+      },
+      "timestamp": "2025-09-25T16:00:43.815795"
+    },
+    "exit_price": 159.44,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -69.12023437500011
+  },
+  {
+    "symbol": "IBM",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 281.026667,
+    "position_size_shares": 15,
+    "position_size_dollars": 4215.4000049999995,
+    "stop_price": 261.08257533482146,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.21390884584352993,
+      "time_horizon_days": 1.5,
+      "entry_price": 281.026667,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.002461053460314333,
+        "volume_surge": 0.7243132845781716,
+        "volume_ratio": 0.7243132845781716,
+        "confidence_components": [
+          0.002461053460314333,
+          0.7243132845781716
+        ]
+      },
+      "timestamp": "2025-09-25T16:00:43.811780"
+    },
+    "exit_price": null,
+    "exit_reason": "PORTFOLIO_MISMATCH",
+    "realized_pnl": null
+  },
+  {
+    "symbol": "NVDA",
+    "entry_date": "2025-09-25",
+    "exit_date": "2025-09-26",
+    "entry_price": 178.144545,
+    "position_size_shares": 11,
+    "position_size_dollars": 1959.5899949999998,
+    "stop_price": 172.54575119018554,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.1182513255167087,
+      "time_horizon_days": 1.5,
+      "entry_price": 178.144545,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.0013319144778306535,
+        "volume_surge": 0.7398580982798894,
+        "volume_ratio": 0.7398580982798894,
+        "confidence_components": [
+          0.0013319144778306535,
+          0.7398580982798894
+        ]
+      },
+      "timestamp": "2025-09-25T16:00:43.808682"
+    },
+    "exit_price": null,
+    "exit_reason": "PORTFOLIO_MISMATCH",
+    "realized_pnl": null
+  },
+  {
+    "symbol": "INTC",
+    "entry_date": "2025-09-26",
+    "exit_date": "2025-09-29",
+    "entry_price": 33.9900016784668,
+    "position_size_shares": 353,
+    "position_size_dollars": 11998.47059249878,
+    "stop_price": 33.14025163650513,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 33.9900016784668,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.03631176093153768,
+        "volume_surge": 2.5926247887202187,
+        "volume_ratio": 2.5926247887202187,
+        "confidence_components": [
+          0.03631176093153768,
+          2.5
+        ]
+      },
+      "timestamp": "2025-09-26T16:01:09.232726"
+    },
+    "exit_price": null,
+    "exit_reason": "PORTFOLIO_MISMATCH",
+    "realized_pnl": null
+  },
+  {
+    "symbol": "IBM",
+    "entry_date": "2025-09-26",
+    "exit_date": "2025-09-29",
+    "entry_price": 281.44000244140625,
+    "position_size_shares": 42,
+    "position_size_dollars": 11820.480102539062,
+    "stop_price": 274.4040023803711,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 281.44000244140625,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.014138850202389919,
+        "volume_surge": 2.420826403506834,
+        "volume_ratio": 2.420826403506834,
+        "confidence_components": [
+          0.014138850202389919,
+          2.420826403506834
+        ]
+      },
+      "timestamp": "2025-09-26T16:01:09.235676"
+    },
+    "exit_price": null,
+    "exit_reason": "PORTFOLIO_MISMATCH",
+    "realized_pnl": null
+  },
+  {
+    "symbol": "AAPL",
+    "entry_date": "2025-09-26",
+    "exit_date": "2025-09-29",
+    "entry_price": 256.8699951171875,
+    "position_size_shares": 46,
+    "position_size_dollars": 11816.019775390625,
+    "stop_price": 250.4482452392578,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 256.8699951171875,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.011598264245322398,
+        "volume_surge": 0.905604791385795,
+        "volume_ratio": 0.905604791385795,
+        "confidence_components": [
+          0.011598264245322398,
+          0.905604791385795
+        ]
+      },
+      "timestamp": "2025-09-26T16:01:09.236462"
+    },
+    "exit_price": null,
+    "exit_reason": "PORTFOLIO_MISMATCH",
+    "realized_pnl": null
+  },
+  {
+    "symbol": "AMD",
+    "entry_date": "2025-09-26",
+    "exit_date": "2025-09-29",
+    "entry_price": 161.27000427246094,
+    "position_size_shares": 60,
+    "position_size_dollars": 9676.200256347656,
+    "stop_price": 157.2382541656494,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.6081789868326476,
+      "time_horizon_days": 1.5,
+      "entry_price": 161.27000427246094,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.006123814665834754,
+        "volume_surge": 0.8276145670901917,
+        "volume_ratio": 0.8276145670901917,
+        "confidence_components": [
+          0.006123814665834754,
+          0.8276145670901917
+        ]
+      },
+      "timestamp": "2025-09-26T16:01:09.242277"
+    },
+    "exit_price": null,
+    "exit_reason": "PORTFOLIO_MISMATCH",
+    "realized_pnl": null
+  },
+  {
+    "symbol": "NVDA",
+    "entry_date": "2025-09-26",
+    "exit_date": "2025-09-29",
+    "entry_price": 177.69000244140625,
+    "position_size_shares": 18,
+    "position_size_dollars": 3198.4200439453125,
+    "stop_price": 173.24775238037108,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.20840791697337757,
+      "time_horizon_days": 1.5,
+      "entry_price": 177.69000244140625,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.0017390844639695313,
+        "volume_surge": 0.9986476663017562,
+        "volume_ratio": 0.9986476663017562,
+        "confidence_components": [
+          0.0017390844639695313,
+          0.9986476663017562
+        ]
+      },
+      "timestamp": "2025-09-26T16:01:09.234929"
+    },
+    "exit_price": null,
+    "exit_reason": "PORTFOLIO_MISMATCH",
+    "realized_pnl": null
+  },
+  {
+    "symbol": "INTC",
+    "entry_date": "2025-09-29",
+    "exit_date": "2025-09-30",
+    "entry_price": 34.140217,
+    "position_size_shares": 691,
+    "position_size_dollars": 23590.889947,
+    "stop_price": 34.6125,
+    "target_price": null,
+    "status": "stopped_out",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 34.140217,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.054348311534822225,
+        "volume_surge": 2.1533082794396607,
+        "volume_ratio": 2.1533082794396607,
+        "confidence_components": [
+          0.054348311534822225,
+          2.1533082794396607
+        ]
+      },
+      "timestamp": "2025-09-29T09:30:05.832305"
+    },
+    "exit_price": 34.420100000000005,
+    "exit_reason": "STOP_LOSS",
+    "realized_pnl": 193.3991530000036
+  },
+  {
+    "symbol": "IBM",
+    "entry_date": "2025-09-29",
+    "exit_date": "2025-09-30",
+    "entry_price": 285.129286,
+    "position_size_shares": 84,
+    "position_size_dollars": 23950.860023999998,
+    "stop_price": 277.2022476196289,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 285.129286,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.012024194408780331,
+        "volume_surge": 1.7888305690934918,
+        "volume_ratio": 1.7888305690934918,
+        "confidence_components": [
+          0.012024194408780331,
+          1.7888305690934918
+        ]
+      },
+      "timestamp": "2025-09-29T09:30:05.834641"
+    },
+    "exit_price": 282.04,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -259.50002399999653
+  },
+  {
+    "symbol": "TSLA",
+    "entry_date": "2025-09-29",
+    "exit_date": "2025-09-30",
+    "entry_price": 443.273261,
+    "position_size_shares": 46,
+    "position_size_dollars": 20390.570005999998,
+    "stop_price": 429.38999404907224,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5402590457820876,
+      "time_horizon_days": 1.5,
+      "entry_price": 443.273261,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.004222135335106486,
+        "volume_surge": 1.0663226916048587,
+        "volume_ratio": 1.0663226916048587,
+        "confidence_components": [
+          0.004222135335106486,
+          1.0663226916048587
+        ]
+      },
+      "timestamp": "2025-09-29T09:30:05.839232"
+    },
+    "exit_price": 438.69000000000005,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -210.83000599999707
+  },
+  {
+    "symbol": "INTC",
+    "entry_date": "2025-09-29",
+    "exit_date": "2025-09-30",
+    "entry_price": 35.5,
+    "position_size_shares": 338,
+    "position_size_dollars": 11999.0,
+    "stop_price": 34.6125,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 35.5,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.054348311534822225,
+        "volume_surge": 2.1533082794396607,
+        "volume_ratio": 2.1533082794396607,
+        "confidence_components": [
+          0.054348311534822225,
+          2.1533082794396607
+        ]
+      },
+      "timestamp": "2025-09-29T16:01:06.473206"
+    },
+    "exit_price": 33.311,
+    "exit_reason": "SMART_STOP_LOSS",
+    "realized_pnl": -739.8820000000001
+  },
+  {
+    "symbol": "TSLA",
+    "entry_date": "2025-09-30",
+    "exit_date": "2025-10-01",
+    "entry_price": 443.273261,
+    "position_size_shares": 46,
+    "position_size_dollars": 20390.570005999998,
+    "stop_price": 432.1297416687012,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 443.273261,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.010630605580866342,
+        "volume_surge": 0.8348757475612092,
+        "volume_ratio": 0.8348757475612092,
+        "confidence_components": [
+          0.010630605580866342,
+          0.8348757475612092
+        ]
+      },
+      "timestamp": "2025-09-30T09:45:11.811895"
+    },
+    "exit_price": null,
+    "exit_reason": "PORTFOLIO_MISMATCH",
+    "realized_pnl": null
+  },
+  {
+    "symbol": "NVDA",
+    "entry_date": "2025-09-30",
+    "exit_date": "2025-10-01",
+    "entry_price": 182.812535,
+    "position_size_shares": 71,
+    "position_size_dollars": 12979.689984999999,
+    "stop_price": 177.30375595092772,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.6088179672369656,
+      "time_horizon_days": 1.5,
+      "entry_price": 182.812535,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.004809960710365713,
+        "volume_surge": 1.0547867988556392,
+        "volume_ratio": 1.0547867988556392,
+        "confidence_components": [
+          0.004809960710365713,
+          1.0547867988556392
+        ]
+      },
+      "timestamp": "2025-09-30T09:45:11.806719"
+    },
+    "exit_price": 185.09,
+    "exit_reason": "SMART_MORNING_PROFIT",
+    "realized_pnl": 161.70001500000046
+  },
+  {
+    "symbol": "MSFT",
+    "entry_date": "2025-09-30",
+    "exit_date": "2025-10-01",
+    "entry_price": 513.00625,
+    "position_size_shares": 32,
+    "position_size_dollars": 16416.2,
+    "stop_price": 505.9694117954799,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.27613433767855994,
+      "time_horizon_days": 1.5,
+      "entry_price": 513.00625,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.0026417936617920135,
+        "volume_surge": 0.8710443642648998,
+        "volume_ratio": 0.8710443642648998,
+        "confidence_components": [
+          0.0026417936617920135,
+          0.8710443642648998
+        ]
+      },
+      "timestamp": "2025-09-30T09:45:11.811377"
+    },
+    "exit_price": 514.33,
+    "exit_reason": "SMART_MIDDAY_BREAKEVEN",
+    "realized_pnl": 42.36000000000058
+  },
+  {
+    "symbol": "AMZN",
+    "entry_date": "2025-09-30",
+    "exit_date": "2025-10-01",
+    "entry_price": 222.1699981689453,
+    "position_size_shares": 14,
+    "position_size_dollars": 3110.3799743652344,
+    "stop_price": 216.61574821472166,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19459940140272652,
+      "time_horizon_days": 1.5,
+      "entry_price": 222.1699981689453,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.0016815682149109168,
+        "volume_surge": 0.9643746022173498,
+        "volume_ratio": 0.9643746022173498,
+        "confidence_components": [
+          0.0016815682149109168,
+          0.9643746022173498
+        ]
+      },
+      "timestamp": "2025-09-30T09:45:11.808077"
+    },
+    "exit_price": 218.38000000000002,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -53.05997436523404
+  },
+  {
+    "symbol": "INTC",
+    "entry_date": "2025-09-30",
+    "exit_date": "2025-10-01",
+    "entry_price": 34.47999954223633,
+    "position_size_shares": 87,
+    "position_size_dollars": 2999.7599601745605,
+    "stop_price": 33.61799955368042,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 50.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 34.47999954223633,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.042123485805379446,
+        "volume_surge": 1.177911173593525,
+        "volume_ratio": 1.177911173593525,
+        "confidence_components": [
+          0.042123485805379446,
+          1.177911173593525
+        ]
+      },
+      "timestamp": "2025-09-30T16:26:40.523018"
+    },
+    "exit_price": null,
+    "exit_reason": "PORTFOLIO_MISMATCH",
+    "realized_pnl": null
+  },
+  {
+    "symbol": "INTC",
+    "entry_date": "2025-10-01",
+    "exit_date": "2025-10-02",
+    "entry_price": 33.940946,
+    "position_size_shares": 444,
+    "position_size_dollars": 15069.780023999998,
+    "stop_price": 32.71124925613403,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 33.940946,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.01936136472300895,
+        "volume_surge": 0.941023307013273,
+        "volume_ratio": 0.941023307013273,
+        "confidence_components": [
+          0.01936136472300895,
+          0.941023307013273
+        ]
+      },
+      "timestamp": "2025-10-01T09:45:03.742039"
+    },
+    "exit_price": 35.64,
+    "exit_reason": "SMART_PROFIT_TAKE",
+    "realized_pnl": 754.3799760000018
+  },
+  {
+    "symbol": "MSFT",
+    "entry_date": "2025-10-01",
+    "exit_date": "2025-10-02",
+    "entry_price": 513.00625,
+    "position_size_shares": 32,
+    "position_size_dollars": 16416.2,
+    "stop_price": 509.14888044084825,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.44498534506364,
+      "time_horizon_days": 1.5,
+      "entry_price": 513.00625,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.0038176352686954407,
+        "volume_surge": 0.9713372147598672,
+        "volume_ratio": 0.9713372147598672,
+        "confidence_components": [
+          0.0038176352686954407,
+          0.9713372147598672
+        ]
+      },
+      "timestamp": "2025-10-01T09:45:03.748480"
+    },
+    "exit_price": null,
+    "exit_reason": "PORTFOLIO_MISMATCH",
+    "realized_pnl": null
+  },
+  {
+    "symbol": "TSLA",
+    "entry_date": "2025-10-01",
+    "exit_date": "2025-10-02",
+    "entry_price": 444.7200012207031,
+    "position_size_shares": 5,
+    "position_size_dollars": 2223.6000061035156,
+    "stop_price": 433.60200119018555,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.14269115608599484,
+      "time_horizon_days": 1.5,
+      "entry_price": 444.7200012207031,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.001537534274999558,
+        "volume_surge": 0.7733765592858944,
+        "volume_ratio": 0.7733765592858944,
+        "confidence_components": [
+          0.001537534274999558,
+          0.7733765592858944
+        ]
+      },
+      "timestamp": "2025-10-01T09:45:03.749183"
+    },
+    "exit_price": 454.63,
+    "exit_reason": "SMART_PROFIT_TAKE",
+    "realized_pnl": 49.54999389648435
+  },
+  {
+    "symbol": "NVDA",
+    "entry_date": "2025-10-01",
+    "exit_date": "2025-10-02",
+    "entry_price": 186.5800018310547,
+    "position_size_shares": 64,
+    "position_size_dollars": 11941.1201171875,
+    "stop_price": 181.9155017852783,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 200.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 186.5800018310547,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.013358174904141873,
+        "volume_surge": 1.2926528519013678,
+        "volume_ratio": 1.2926528519013678,
+        "confidence_components": [
+          0.013358174904141873,
+          1.2926528519013678
+        ]
+      },
+      "timestamp": "2025-10-01T16:01:03.755226"
+    },
+    "exit_price": 188.72,
+    "exit_reason": "SMART_MORNING_PROFIT",
+    "realized_pnl": 136.95988281249993
+  },
+  {
+    "symbol": "PFE",
+    "entry_date": "2025-10-02",
+    "exit_date": "2025-10-03",
+    "entry_price": 27.209999084472656,
+    "position_size_shares": 220,
+    "position_size_dollars": 5986.199798583984,
+    "stop_price": 26.52974910736084,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 27.209999084472656,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.03670192285672075,
+        "volume_surge": 2.5596762794524057,
+        "volume_ratio": 2.5596762794524057,
+        "confidence_components": [
+          0.03670192285672075,
+          2.5
+        ]
+      },
+      "timestamp": "2025-10-02T09:45:11.850170"
+    },
+    "exit_price": 26.883899999999997,
+    "exit_reason": "FAST_EXIT",
+    "realized_pnl": -71.74179858398503
+  },
+  {
+    "symbol": "AMD",
+    "entry_date": "2025-10-07",
+    "exit_date": "2025-10-08",
+    "entry_price": 178.737416,
+    "position_size_shares": 89,
+    "position_size_dollars": 15907.630024,
+    "stop_price": 198.6172565460205,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 178.737416,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.06396641612910917,
+        "volume_surge": 4.594661652074926,
+        "volume_ratio": 4.594661652074926,
+        "confidence_components": [
+          0.06396641612910917,
+          2.5
+        ]
+      },
+      "timestamp": "2025-10-07T09:45:08.638763"
+    },
+    "exit_price": 216.863,
+    "exit_reason": "D+1_STRATEGIC_1",
+    "realized_pnl": 3393.176976
+  },
+  {
+    "symbol": "PFE",
+    "entry_date": "2025-10-07",
+    "exit_date": "2025-10-08",
+    "entry_price": 27.3700008392334,
+    "position_size_shares": 219,
+    "position_size_dollars": 5994.030183792114,
+    "stop_price": 26.68575081825256,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 27.3700008392334,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.03554289284952608,
+        "volume_surge": 1.1374913013544685,
+        "volume_ratio": 1.1374913013544685,
+        "confidence_components": [
+          0.03554289284952608,
+          1.1374913013544685
+        ]
+      },
+      "timestamp": "2025-10-07T09:45:08.639487"
+    },
+    "exit_price": 26.365000000000002,
+    "exit_reason": "D+1_STRATEGIC_6",
+    "realized_pnl": -220.09518379211383
+  },
+  {
+    "symbol": "INTC",
+    "entry_date": "2025-10-07",
+    "exit_date": "2025-10-08",
+    "entry_price": 36.59000015258789,
+    "position_size_shares": 163,
+    "position_size_dollars": 5964.170024871826,
+    "stop_price": 35.675250148773195,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 36.59000015258789,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.02249021712245622,
+        "volume_surge": 0.7499011706812527,
+        "volume_ratio": 0.7499011706812527,
+        "confidence_components": [
+          0.02249021712245622,
+          0.7499011706812527
+        ]
+      },
+      "timestamp": "2025-10-07T09:45:08.640184"
+    },
+    "exit_price": 36.504999999999995,
+    "exit_reason": "D+1_STRATEGIC_4",
+    "realized_pnl": -13.855024871826913
+  },
+  {
+    "symbol": "SHOP",
+    "entry_date": "2025-10-07",
+    "exit_date": "2025-10-08",
+    "entry_price": 164.5,
+    "position_size_shares": 36,
+    "position_size_dollars": 5922.0,
+    "stop_price": 160.3875,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 1.0,
+      "time_horizon_days": 1.5,
+      "entry_price": 164.5,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.02597853287859475,
+        "volume_surge": 1.4449114573719952,
+        "volume_ratio": 1.4449114573719952,
+        "confidence_components": [
+          0.02597853287859475,
+          1.4449114573719952
+        ]
+      },
+      "timestamp": "2025-10-07T09:45:08.642367"
+    },
+    "exit_price": 165.38,
+    "exit_reason": "D+1_STRATEGIC_7",
+    "realized_pnl": 31.679999999999836
+  },
+  {
+    "symbol": "GOOGL",
+    "entry_date": "2025-10-07",
+    "exit_date": "2025-10-08",
+    "entry_price": 250.42999267578125,
+    "position_size_shares": 23,
+    "position_size_dollars": 5759.889831542969,
+    "stop_price": 244.16924285888672,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.7811245048403493,
+      "time_horizon_days": 1.5,
+      "entry_price": 250.42999267578125,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.007487842119760696,
+        "volume_surge": 0.8693253369340018,
+        "volume_ratio": 0.8693253369340018,
+        "confidence_components": [
+          0.007487842119760696,
+          0.8693253369340018
+        ]
+      },
+      "timestamp": "2025-10-07T09:45:08.647169"
+    },
+    "exit_price": 244.65,
+    "exit_reason": "D+1_STRATEGIC_3",
+    "realized_pnl": -132.93983154296862
+  },
+  {
+    "symbol": "MSFT",
+    "entry_date": "2025-10-07",
+    "exit_date": "2025-10-08",
+    "entry_price": 528.5700073242188,
+    "position_size_shares": 11,
+    "position_size_dollars": 5814.270080566406,
+    "stop_price": 519.3420096261161,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.6500521582053018,
+      "time_horizon_days": 1.5,
+      "entry_price": 528.5700073242188,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.005142075389715145,
+        "volume_surge": 1.0534853940905766,
+        "volume_ratio": 1.0534853940905766,
+        "confidence_components": [
+          0.005142075389715145,
+          1.0534853940905766
+        ]
+      },
+      "timestamp": "2025-10-07T09:45:08.646104"
+    },
+    "exit_price": 526.22,
+    "exit_reason": "D+1_STRATEGIC_5",
+    "realized_pnl": -25.85008056640595
+  },
+  {
+    "symbol": "TSLA",
+    "entry_date": "2025-10-07",
+    "exit_date": "2025-10-08",
+    "entry_price": 453.25,
+    "position_size_shares": 9,
+    "position_size_dollars": 4079.25,
+    "stop_price": 441.91875,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5611738347783044,
+      "time_horizon_days": 1.5,
+      "entry_price": 453.25,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.005604947405644101,
+        "volume_surge": 0.8343429981953838,
+        "volume_ratio": 0.8343429981953838,
+        "confidence_components": [
+          0.005604947405644101,
+          0.8343429981953838
+        ]
+      },
+      "timestamp": "2025-10-07T09:45:08.648989"
+    },
+    "exit_price": 430.2799,
+    "exit_reason": "D+1_STRATEGIC_8",
+    "realized_pnl": -206.73090000000002
+  },
+  {
+    "symbol": "BA",
+    "entry_date": "2025-10-07",
+    "exit_date": "2025-10-08",
+    "entry_price": 219.72999572753906,
+    "position_size_shares": 17,
+    "position_size_dollars": 3735.409927368164,
+    "stop_price": 214.2367458343506,
+    "target_price": null,
+    "status": "exited",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.4847338763994389,
+      "time_horizon_days": 1.5,
+      "entry_price": 219.72999572753906,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.004525997736286591,
+        "volume_surge": 0.89249911408695,
+        "volume_ratio": 0.89249911408695,
+        "confidence_components": [
+          0.004525997736286591,
+          0.89249911408695
+        ]
+      },
+      "timestamp": "2025-10-07T09:45:08.644505"
+    },
+    "exit_price": 222.1,
+    "exit_reason": "D+1_STRATEGIC_2",
+    "realized_pnl": 40.29007263183584
+  },
+  {
+    "symbol": "NFLX",
+    "entry_date": "2025-10-08",
+    "exit_date": "2025-10-09",
+    "entry_price": 1191.06005859375,
+    "position_size_shares": 3,
+    "position_size_dollars": 3573.18017578125,
+    "stop_price": 1161.2835571289063,
+    "target_price": null,
+    "status": "entered",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5252266961822802,
+      "time_horizon_days": 1.5,
+      "entry_price": 1191.06005859375,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.004361400642314522,
+        "volume_surge": 1.0035512657075214,
+        "volume_ratio": 1.0035512657075214,
+        "confidence_components": [
+          0.004361400642314522,
+          1.0035512657075214
+        ]
+      },
+      "timestamp": "2025-10-08T09:51:39.148457"
+    },
+    "exit_price": null,
+    "exit_reason": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "CRM",
+    "entry_date": "2025-10-08",
+    "exit_date": "2025-10-09",
+    "entry_price": 239.74000549316406,
+    "position_size_shares": 16,
+    "position_size_dollars": 3835.840087890625,
+    "stop_price": 233.74650535583496,
+    "target_price": null,
+    "status": "entered",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5085471759108203,
+      "time_horizon_days": 1.5,
+      "entry_price": 239.74000549316406,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.0044262512434321,
+        "volume_surge": 0.9574452283698478,
+        "volume_ratio": 0.9574452283698478,
+        "confidence_components": [
+          0.0044262512434321,
+          0.9574452283698478
+        ]
+      },
+      "timestamp": "2025-10-08T09:51:39.144992"
+    },
+    "exit_price": null,
+    "exit_reason": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "AVGO",
+    "entry_date": "2025-10-08",
+    "exit_date": "2025-10-09",
+    "entry_price": 336.4100036621094,
+    "position_size_shares": 4,
+    "position_size_dollars": 1345.6400146484375,
+    "stop_price": 327.9997535705566,
+    "target_price": null,
+    "status": "entered",
+    "max_risk_dollars": 100.0,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.19548215050607912,
+      "time_horizon_days": 1.5,
+      "entry_price": 336.4100036621094,
+      "target_price": null,
+      "features_used": {
+        "momentum_score": 0.0022900548691084655,
+        "volume_surge": 0.7113444934697922,
+        "volume_ratio": 0.7113444934697922,
+        "confidence_components": [
+          0.0022900548691084655,
+          0.7113444934697922
+        ]
+      },
+      "timestamp": "2025-10-08T09:51:39.142836"
+    },
+    "exit_price": null,
+    "exit_reason": null,
+    "realized_pnl": null
+  }
+]

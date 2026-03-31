@@ -1,0 +1,50 @@
+===========================================================================
+BACKTEST COMPARISON REPORT
+===========================================================================
+
+
+Baseline (3.5% momentum, 1.0x volume)
+---------------------------------------------------------------------------
+Period: 2017-01-03 to 2022-12-22
+Initial Capital: $10,000.00
+Final Capital: $13,460.65
+Total Return: +34.61%
+
+Total Trades: 843
+Winning Trades: 381 (45.2%)
+Losing Trades: 446
+Average Win: $+163.81
+Average Loss: $-132.18
+Win/Loss Ratio: 1.24:1
+
+Max Drawdown: -102.07%
+Sharpe Ratio: 0.30
+
+
+Improved (5.0% momentum, 1.5x volume)
+---------------------------------------------------------------------------
+Period: 2017-01-04 to 2022-12-15
+Initial Capital: $10,000.00
+Final Capital: $9,090.73
+Total Return: -9.09%
+
+Total Trades: 319
+Winning Trades: 142 (44.5%)
+Losing Trades: 169
+Average Win: $+187.10
+Average Loss: $-162.59
+Win/Loss Ratio: 1.15:1
+
+Max Drawdown: -40.05%
+Sharpe Ratio: -0.16
+
+
+===========================================================================
+IMPROVEMENT ANALYSIS
+===========================================================================
+
+Total Return Change: -126.3%
+Trade Count Change: +62.2% (843 → 319)
+Win Rate Change: -0.7% (45.2% → 44.5%)
+Win/Loss Ratio: 1.24:1 → 1.15:1
+Sharpe Ratio: 0.30 → -0.16

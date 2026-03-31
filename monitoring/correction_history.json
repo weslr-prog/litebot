@@ -1,0 +1,56 @@
+[
+  {
+    "timestamp": "2025-10-05T22:10:44.612653",
+    "issue_type": "FILTER_FAILURE",
+    "parameter": "min_rows",
+    "old_value": 120,
+    "new_value": 115,
+    "reason": "Pre-filter returned insufficient candidates - relaxing data requirement",
+    "success": true
+  },
+  {
+    "timestamp": "2025-10-05T22:10:44.613613",
+    "issue_type": "FILTER_FAILURE",
+    "parameter": "min_rows",
+    "old_value": 115,
+    "new_value": 110,
+    "reason": "Pre-filter returned insufficient candidates - relaxing data requirement",
+    "success": true
+  },
+  {
+    "timestamp": "2025-10-06T17:17:52.412956",
+    "issue_type": "FILTER_FAILURE",
+    "parameter": "min_rows",
+    "old_value": 110,
+    "new_value": 105,
+    "reason": "Pre-filter returned insufficient candidates - relaxing data requirement",
+    "success": true
+  },
+  {
+    "timestamp": "2025-10-06T17:17:52.414310",
+    "issue_type": "FILTER_FAILURE",
+    "parameter": "min_rows",
+    "old_value": 105,
+    "new_value": 100,
+    "reason": "Pre-filter returned insufficient candidates - relaxing data requirement",
+    "success": true
+  },
+  {
+    "timestamp": "2025-10-06T17:19:52.870158",
+    "issue_type": "FILTER_FAILURE",
+    "parameter": "min_rows",
+    "old_value": 100,
+    "new_value": 95,
+    "reason": "Pre-filter returned insufficient candidates - relaxing data requirement",
+    "success": true
+  },
+  {
+    "timestamp": "2025-10-06T17:19:52.871331",
+    "issue_type": "FILTER_FAILURE",
+    "parameter": "min_rows",
+    "old_value": 95,
+    "new_value": 90,
+    "reason": "Pre-filter returned insufficient candidates - relaxing data requirement",
+    "success": true
+  }
+]

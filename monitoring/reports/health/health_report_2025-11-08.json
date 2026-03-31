@@ -1,0 +1,71 @@
+{
+  "check_date": "2025-11-08",
+  "check_timestamp": "2025-11-08T16:00:59.716013",
+  "overall_status": "CRITICAL",
+  "metrics": {
+    "date": "2025-11-08",
+    "positions_opened": 2,
+    "positions_closed": 0,
+    "signals_generated": 0,
+    "signals_blocked": 2,
+    "signals_executed": 0,
+    "prefilter_candidates": 0,
+    "prefilter_input_symbols": 0,
+    "errors_count": 0,
+    "warnings_count": 6,
+    "pdt_blocks": 0,
+    "diversification_blocks": 2,
+    "filter_failures": {},
+    "exit_reasons": {},
+    "api_errors": 0,
+    "block_rate": 0.0,
+    "execution_rate": 0.0
+  },
+  "issues_found": 2,
+  "issues": [
+    {
+      "issue_type": "FILTER_FAILURE",
+      "severity": "CRITICAL",
+      "message": "Pre-filter returned only 0 candidates",
+      "metric_value": 0,
+      "expected_value": 10,
+      "recommendations": [
+        "Check data completeness filter (may need to reduce min_rows)",
+        "Review liquidity filter thresholds",
+        "Verify market data is available (free tier limitations)",
+        "Consider relaxing momentum/volatility filters"
+      ],
+      "auto_fixable": true
+    },
+    {
+      "issue_type": "NO_SIGNALS",
+      "severity": "CRITICAL",
+      "message": "No trading signals generated",
+      "metric_value": 0,
+      "expected_value": 10,
+      "recommendations": [
+        "Pre-filter returned 0 candidates",
+        "Check signal generation logic",
+        "Verify strategy is enabled",
+        "Check market hours and trading schedule"
+      ],
+      "auto_fixable": true
+    }
+  ],
+  "system_health_score": 45,
+  "recommendations": [
+    "\ud83d\udd27 AUTO-CORRECTABLE ISSUES DETECTED:",
+    "  \u2022 Pre-filter returned only 0 candidates",
+    "    - Check data completeness filter (may need to reduce min_rows)",
+    "    - Review liquidity filter thresholds",
+    "    - Verify market data is available (free tier limitations)",
+    "    - Consider relaxing momentum/volatility filters",
+    "  \u2022 No trading signals generated",
+    "    - Pre-filter returned 0 candidates",
+    "    - Check signal generation logic",
+    "    - Verify strategy is enabled",
+    "    - Check market hours and trading schedule",
+    "\n\ud83d\udca1 QUICK FIX FOR PRE-FILTER:",
+    "  Run: Edit pre_filter.py, reduce min_rows from 30 to 20"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "activated": "2025-10-24T16:00:59.727461",
+  "reason": "1 critical PDT violations detected",
+  "violations": [
+    {
+      "symbol": "MMM",
+      "violation_date": "2025-10-23",
+      "violation_type": "multiple_entries",
+      "severity": "CRITICAL",
+      "entry_timestamp": null,
+      "exit_timestamp": null,
+      "entry_count": 2,
+      "details": "Multiple entries (2) for MMM on 2025-10-23. Entry times: 2025-10-23T13:45:00.766412+00:00, 2025-10-23T14:30:25.136986+00:00"
+    }
+  ],
+  "auto_recovery": false,
+  "manual_override_required": true
+}

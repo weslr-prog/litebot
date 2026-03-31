@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-10-20_18-00-26",
+  "for_date": "2025-10-21",
+  "go_for_launch": true,
+  "passed_checks": [
+    "Alpaca API Connection",
+    "Timezone Handling",
+    "Position Loading",
+    "Pattern Recognition",
+    "Market Schedule",
+    "Disk Space",
+    "Bot Dry Run",
+    "Previous Session Health",
+    "Log File Size",
+    "Memory Available"
+  ],
+  "warnings": [],
+  "critical_issues": []
+}

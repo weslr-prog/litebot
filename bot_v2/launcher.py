@@ -113,6 +113,9 @@ class BotV2Launcher:
         self.last_morning_brief = None
         self.last_daily_summary = None
         self.last_health_check = None  # Track last connection health check
+        self._entry_guard_date = dt.date.today()
+        self._entered_symbols_today = set()
+        self._rejected_symbols_today = {}
         
         # Session tracking for daily summary
         self.session_data = self._new_session_data()
@@ -163,6 +166,26 @@ class BotV2Launcher:
             reason_key = (reason or "unknown_rejection").strip().lower().replace(" ", "_")
             self.session_data['rejections'][reason_key] = self.session_data['rejections'].get(reason_key, 0) + int(count)
 
+    def _log_signal_rejections(self, phase: str, rejection_stats: Dict[str, Any], sample_limit: int = 5):
+        """Log per-scan signal rejection breakdown to the main launcher log."""
+        counts = (rejection_stats or {}).get('counts', {}) or {}
+        details = (rejection_stats or {}).get('details', []) or []
+        total_rejected = int((rejection_stats or {}).get('total_rejected') or 0)
+
+        if total_rejected <= 0 and not details:
+            return
+
+        if total_rejected > 0:
+            nonzero_counts = {k: int(v) for k, v in counts.items() if int(v) > 0}
+            self.logger.info(f"📉 Signal rejections ({phase}): {total_rejected} total | {nonzero_counts}")
+
+        if details:
+            for detail in details[:sample_limit]:
+                self.logger.info(f"   • {detail}")
+            remaining = len(details) - sample_limit
+            if remaining > 0:
+                self.logger.info(f"   • ... and {remaining} more")
+
     def _classify_exit_reason(self, reason: Optional[str]) -> str:
         """Normalize free-form exit reason text to stable tags for analysis."""
         reason_upper = (reason or "").upper()
@@ -183,6 +206,81 @@ class BotV2Launcher:
         tag = self._classify_exit_reason(reason)
         self.session_data['exit_reasons'][tag] = self.session_data['exit_reasons'].get(tag, 0) + 1
         return tag
+
+    def _reset_daily_entry_guards_if_needed(self):
+        """Reset same-day symbol guard when date changes."""
+        today = dt.date.today()
+        if getattr(self, "_entry_guard_date", None) != today:
+            self._entry_guard_date = today
+            self._entered_symbols_today = set()
+            self._rejected_symbols_today = {}
+
+    def _record_entered_symbol(self, symbol: str):
+        """Mark a symbol as entered today to prevent repeat churn."""
+        self._reset_daily_entry_guards_if_needed()
+        self._entered_symbols_today.add(symbol.upper())
+
+    def _should_block_entry_symbol(self, symbol: str) -> bool:
+        """Block entries for symbols already active or already entered today."""
+        self._reset_daily_entry_guards_if_needed()
+        sym = (symbol or "").upper()
+        if not sym:
+            return True
+
+        active_symbols = {
+            pos.symbol.upper()
+            for pos in self.position_tracker.get_active_positions()
+            if getattr(pos, "symbol", None)
+        }
+        if sym in active_symbols:
+            return True
+
+        return sym in self._entered_symbols_today
+
+    def _record_rejected_symbol(self, symbol: str):
+        """Track temporary entry rejections to avoid immediate re-attempt loops."""
+        self._reset_daily_entry_guards_if_needed()
+        sym = (symbol or "").upper()
+        if sym:
+            self._rejected_symbols_today[sym] = dt.datetime.now(self.tz)
+
+    def _is_rejected_symbol_on_cooldown(self, symbol: str) -> bool:
+        """Return True if symbol had a recent rejection and should cool down."""
+        self._reset_daily_entry_guards_if_needed()
+        sym = (symbol or "").upper()
+        if not sym:
+            return True
+
+        last_rejection = self._rejected_symbols_today.get(sym)
+        if not last_rejection:
+            return False
+
+        cooldown_minutes = int(getattr(self.config, 'rejected_symbol_cooldown_minutes', 45))
+        elapsed = (dt.datetime.now(self.tz) - last_rejection).total_seconds() / 60.0
+        return elapsed < cooldown_minutes
+
+    def _dedupe_signals_by_symbol(self, signals: List[Any]) -> List[Any]:
+        """Keep highest-confidence signal per symbol to avoid duplicate same-cycle entries."""
+        by_symbol: Dict[str, Any] = {}
+        duplicate_count = 0
+        for signal in signals:
+            sym = getattr(signal, "symbol", "").upper()
+            if not sym:
+                continue
+            if sym in by_symbol:
+                duplicate_count += 1
+                if getattr(signal, "confidence", 0.0) > getattr(by_symbol[sym], "confidence", 0.0):
+                    by_symbol[sym] = signal
+            else:
+                by_symbol[sym] = signal
+
+        if duplicate_count > 0:
+            self.logger.warning(
+                f"⚠️ Duplicate symbol signals detected: {duplicate_count} dropped before execution"
+            )
+            self._record_rejection_counts({"duplicate_symbol_signal": duplicate_count})
+
+        return sorted(by_symbol.values(), key=lambda s: getattr(s, "confidence", 0.0), reverse=True)
     
     def _initialize_components(self):
         """Initialize all bot_v2 modules"""
@@ -407,11 +505,12 @@ class BotV2Launcher:
                         from bot_v2.models.positions import PositionStatus
                         pos.status = PositionStatus.EXITED
                         # TIER 1 FIX: Use actual sell fill or zero P&L for phantom exits
-                        sell_info = recent_sell_fills.get(pos.symbol.upper())
-                        if sell_info and sell_info.get('price') is not None:
-                            pos.exit_price = sell_info['price']
-                            pos.exit_timestamp = sell_info['filled_at']
-                            pos.exit_date = sell_info['filled_at'].date()
+                        sell_fills = recent_sell_fills.get(pos.symbol.upper(), [])
+                        latest_fill = sell_fills[-1] if sell_fills else None
+                        if latest_fill and latest_fill.get('price') is not None:
+                            pos.exit_price = latest_fill['price']
+                            pos.exit_timestamp = latest_fill['filled_at']
+                            pos.exit_date = latest_fill['filled_at'].date()
                             pos.exit_reason = "Exited via Alpaca (sync reconciled)"
                             pos.realized_pnl = (pos.exit_price - pos.entry_price) * pos.position_size_shares
                         else:
@@ -646,11 +745,12 @@ class BotV2Launcher:
                     # TIER 1 FIX: Use actual Alpaca sell fill if available.
                     # If no fill found, set P&L to $0 instead of fabricating a price.
                     # This prevents phantom P&L from corrupting performance tracking.
-                    sell_info = recent_sell_fills.get(pos.symbol.upper())
-                    if sell_info and sell_info.get('price') is not None:
-                        pos.exit_price = sell_info['price']
-                        pos.exit_timestamp = sell_info['filled_at']
-                        pos.exit_date = sell_info['filled_at'].date()
+                    sell_fills = recent_sell_fills.get(pos.symbol.upper(), [])
+                    latest_fill = sell_fills[-1] if sell_fills else None
+                    if latest_fill and latest_fill.get('price') is not None:
+                        pos.exit_price = latest_fill['price']
+                        pos.exit_timestamp = latest_fill['filled_at']
+                        pos.exit_date = latest_fill['filled_at'].date()
                         pos.exit_reason = "Exited via Alpaca (sync reconciled)"
                         pos.realized_pnl = (pos.exit_price - pos.entry_price) * pos.position_size_shares
                         self.logger.info(
@@ -1053,21 +1153,25 @@ class BotV2Launcher:
         self.logger.info("=" * 80)
         
         try:
-            # Fetch VIX and SPY momentum for strategy allocation
-            self.logger.info("📊 Fetching market conditions for strategy allocation...")
-            try:
-                gap_alloc, fade_alloc = self.config.get_live_market_allocation()
-                self.logger.info(f"📊 Strategy Allocation: Gap&Go {gap_alloc:.0%} | Fade {fade_alloc:.0%}")
-                
-                # Update config with live allocation
-                self.config.gap_and_go_allocation = gap_alloc
-                self.config.fade_short_allocation = fade_alloc
-                
-                # Store for reference
-                self._today_gap_allocation = gap_alloc
-                self._today_fade_allocation = fade_alloc
-            except Exception as e:
-                self.logger.warning(f"⚠️ Market allocation fetch failed: {e} - Using defaults")
+            # Fetch VIX/SPY only when Gap&Go or Fade/Short are enabled.
+            # In momentum-only mode this would be misleading noise.
+            if self.config.enable_gap_and_go or self.config.enable_fade_short:
+                self.logger.info("📊 Fetching market conditions for strategy allocation...")
+                try:
+                    gap_alloc, fade_alloc = self.config.get_live_market_allocation()
+                    self.logger.info(f"📊 Strategy Allocation: Gap&Go {gap_alloc:.0%} | Fade {fade_alloc:.0%}")
+
+                    # Update config with live allocation
+                    self.config.gap_and_go_allocation = gap_alloc
+                    self.config.fade_short_allocation = fade_alloc
+
+                    # Store for reference
+                    self._today_gap_allocation = gap_alloc
+                    self._today_fade_allocation = fade_alloc
+                except Exception as e:
+                    self.logger.warning(f"⚠️ Market allocation fetch failed: {e} - Using defaults")
+            else:
+                self.logger.info("📊 Strategy Mode: Momentum-only (Gap&Go/Fade disabled)")
             
             # Portfolio summary
             positions = self.position_tracker.get_active_positions()
@@ -1182,7 +1286,9 @@ class BotV2Launcher:
             signal_duration = (time.time() - signal_start) * 1000
             signal_rejections = self.signal_generator.get_last_rejection_stats()
             self._record_rejection_counts(signal_rejections.get('counts', {}))
+            self._log_signal_rejections("entry_window", signal_rejections)
             
+            signals = self._dedupe_signals_by_symbol(signals)
             self.logger.info(f"✅ Generated {len(signals)} entry signals")
             self.session_data['signals_generated'] += len(signals)
             
@@ -1213,6 +1319,17 @@ class BotV2Launcher:
                         self.logger.info(f"📊 Daily entry cap reached ({self.entries_today}/{max_daily_entries}) - no more entries today")
                         break  # Stop processing more signals
                     
+                    # Check earnings blackout
+                    if self._should_block_entry_symbol(signal.symbol):
+                        self.logger.info(f"🚫 Entry blocked by symbol guard: {signal.symbol}")
+                        self._record_rejection('symbol_guard_block', signal.symbol)
+                        continue
+
+                    if self._is_rejected_symbol_on_cooldown(signal.symbol):
+                        self.logger.info(f"⏳ Entry cooldown after rejection: {signal.symbol}")
+                        self._record_rejection('rejected_symbol_cooldown', signal.symbol)
+                        continue
+
                     # Check earnings blackout
                     if self.earnings_calendar.should_avoid_entry(signal.symbol):
                         self.logger.warning(f"⚠️ Earnings Blackout: {signal.symbol} entry blocked")
@@ -1245,9 +1362,12 @@ class BotV2Launcher:
                         # PDT tracking is handled by order_manager._record_day_trade_if_needed()
                         # Only intraday trades (max_hold_days=0) are recorded as day trades
                         self.entries_today += 1
+                        self._record_entered_symbol(signal.symbol)
+                        self._rejected_symbols_today.pop(signal.symbol.upper(), None)
                         self.session_data['entries_executed'].append(signal.symbol)
                     else:
                         self.logger.warning(f"⚠️ Entry rejected: {signal.symbol} (check order_manager logs for details)")
+                        self._record_rejected_symbol(signal.symbol)
                         self._record_rejection('order_manager_rejected', signal.symbol)
                     
                 except Exception as e:
@@ -1363,10 +1483,12 @@ class BotV2Launcher:
                 signal_duration = (time.time() - signal_start) * 1000
                 signal_rejections = self.signal_generator.get_last_rejection_stats()
                 self._record_rejection_counts(signal_rejections.get('counts', {}))
+                self._log_signal_rejections("late_entry", signal_rejections)
             finally:
                 # Restore original threshold
                 self.config.confidence_threshold = original_threshold
             
+            signals = self._dedupe_signals_by_symbol(signals)
             self.logger.info(f"✅ Late entry: {len(signals)} signals at {conf_multiplier:.1f}x confidence bar")
             self.session_data['signals_generated'] += len(signals)
             
@@ -1393,6 +1515,16 @@ class BotV2Launcher:
                         self.logger.info(f"📊 Daily entry cap reached ({self.entries_today}/{max_daily_entries}) - no late entries")
                         break
                     
+                    if self._should_block_entry_symbol(signal.symbol):
+                        self.logger.info(f"🚫 Late entry blocked by symbol guard: {signal.symbol}")
+                        self._record_rejection('symbol_guard_block', signal.symbol)
+                        continue
+
+                    if self._is_rejected_symbol_on_cooldown(signal.symbol):
+                        self.logger.info(f"⏳ Late entry cooldown after rejection: {signal.symbol}")
+                        self._record_rejection('rejected_symbol_cooldown', signal.symbol)
+                        continue
+
                     # Check earnings blackout
                     if self.earnings_calendar.should_avoid_entry(signal.symbol):
                         self.logger.warning(f"⚠️ Earnings Blackout: {signal.symbol} late entry blocked")
@@ -1428,9 +1560,12 @@ class BotV2Launcher:
                         self.position_tracker.add_position(position)
                         self.position_tracker.save_positions()
                         self.entries_today += 1
+                        self._record_entered_symbol(signal.symbol)
+                        self._rejected_symbols_today.pop(signal.symbol.upper(), None)
                         self.session_data['entries_executed'].append(signal.symbol)
                     else:
                         self.logger.warning(f"⚠️ Late entry rejected: {signal.symbol}")
+                        self._record_rejected_symbol(signal.symbol)
                         self._record_rejection('order_manager_rejected', signal.symbol)
                     
                 except Exception as e:
@@ -1627,9 +1762,9 @@ class BotV2Launcher:
         
         This replaces the old "force exit all" on Friday 3:30 PM.
         Winners stay protected by dynamic trailing stops.
-        Only positions with P&L below threshold (-2% default) get force exited.
+        Only positions with P&L below threshold (-3% default) get force exited.
         """
-        loser_threshold = getattr(self.config, 'friday_loser_threshold', -0.02)
+        loser_threshold = getattr(self.config, 'friday_loser_threshold', -0.03)
         
         self.logger.info("=" * 80)
         self.logger.info(f"🔍 FRIDAY LOSER CHECK: Exiting positions below {loser_threshold*100:.1f}%")

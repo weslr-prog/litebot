@@ -1,5 +1,6 @@
 {
     "python.defaultInterpreterPath": "/home/wes/Desktop/litebotx-usb-deployment/litebotx_env/bin/python",
+    "python.terminal.activateEnvironment": true,
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
     "python.formatting.provider": "black",
@@ -7,5 +8,12 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.python",
         "editor.formatOnSave": true
-    }
+    },
+    "python-envs.pythonProjects": [
+        {
+            "path": ".",
+            "envManager": "ms-python.python:system",
+            "packageManager": "ms-python.python:pip"
+        }
+    ]
 }

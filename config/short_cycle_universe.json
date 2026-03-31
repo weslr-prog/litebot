@@ -1,0 +1,22 @@
+{
+  "base_universe": [
+    "PLTR", "SOFI", "RIVN", "HOOD", "SNAP",
+    "PLUG", "FCEL", "BE", "TLRY", "CGC",
+    "MARA", "RIOT", "COIN", "AMC", "GME",
+    "NIO", "LCID", "XPEV", "FSLY", "NET",
+    "DKNG", "PENN", "DDOG", "CRWD", "ZS",
+    "RBLX", "U", "PATH", "BILL", "AFRM",
+    "OPEN", "UPST", "SKLZ", "LAZR",
+    "QS", "CHPT", "BLNK", "CLSK", "BTBT",
+    "MSOS", "SNDL", "ACB", "CRON", "OGI",
+    "SI", "BYND", "GRWG",
+    "SFIX", "LULU", "ETSY", "W",
+    "SPCE", "IRDM", "GSAT", "SATS",
+    "PACB", "TWST", "ARKG", "BEAM", "CRSP",
+    "EDIT", "NTLA", "VCYT", "EXAS", "ILMN"
+  ],
+  "augment_from_prefilter": true,
+  "min_symbols": 8,
+  "max_symbols": 15,
+  "comment": "SMALL PORTFOLIO OPTIMIZATION - Nov 12, 2025: Mid-cap volatile stocks $10-30 range with 3-8% daily ATR. Cleaned Nov 12: Removed delisted symbols (VLDR, TTCF, OATLY, OSTK, ASTR). Dynamic universe generator now primary source. Focus on growth tech, crypto-related, cannabis, meme stocks, clean energy. Target stocks that move 3-10% daily for small account profit opportunities."
+}

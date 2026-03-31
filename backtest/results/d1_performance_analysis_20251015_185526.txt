@@ -1,0 +1,8 @@
+D+1 Strategy Performance Analysis
+Generated: 2025-10-15 18:55:26
+
+Total Trades: 7
+Win Rate: 57.1%
+Profit Factor: 2.35
+Net P&L: $267.00
+Avg Hold: 1.5 days

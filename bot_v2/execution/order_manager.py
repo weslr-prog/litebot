@@ -45,9 +45,10 @@ class AIOrderManager:
         # Anti-churning safeguards
         self.recent_entries = {}  # symbol -> timestamp of last entry
         self.recent_exits = {}    # symbol -> timestamp of last exit
-        self.min_hold_time_minutes = 30  # Minimum 30 minutes before exit
-        self.entry_cooldown_minutes = 60  # 60 minute cooldown after exit before re-entry
-        self.duplicate_entry_window_minutes = 5  # Prevent duplicate entries within 5 min
+        self.min_hold_time_minutes = getattr(config, 'min_hold_time_minutes', 30)
+        self.entry_cooldown_minutes = getattr(config, 'entry_cooldown_minutes', 120)
+        self.duplicate_entry_window_minutes = getattr(config, 'duplicate_entry_window_minutes', 30)
+        self.failed_entry_cooldown_minutes = getattr(config, 'failed_entry_cooldown_minutes', 15)
     
     def execute_entry(self, signal):
         """
@@ -164,6 +165,17 @@ class AIOrderManager:
         """
         try:
             symbol = position.symbol
+
+            # ANTI-CHURNING CHECK 0: Cooldown after a failed entry attempt
+            if symbol in self.recent_exits:
+                time_since_last_fail_or_exit = (dt.datetime.now(pytz.UTC) - self.recent_exits[symbol]).total_seconds() / 60
+                if time_since_last_fail_or_exit < self.failed_entry_cooldown_minutes:
+                    self.logger.warning(
+                        f"⚠️ RECENT FAILURE COOLDOWN: {symbol} - "
+                        f"Last failure/exit was {time_since_last_fail_or_exit:.1f} minutes ago "
+                        f"(cooldown: {self.failed_entry_cooldown_minutes} min)"
+                    )
+                    return False
             
             # ANTI-CHURNING CHECK 1: Prevent duplicate entries within timeframe
             if symbol in self.recent_entries:
@@ -187,11 +199,9 @@ class AIOrderManager:
                     )
                     return False
             
-            # Log the trade decision
-            self._log_trade_explanation(position)
-            
             # Day trade enforcement check
             if not self._check_day_trade_allowance(position):
+                self.recent_exits[symbol] = dt.datetime.now(pytz.UTC)
                 return False
             
             # Submit actual order to broker
@@ -233,6 +243,9 @@ class AIOrderManager:
                         # Record in recent_exits so we don't re-enter during cooldown
                         self.recent_exits[symbol] = dt.datetime.now(pytz.UTC)
                         return False
+
+                    # Log explainability only after successful order + acceptable fill.
+                    self._log_trade_explanation(position)
                     
                     # Record entry time for anti-churning
                     self.recent_entries[symbol] = dt.datetime.now(pytz.UTC)
@@ -241,11 +254,13 @@ class AIOrderManager:
                     return True
                 else:
                     self.logger.error(f"❌ FAILED to submit buy order for {position.symbol}")
+                    self.recent_exits[symbol] = dt.datetime.now(pytz.UTC)
                     return False
             else:
                 # Fallback to paper trade logging
                 self.logger.info(f"📝 Paper trade: {position.symbol} {position.position_size_shares} shares")
                 position.entry_timestamp = dt.datetime.now(pytz.UTC)
+                self._log_trade_explanation(position)
                 
                 # Record entry time for anti-churning
                 self.recent_entries[symbol] = dt.datetime.now(pytz.UTC)
@@ -254,6 +269,10 @@ class AIOrderManager:
             
         except Exception as e:
             self.logger.error(f"Buy order execution failed: {e}")
+            try:
+                self.recent_exits[position.symbol] = dt.datetime.now(pytz.UTC)
+            except Exception:
+                pass
             return False
     
     def execute_sell_order(self, position, exit_price: float, reason: str) -> bool:
@@ -271,15 +290,21 @@ class AIOrderManager:
         try:
             shares_to_exit = position.position_size_shares
             symbol = position.symbol
+            reason = reason or "UNKNOWN_EXIT"
+            reason_lower = reason.lower()
             
             # ANTI-CHURNING CHECK: Minimum hold time (unless emergency exit)
-            is_emergency = "stop" in reason.lower() or "loss" in reason.lower()
-            is_force_exit = "force exit" in reason.lower() or "d+1" in reason.lower()
+            is_emergency = "stop" in reason_lower or "loss" in reason_lower
+            is_force_exit = "force exit" in reason_lower or "d+1" in reason_lower
             
             if not is_emergency and not is_force_exit:
                 entry_time = position.filled_at or position.entry_timestamp
                 if entry_time:
-                    hold_time_minutes = (dt.datetime.now(pytz.UTC) - entry_time.replace(tzinfo=pytz.UTC)).total_seconds() / 60
+                    if entry_time.tzinfo is None:
+                        entry_time_utc = entry_time.replace(tzinfo=pytz.UTC)
+                    else:
+                        entry_time_utc = entry_time.astimezone(pytz.UTC)
+                    hold_time_minutes = (dt.datetime.now(pytz.UTC) - entry_time_utc).total_seconds() / 60
                     if hold_time_minutes < self.min_hold_time_minutes:
                         self.logger.warning(
                             f"⚠️ EARLY EXIT BLOCKED: {symbol} - "
@@ -332,8 +357,19 @@ class AIOrderManager:
                             )
                     
                     # Record exit time for anti-churning
-                    self.recent_exits[symbol] = dt.datetime.now(pytz.UTC)
+                    exit_timestamp = dt.datetime.now(pytz.UTC)
+                    self.recent_exits[symbol] = exit_timestamp
                     self.logger.info(f"📝 Recorded exit time for {symbol} anti-churning tracking")
+
+                    # Persist exit metadata on tracked position for ledger accuracy.
+                    position.status = PositionStatus.EXITED
+                    position.exit_reason = reason
+                    position.exit_timestamp = exit_timestamp
+                    position.exit_date = exit_timestamp.date()
+                    position.exit_price = exit_price
+                    position.realized_pnl = (position.exit_price - position.entry_price) * shares_to_exit
+                    position.hold_days = (position.exit_date - position.entry_date).days
+                    self.log_exit_explanation(position)
                     
                     return True
                 else:
@@ -344,7 +380,18 @@ class AIOrderManager:
                 self.logger.info(f"📝 Paper sell: {position.symbol} {shares_to_exit} shares")
                 
                 # Record exit time for anti-churning
-                self.recent_exits[symbol] = dt.datetime.now(pytz.UTC)
+                exit_timestamp = dt.datetime.now(pytz.UTC)
+                self.recent_exits[symbol] = exit_timestamp
+
+                # Persist exit metadata in fallback mode as well.
+                position.status = PositionStatus.EXITED
+                position.exit_reason = reason
+                position.exit_timestamp = exit_timestamp
+                position.exit_date = exit_timestamp.date()
+                position.exit_price = exit_price
+                position.realized_pnl = (position.exit_price - position.entry_price) * shares_to_exit
+                position.hold_days = (position.exit_date - position.entry_date).days
+                self.log_exit_explanation(position)
                 
                 return True
                 

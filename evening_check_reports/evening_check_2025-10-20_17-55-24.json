@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-10-20_17-55-24",
+  "for_date": "2025-10-21",
+  "go_for_launch": false,
+  "passed_checks": [
+    "Timezone Handling",
+    "Position Loading",
+    "Pattern Recognition",
+    "Disk Space",
+    "Bot Dry Run",
+    "Previous Session Health",
+    "Log File Size",
+    "Memory Available"
+  ],
+  "warnings": [],
+  "critical_issues": [
+    "Alpaca API Connection: API credentials not set in environment",
+    "Market Schedule: Market schedule check failed: You must supply a method of authentication"
+  ]
+}

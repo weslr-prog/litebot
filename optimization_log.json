@@ -1,0 +1,15 @@
+[
+  {
+    "timestamp": "2025-10-01T17:20:21.158746",
+    "optimization_type": "proven_regime_based",
+    "old_threshold": 0.07,
+    "new_threshold": 0.055,
+    "adjustment": -0.015000000000000006,
+    "reasoning": "Win rate below optimal - lowering threshold to capture more quality signals",
+    "performance_before": {
+      "win_rate": 0.5625,
+      "total_trades": 16,
+      "sharpe_ratio": 2.3923564738877228
+    }
+  }
+]

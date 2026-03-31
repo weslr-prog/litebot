@@ -1,0 +1,147 @@
+{
+  "timestamp": "20251114_185958",
+  "configurations": [
+    {
+      "name": "Baseline (3.5%, 1.0x)",
+      "momentum": 0.035,
+      "volume": 1.0
+    },
+    {
+      "name": "Moderate Volume (3.5%, 1.25x)",
+      "momentum": 0.035,
+      "volume": 1.25
+    },
+    {
+      "name": "Intermediate Momentum (4.0%, 1.0x)",
+      "momentum": 0.04,
+      "volume": 1.0
+    },
+    {
+      "name": "Intermediate Both (4.0%, 1.25x)",
+      "momentum": 0.04,
+      "volume": 1.25
+    },
+    {
+      "name": "Higher Momentum (4.25%, 1.0x)",
+      "momentum": 0.0425,
+      "volume": 1.0
+    },
+    {
+      "name": "Higher Both (4.25%, 1.25x)",
+      "momentum": 0.0425,
+      "volume": 1.25
+    }
+  ],
+  "historical": {
+    "Baseline (3.5%, 1.0x)": {
+      "total_return": 0.34606533550620283,
+      "total_trades": 843,
+      "win_rate": 0.45195729537366547,
+      "win_loss_ratio": 1.2393233926558076,
+      "sharpe_ratio": 0.2983255199859758,
+      "avg_win": 163.8084879234394,
+      "avg_loss": -132.17574112952556
+    },
+    "Moderate Volume (3.5%, 1.25x)": {
+      "total_return": 0.7715900881171239,
+      "total_trades": 586,
+      "win_rate": 0.45733788395904434,
+      "win_loss_ratio": 1.3385431833244277,
+      "sharpe_ratio": 0.8459478655272114,
+      "avg_win": 188.71089133086488,
+      "avg_loss": -140.9822960378308
+    },
+    "Intermediate Momentum (4.0%, 1.0x)": {
+      "total_return": 0.4547588508427154,
+      "total_trades": 765,
+      "win_rate": 0.45751633986928103,
+      "win_loss_ratio": 1.2503097836514594,
+      "sharpe_ratio": 0.41302962035754504,
+      "avg_win": 169.18063034057616,
+      "avg_loss": -135.31097057122406
+    },
+    "Intermediate Both (4.0%, 1.25x)": {
+      "total_return": 0.8660504322052004,
+      "total_trades": 537,
+      "win_rate": 0.45996275605214154,
+      "win_loss_ratio": 1.3741843609953097,
+      "sharpe_ratio": 1.0019964349687325,
+      "avg_win": 196.96181580750084,
+      "avg_loss": -143.3299791483896
+    },
+    "Higher Momentum (4.25%, 1.0x)": {
+      "total_return": 0.5424818186819562,
+      "total_trades": 731,
+      "win_rate": 0.46101231190150477,
+      "win_loss_ratio": 1.2603467107520945,
+      "sharpe_ratio": 0.507274389281391,
+      "avg_win": 172.0607752417952,
+      "avg_loss": -136.51860537575436
+    },
+    "Higher Both (4.25%, 1.25x)": {
+      "total_return": 0.9511514036417013,
+      "total_trades": 518,
+      "win_rate": 0.46525096525096526,
+      "win_loss_ratio": 1.3873362641436362,
+      "sharpe_ratio": 1.1303520766448834,
+      "avg_win": 198.88558000400354,
+      "avg_loss": -143.35787591249195
+    }
+  },
+  "recent": {
+    "Baseline (3.5%, 1.0x)": {
+      "total_return": 0.6459370777904987,
+      "total_trades": 360,
+      "win_rate": 0.5,
+      "win_loss_ratio": 1.285528099729033,
+      "sharpe_ratio": 1.7388115464335028,
+      "avg_win": 133.0826978004641,
+      "avg_loss": -103.52375636792041
+    },
+    "Moderate Volume (3.5%, 1.25x)": {
+      "total_return": 0.37834033596515726,
+      "total_trades": 232,
+      "win_rate": 0.49137931034482757,
+      "win_loss_ratio": 1.2656391896050738,
+      "sharpe_ratio": 1.3924503171703682,
+      "avg_win": 148.32708231398937,
+      "avg_loss": -117.19539307270732
+    },
+    "Intermediate Momentum (4.0%, 1.0x)": {
+      "total_return": 0.6210513262450699,
+      "total_trades": 315,
+      "win_rate": 0.5047619047619047,
+      "win_loss_ratio": 1.2820411244190109,
+      "sharpe_ratio": 1.825603857216652,
+      "avg_win": 140.0685725793149,
+      "avg_loss": -109.25435222898211
+    },
+    "Intermediate Both (4.0%, 1.25x)": {
+      "total_return": 0.39162335096597695,
+      "total_trades": 211,
+      "win_rate": 0.4976303317535545,
+      "win_loss_ratio": 1.2563669487871907,
+      "sharpe_ratio": 1.5319356163603253,
+      "avg_win": 154.14953017688939,
+      "avg_loss": -122.69467158913614
+    },
+    "Higher Momentum (4.25%, 1.0x)": {
+      "total_return": 0.5729872192323213,
+      "total_trades": 295,
+      "win_rate": 0.5050847457627119,
+      "win_loss_ratio": 1.2678973973222771,
+      "sharpe_ratio": 1.7598055494054101,
+      "avg_win": 142.68183717271629,
+      "avg_loss": -112.53421410443126
+    },
+    "Higher Both (4.25%, 1.25x)": {
+      "total_return": 0.40867642031908075,
+      "total_trades": 200,
+      "win_rate": 0.495,
+      "win_loss_ratio": 1.2959743763901015,
+      "sharpe_ratio": 1.6617894121016268,
+      "avg_win": 159.04231138181208,
+      "avg_loss": -122.7202591958799
+    }
+  }
+}

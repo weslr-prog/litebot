@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-10-01T18:15:29.140004",
+  "version": "drawdown_fix_v1",
+  "changes": {
+    "max_position_size_dollars": {
+      "old": "~$1,200",
+      "new": "$400",
+      "reason": "Limit single-trade impact after $739 loss"
+    },
+    "stop_loss_percentage": {
+      "old": "~3%",
+      "new": "2%",
+      "reason": "Tighter stops to reduce drawdown"
+    },
+    "max_loss_per_trade": {
+      "old": "None",
+      "new": "$100",
+      "reason": "Hard cap on any single trade loss"
+    },
+    "fast_exit_threshold": {
+      "old": "~1.5%",
+      "new": "0.8%",
+      "reason": "Exit losing trades faster (16/21 losses were fast exits)"
+    },
+    "confidence_threshold_increase": {
+      "old": "0.055",
+      "new": "0.08",
+      "reason": "Improve win rate from 32.3% - be more selective"
+    },
+    "position_sizing_strategy": {
+      "old": "Fixed",
+      "new": "Progressive (start small)",
+      "reason": "Reduce risk on new positions"
+    }
+  },
+  "expected_outcomes": {
+    "max_single_loss": "$100 (down from $739)",
+    "improved_win_rate": ">45% (from 32.3%)",
+    "reduced_drawdown": "<10% (from 24.3%)",
+    "sharpe_ratio": ">2.0 (maintain current 2.39)"
+  }
+}

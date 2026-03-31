@@ -247,7 +247,8 @@ class AISignalGenerator:
             'liquidity_low': 0,
             'earnings_blackout': 0,
             'quality_reject': 0,
-            'data_insufficient': 0
+            'data_insufficient': 0,
+            'other_reject': 0
         }
         rejection_details = []  # Track detailed rejections with confidence scores
         
@@ -259,7 +260,8 @@ class AISignalGenerator:
                     signals.append(signal)
                 elif reject_reason:
                     # Log rejection with confidence score
-                    rejection_details.append(f"{symbol}: {confidence:.1%} confidence - {reject_reason}")
+                    confidence_label = f"{confidence:.1%}" if confidence > 0 else "n/a"
+                    rejection_details.append(f"{symbol}: {confidence_label} confidence - {reject_reason}")
                     # Track rejection reasons
                     if 'SMA' in reject_reason or 'below' in reject_reason:
                         rejection_stats['sma_reject'] += 1
@@ -275,6 +277,8 @@ class AISignalGenerator:
                         rejection_stats['earnings_blackout'] += 1
                     elif 'quality' in reject_reason:
                         rejection_stats['quality_reject'] += 1
+                    else:
+                        rejection_stats['other_reject'] += 1
             except Exception as e:
                 self.logger.error(f"Error analyzing {symbol}: {e}")
                 rejection_stats['data_insufficient'] += 1
@@ -302,6 +306,8 @@ class AISignalGenerator:
                 self.logger.info(f"   • Earnings blackout: {rejection_stats['earnings_blackout']} (3d before/1d after)")
             if rejection_stats['quality_reject'] > 0:
                 self.logger.info(f"   • Quality screen: {rejection_stats['quality_reject']} (failed quality check)")
+            if rejection_stats['other_reject'] > 0:
+                self.logger.info(f"   • Other strategy/filter rejects: {rejection_stats['other_reject']}")
             if rejection_stats['data_insufficient'] > 0:
                 self.logger.info(f"   • Data errors: {rejection_stats['data_insufficient']}")
 
@@ -593,6 +599,8 @@ class AISignalGenerator:
             fade_short_confidence = 0.0
             momentum_signal = False
             momentum_confidence = 0.0
+            swing_pullback_signal = False
+            swing_pullback_confidence = 0.0
             
             # ───────────────────────────────────────────────────────────────
             # STRATEGY 1: GAP & GO (PRIMARY - 70% allocation)
@@ -645,12 +653,36 @@ class AISignalGenerator:
                     self.logger.info(
                         f"   ✅ {symbol} MOMENTUM: 5d return +{momentum_signal_result['five_day_return']*100:.1f}%, "
                         f"RSI {momentum_signal_result['rsi']:.1f}, ADR {momentum_signal_result['adr']*100:.1f}%, "
+                        f"Vol {momentum_signal_result['volume_ratio']:.2f}x, "
                         f"conf={momentum_confidence:.2f}"
                     )
+
+            # ───────────────────────────────────────────────────────────────
+            # STRATEGY 4: SWING PULLBACK (CHOPPY/WEAK-TREND FALLBACK)
+            # ───────────────────────────────────────────────────────────────
+            # Objective: keep opportunity flow in range-bound tape without forcing trend entries.
+            # Hold intent: 1-3 days.
+            if getattr(self.config, 'enable_swing_pullback', True) and len(data_normalized) >= 20:
+                if self._is_choppy_or_weak_trend(data_normalized):
+                    pullback_result = self._check_swing_pullback(symbol, data_normalized, current_rsi)
+                    if pullback_result:
+                        swing_pullback_signal = True
+                        swing_pullback_confidence = pullback_result['confidence']
+                        self.logger.info(
+                            f"   ✅ {symbol} SWING PULLBACK: RSI {pullback_result['rsi']:.1f}, "
+                            f"3d return {pullback_result['three_day_return']*100:+.1f}%, "
+                            f"dist-to-SMA {pullback_result['price_vs_sma']*100:+.1f}%, "
+                            f"conf={swing_pullback_confidence:.2f}"
+                        )
             
             # Store confidence for rejection tracking
-            self._current_confidence = max(gap_and_go_confidence, fade_short_confidence, 
-                                          momentum_confidence, mean_reversion_confidence)
+            self._current_confidence = max(
+                gap_and_go_confidence,
+                fade_short_confidence,
+                momentum_confidence,
+                swing_pullback_confidence,
+                mean_reversion_confidence,
+            )
             
             # ───────────────────────────────────────────────────────────────
             # CONFLICT RESOLUTION & STRATEGY SELECTION
@@ -663,7 +695,7 @@ class AISignalGenerator:
             base_confidence = 0.0
             
             # Priority 1: Gap & Go (70% allocation, +830% returns)
-            if gap_and_go_signal and gap_and_go_confidence >= self.config.confidence_threshold:
+            if gap_and_go_signal and gap_and_go_confidence >= confidence_threshold:
                 if is_liquid:
                     best_strategy = 'GAP_AND_GO'
                     best_signal = True
@@ -672,7 +704,7 @@ class AISignalGenerator:
                         self.logger.info(f"   🔄 {symbol}: Gap & Go takes priority (conflict resolution)")
             
             # Priority 2: Fade/Short (15% allocation, +174% returns, 62.8% WR)
-            elif fade_short_signal and fade_short_confidence >= self.config.confidence_threshold:
+            elif fade_short_signal and fade_short_confidence >= confidence_threshold:
                 if is_liquid:
                     best_strategy = 'FADE_SHORT'
                     best_signal = True
@@ -681,11 +713,18 @@ class AISignalGenerator:
                         self.logger.info(f"   🔄 {symbol}: Fade/Short takes priority over Momentum")
             
             # Priority 3: Momentum (15% allocation, trend continuation)
-            elif momentum_signal and momentum_confidence >= self.config.confidence_threshold:
+            elif momentum_signal and momentum_confidence >= confidence_threshold:
                 if is_liquid:
                     best_strategy = 'MOMENTUM'
                     best_signal = True
                     base_confidence = momentum_confidence
+
+            # Priority 4: Swing Pullback (range-bound fallback for 1-3 day holds)
+            elif swing_pullback_signal and swing_pullback_confidence >= confidence_threshold:
+                if is_liquid:
+                    best_strategy = 'SWING_PULLBACK'
+                    best_signal = True
+                    base_confidence = swing_pullback_confidence
             
             # No signal if no strategy triggers
             if not best_signal:
@@ -694,17 +733,17 @@ class AISignalGenerator:
                         f"   ❌ {symbol}: Insufficient liquidity (${avg_dollar_volume:,.0f} < $500K)"
                     )
                     self._current_rejection = f"Insufficient liquidity (${avg_dollar_volume:,.0f})"
-                elif not gap_and_go_signal and not fade_short_signal and not momentum_signal:
+                elif not gap_and_go_signal and not fade_short_signal and not momentum_signal and not swing_pullback_signal:
                     self.logger.info(
                         f"   ❌ {symbol}: No strategy trigger - Gap={gap_and_go_signal}, "
-                        f"Fade={fade_short_signal}, Momentum={momentum_signal}, RSI={current_rsi:.1f}"
+                        f"Fade={fade_short_signal}, Momentum={momentum_signal}, Pullback={swing_pullback_signal}, RSI={current_rsi:.1f}"
                     )
                     self._current_rejection = f"No strategy trigger (RSI={current_rsi:.1f})"
                 else:
                     self.logger.info(
-                        f"   ❌ {symbol}: Confidence too low - best={base_confidence:.2f} < {self.config.confidence_threshold:.2f}"
+                        f"   ❌ {symbol}: Confidence too low - best={base_confidence:.2f} < {confidence_threshold:.2f}"
                     )
-                    self._current_rejection = f"Low confidence ({base_confidence:.2f} < {self.config.confidence_threshold:.2f})"
+                    self._current_rejection = f"Low confidence ({base_confidence:.2f} < {confidence_threshold:.2f})"
                 rejection_reasons.append(f"No valid strategy signal")
                 return None
 
@@ -853,7 +892,7 @@ class AISignalGenerator:
                         self.logger.debug(f"   ⚠️  {symbol}: Medium sentiment confidence - applying -5% penalty ({original_conf:.3f} → {confidence:.3f})")
                 
                 # Check if confidence dropped below threshold due to data quality
-                if confidence < self.config.confidence_threshold:
+                if confidence < confidence_threshold:
                     self.logger.warning(f"❌ {symbol}: Below confidence threshold ({confidence:.1%}) due to data quality issues")
                     return None
             
@@ -989,7 +1028,7 @@ class AISignalGenerator:
                     self.logger.info(f"   📉 RSI oversold: {current_rsi:.1f} (threshold: 30)")
 
             # Entry signal generation (if best strategy found)
-            if best_signal and confidence >= self.config.confidence_threshold:
+            if best_signal and confidence >= confidence_threshold:
                 # Entry quality screening (observation mode - log but don't block)
                 if self.screening_enabled and self.entry_screener:
                     try:
@@ -1065,11 +1104,12 @@ class AISignalGenerator:
                 position_size_dollars = self.config.max_position_dollars
                 
                 # Create signal with strategy-specific metadata
+                time_horizon_days = 2.5 if best_strategy == "SWING_PULLBACK" else 1.5
                 signal = AISignal(
                     symbol=symbol,
                     action="BUY",
                     confidence=confidence,
-                    time_horizon_days=1.5,
+                    time_horizon_days=time_horizon_days,
                     entry_price=realtime_price,
                     stop_price=stop_price,
                     target_price=target_price,
@@ -1086,6 +1126,8 @@ class AISignalGenerator:
                         # Strategy-specific features
                         "gap_and_go_conf": gap_and_go_confidence,
                         "fade_short_conf": fade_short_confidence,
+                        "momentum_conf": momentum_confidence,
+                        "swing_pullback_conf": swing_pullback_confidence,
                         # Adaptive parameters
                         "adaptive_stop_loss_pct": stop_loss_pct if self.adaptive_params_enabled else None,
                         "adaptive_profit_target_pct": profit_target_pct if self.adaptive_params_enabled else None,
@@ -1113,8 +1155,8 @@ class AISignalGenerator:
                     rejection_reasons.append("No strategy triggered")
                     rejection_reasons.append(f"(GG: {gap_and_go_signal}, FS: {fade_short_signal})")
                 
-                if best_signal and confidence < self.config.confidence_threshold:
-                    rejection_reasons.append(f"Confidence {confidence:.3f} < {self.config.confidence_threshold:.3f}")
+                if best_signal and confidence < confidence_threshold:
+                    rejection_reasons.append(f"Confidence {confidence:.3f} < {confidence_threshold:.3f}")
                 
                 rejection_msg = " AND ".join(rejection_reasons)
                 self.logger.debug(f"   ❌ REJECT {symbol}: {rejection_msg}")
@@ -1225,6 +1267,91 @@ class AISignalGenerator:
             
         except Exception as e:
             self.logger.debug(f"{symbol}: Gap & Go check failed: {e}")
+            return None
+
+    def _is_choppy_or_weak_trend(self, data: pd.DataFrame) -> bool:
+        """Detect range-bound/weak-trend tape where pullback entries are more suitable."""
+        if len(data) < 20:
+            return False
+        try:
+            close = data['close']
+            current_price = close.iloc[-1]
+            sma20 = close.rolling(20).mean().iloc[-1]
+            if sma20 <= 0:
+                return False
+
+            # Flat-to-weak direction over 5d and modest distance from trend anchor.
+            ret_5d = (current_price - close.iloc[-5]) / close.iloc[-5] if len(close) >= 5 else 0.0
+            dist_to_sma = abs((current_price - sma20) / sma20)
+
+            return abs(ret_5d) <= 0.03 and dist_to_sma <= 0.04
+        except Exception:
+            return False
+
+    def _check_swing_pullback(self, symbol: str, data: pd.DataFrame, current_rsi: float) -> Optional[dict]:
+        """
+        Fallback long setup for weak-trend/choppy conditions.
+
+        Criteria:
+        - RSI mildly weak but not broken (38-52)
+        - Recent pullback (3-day return between -8% and -0.5%)
+        - Price near/just below SMA20 (mean-revert zone)
+        - Minimum volatility and baseline liquidity confirmation
+        """
+        try:
+            if len(data) < 20:
+                return None
+
+            now = datetime.now()
+            if not (10 <= now.hour < 14 or (now.hour == 14 and now.minute <= 30)):
+                return None
+
+            current_price = data['close'].iloc[-1]
+            sma20 = data['close'].rolling(20).mean().iloc[-1]
+            if sma20 <= 0:
+                return None
+
+            # Mildly oversold-to-neutral zone.
+            if not (38.0 <= current_rsi <= 52.0):
+                return None
+
+            if len(data) < 3:
+                return None
+            three_day_return = (current_price - data['close'].iloc[-3]) / data['close'].iloc[-3]
+            if not (-0.08 <= three_day_return <= -0.005):
+                return None
+
+            price_vs_sma = (current_price - sma20) / sma20
+            if not (-0.03 <= price_vs_sma <= 0.01):
+                return None
+
+            adr = ((data['high'] - data['low']) / data['close']).tail(14).mean()
+            if adr < 0.018:
+                return None
+
+            avg_volume_20d = data['volume'].tail(20).mean()
+            current_volume = data['volume'].iloc[-1]
+            volume_ratio = (current_volume / avg_volume_20d) if avg_volume_20d > 0 else 0.0
+            min_volume_ratio = getattr(self.config, 'swing_pullback_min_volume_ratio', 0.85)
+            if volume_ratio < min_volume_ratio:
+                return None
+
+            # Confidence favors moderate pullbacks and RSI near mid-40s.
+            rsi_score = 1.0 - min(abs(current_rsi - 45.0) / 15.0, 1.0)
+            pullback_score = min(max((-three_day_return - 0.005) / 0.075, 0.0), 1.0)
+            proximity_score = 1.0 - min(abs(price_vs_sma) / 0.03, 1.0)
+            confidence = min(0.25 + rsi_score * 0.30 + pullback_score * 0.30 + proximity_score * 0.25, 1.0)
+
+            return {
+                'rsi': current_rsi,
+                'three_day_return': three_day_return,
+                'price_vs_sma': price_vs_sma,
+                'adr': adr,
+                'volume_ratio': volume_ratio,
+                'confidence': confidence,
+            }
+        except Exception as e:
+            self.logger.debug(f"{symbol}: Swing pullback check failed: {e}")
             return None
     
     def _check_fade_short(self, symbol: str, data: pd.DataFrame, current_rsi: float) -> Optional[dict]:
@@ -1375,6 +1502,7 @@ class AISignalGenerator:
             min_adr = getattr(self.config, 'momentum_min_adr_pct', 0.02)
             min_5d_return = getattr(self.config, 'momentum_min_5d_return', 0.03)
             max_5d_return = getattr(self.config, 'momentum_max_5d_return', 0.15)
+            min_volume_ratio = getattr(self.config, 'momentum_min_volume_ratio', 1.0)
             
             # RSI must be in "healthy trend" range (45-65)
             if not (rsi_min <= current_rsi <= rsi_max):
@@ -1409,6 +1537,13 @@ class AISignalGenerator:
             
             # ADR must be above threshold
             if adr < min_adr:
+                return None
+
+            # Volume must be at least baseline average for momentum continuation quality.
+            avg_volume_20d = data['volume'].tail(20).mean()
+            current_volume = data['volume'].iloc[-1]
+            volume_ratio = (current_volume / avg_volume_20d) if avg_volume_20d > 0 else 0.0
+            if volume_ratio < min_volume_ratio:
                 return None
             
             # Calculate confidence
@@ -1446,6 +1581,7 @@ class AISignalGenerator:
                 'price_vs_sma': price_vs_sma,
                 'five_day_return': five_day_return,
                 'adr': adr,
+                'volume_ratio': volume_ratio,
                 'confidence': confidence
             }
             
