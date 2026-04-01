@@ -155,7 +155,8 @@ class ShortCycleConfig:
     # Best for: Stocks with established uptrend, looking for continuation
     momentum_sma_period: int = 20  # SMA for trend confirmation
     momentum_rsi_min: float = 45.0  # RSI floor (not oversold)
-    momentum_rsi_max: float = 70.0  # Relaxed ceiling to improve momentum-only signal throughput
+    momentum_rsi_max: float = 72.0  # Slightly wider ceiling to reduce borderline RSI rejections
+    momentum_ema_break_tolerance_pct: float = 0.003  # Allow up to 0.3% below EMA20 before hard reject
     momentum_min_adr_pct: float = 0.02  # Minimum 2% ADR for volatility
     momentum_min_5d_return: float = 0.02  # Allow earlier trend continuation (+2% in 5 days)
     momentum_max_5d_return: float = 0.15  # Not more than 15% (avoid chasing)
@@ -170,6 +171,8 @@ class ShortCycleConfig:
 
     # Swing pullback fallback (for choppy / weak-trend regimes)
     enable_swing_pullback: bool = True
+    swing_pullback_rsi_min: float = 38.0  # Lower bound for weak/choppy pullback context
+    swing_pullback_rsi_max: float = 56.0  # Slightly wider upper bound to admit borderline pullback resets
     swing_pullback_min_volume_ratio: float = 0.85  # Allow slightly softer volume than momentum
     swing_pullback_support_tolerance: float = 0.035  # Support can be slightly wider in choppy tape
     swing_pullback_volume_max_ratio: float = 1.05  # Pullback volume should stay controlled, not distributive

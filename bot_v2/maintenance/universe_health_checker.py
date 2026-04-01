@@ -8,6 +8,7 @@ import datetime as dt
 from pathlib import Path
 from typing import Dict, List, Tuple
 import logging
+import pandas as pd
 
 
 class UniverseHealthChecker:
@@ -99,12 +100,8 @@ class UniverseHealthChecker:
             # Check each stock
             for symbol in all_stocks:
                 try:
-                    # Get recent data
-                    bars = self.data_source.get_bars(
-                        symbol, 
-                        timeframe='1D',
-                        limit=5
-                    )
+                    # Get recent data (supports both get_bars and get_historical_data APIs)
+                    bars = self._fetch_recent_bars(symbol, limit=5)
                     
                     if not bars or len(bars) == 0:
                         results['delisted'].append(symbol)
@@ -143,6 +140,37 @@ class UniverseHealthChecker:
             results['recommendation'] = f"❌ Check failed: {e}"
         
         return results
+
+    def _fetch_recent_bars(self, symbol: str, limit: int = 5) -> List[Dict]:
+        """
+        Fetch recent bars using whichever interface the injected data source supports.
+
+        Supported data source contracts:
+        1) get_bars(symbol, timeframe='1D', limit=N) -> list[dict]
+        2) get_historical_data(symbol, days=N) -> pandas.DataFrame with close/volume columns
+        """
+        # Legacy / broker-style interface
+        if hasattr(self.data_source, 'get_bars'):
+            bars = self.data_source.get_bars(symbol, timeframe='1D', limit=limit)
+            return bars if bars else []
+
+        # bot_v2 DataLoader interface
+        if hasattr(self.data_source, 'get_historical_data'):
+            df = self.data_source.get_historical_data(symbol, days=max(10, limit))
+            if df is None or not isinstance(df, pd.DataFrame) or df.empty:
+                return []
+
+            required_cols = {'close', 'volume'}
+            if not required_cols.issubset(set(df.columns)):
+                return []
+
+            recent = df.tail(limit)
+            # Convert rows to dicts so existing health-check logic can remain unchanged.
+            return recent.to_dict('records')
+
+        raise AttributeError(
+            "Data source does not support get_bars or get_historical_data"
+        )
     
     def _log_results(self, results: Dict):
         """Log health check results"""

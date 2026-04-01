@@ -465,12 +465,15 @@ class AISignalGenerator:
                 current_ema = ema_20.iloc[-1]
                 current_price = data_normalized['close'].iloc[-1]
                 
-                # RULE 1: Price must be ABOVE the 20 EMA (directional bias)
-                if current_price < current_ema:
+                # RULE 1: Price should be above 20 EMA (directional bias), with a small
+                # configurable tolerance to avoid rejecting borderline prints around the EMA.
+                ema_break_tolerance = getattr(self.config, 'momentum_ema_break_tolerance_pct', 0.0)
+                ema_floor = current_ema * (1 - max(ema_break_tolerance, 0.0))
+                if current_price < ema_floor:
                     price_below_pct = ((current_ema - current_price) / current_ema) * 100
                     self.logger.info(
                         f"   ❌ {symbol}: Price ${current_price:.2f} below 20 EMA ${current_ema:.2f} "
-                        f"({price_below_pct:.1f}% below — no long entries below trend)"
+                        f"({price_below_pct:.1f}% below — outside tolerance {ema_break_tolerance:.2%})"
                     )
                     self._current_rejection = f"Below 20 EMA ({price_below_pct:.1f}% below trend)"
                     return None
@@ -1516,7 +1519,9 @@ class AISignalGenerator:
             if sma20 <= 0:
                 return None
 
-            if not (38.0 <= current_rsi <= 52.0):
+            swing_rsi_min = getattr(self.config, 'swing_pullback_rsi_min', 38.0)
+            swing_rsi_max = getattr(self.config, 'swing_pullback_rsi_max', 52.0)
+            if not (swing_rsi_min <= current_rsi <= swing_rsi_max):
                 return None
 
             three_day_return = (current_price - data['close'].iloc[-3]) / data['close'].iloc[-3]
