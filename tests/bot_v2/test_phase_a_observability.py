@@ -98,6 +98,33 @@ def test_signal_generator_exposes_rejection_stats():
     assert stats["total_rejected"] == 2
 
 
+def test_signal_generator_buckets_gate_rejections_before_generic_labels():
+    """Gate-tagged rejections should count as gate rejects, not generic momentum rejects."""
+    config = ShortCycleConfig(confidence_threshold=0.35)
+    generator = AISignalGenerator(config=config, adaptive_params=False)
+
+    generator._validate_entry_candidates = lambda universe, active: universe
+
+    def _fake_analyze(symbol, _data):
+        if symbol == "AAA":
+            return (None, "MOMENTUM gate [trend_structure] - Price/EMA structure not bullish", 0.2)
+        return (None, "Momentum falling knife (-6.0%)", 0.1)
+
+    generator._analyze_symbol_with_reason = _fake_analyze
+
+    result = generator.generate_signals(
+        universe=["AAA", "BBB"],
+        market_data={"AAA": object(), "BBB": object()},
+        active_positions=[],
+    )
+    stats = generator.get_last_rejection_stats()
+
+    assert result == []
+    assert stats["counts"]["momentum_gate_reject"] == 1
+    assert stats["counts"]["momentum_reject"] == 1
+    assert stats["counts"]["gate_trend_structure"] == 1
+
+
 def test_daily_stats_save_dedupes_same_day(tmp_path):
     """Daily stats writer should replace existing same-day records instead of appending duplicates."""
     summary = DailySummary(_DummyDataLoader(), _DummyPositionTracker())

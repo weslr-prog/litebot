@@ -4,6 +4,7 @@ Extracted from traders/short_cycle_trader.py
 """
 
 import logging
+import re
 import pandas as pd
 from typing import Any, List, Dict, Optional, Callable, Tuple
 from datetime import datetime, timedelta
@@ -216,6 +217,31 @@ class AISignalGenerator:
             "total_rejected": sum(self._last_rejection_stats.values()) if self._last_rejection_stats else 0,
         }
 
+    def _set_strategy_gate_rejection(self, strategy: str, gate: str, detail: str):
+        """Store first-fail setup gate context for rejection telemetry."""
+        self._current_rejection = f"{strategy} gate [{gate}] - {detail}"
+
+    def _parse_hhmm_to_minutes(self, value: str, default: str) -> int:
+        """Parse HH:MM strings to minutes since midnight with safe defaults."""
+        raw = value or default
+        try:
+            hour_str, minute_str = raw.split(":", 1)
+            hour = int(hour_str)
+            minute = int(minute_str)
+            hour = max(0, min(hour, 23))
+            minute = max(0, min(minute, 59))
+            return hour * 60 + minute
+        except Exception:
+            hour_str, minute_str = default.split(":", 1)
+            return int(hour_str) * 60 + int(minute_str)
+
+    def _is_within_scan_window(self, now: datetime, start_hhmm: str, end_hhmm: str) -> bool:
+        """Return True when now falls within [start, end] inclusive by minute."""
+        current_minutes = now.hour * 60 + now.minute
+        start_minutes = self._parse_hhmm_to_minutes(start_hhmm, start_hhmm)
+        end_minutes = self._parse_hhmm_to_minutes(end_hhmm, end_hhmm)
+        return start_minutes <= current_minutes <= end_minutes
+
     def generate_signals(self, universe: List[str], market_data: Dict[str, pd.DataFrame], 
                         active_positions: Optional[List] = None) -> List[AISignal]:
         """Generate AI signals for given universe
@@ -248,6 +274,8 @@ class AISignalGenerator:
             'earnings_blackout': 0,
             'quality_reject': 0,
             'data_insufficient': 0,
+            'momentum_gate_reject': 0,
+            'swing_gate_reject': 0,
             'other_reject': 0
         }
         rejection_details = []  # Track detailed rejections with confidence scores
@@ -263,19 +291,30 @@ class AISignalGenerator:
                     confidence_label = f"{confidence:.1%}" if confidence > 0 else "n/a"
                     rejection_details.append(f"{symbol}: {confidence_label} confidence - {reject_reason}")
                     # Track rejection reasons
-                    if 'SMA' in reject_reason or 'below' in reject_reason:
+                    reason_lower = reject_reason.lower()
+                    gate_match = re.search(r'\[(.*?)\]', reject_reason)
+                    if gate_match:
+                        gate_key = gate_match.group(1).strip().lower().replace(' ', '_')
+                        if gate_key:
+                            stat_key = f"gate_{gate_key}"
+                            rejection_stats[stat_key] = rejection_stats.get(stat_key, 0) + 1
+                    if 'momentum gate [' in reason_lower:
+                        rejection_stats['momentum_gate_reject'] += 1
+                    elif 'swing_pullback gate [' in reason_lower:
+                        rejection_stats['swing_gate_reject'] += 1
+                    elif 'sma' in reason_lower or 'below' in reason_lower:
                         rejection_stats['sma_reject'] += 1
-                    elif 'momentum' in reject_reason or 'falling' in reject_reason:
+                    elif 'momentum' in reason_lower or 'falling' in reason_lower:
                         rejection_stats['momentum_reject'] += 1
-                    elif 'RSI' in reject_reason:
+                    elif 'rsi too high' in reason_lower:
                         rejection_stats['rsi_high'] += 1
-                    elif 'confidence' in reject_reason:
+                    elif 'confidence' in reason_lower:
                         rejection_stats['confidence_low'] += 1
-                    elif 'liquid' in reject_reason:
+                    elif 'liquid' in reason_lower:
                         rejection_stats['liquidity_low'] += 1
-                    elif 'earning' in reject_reason:
+                    elif 'earning' in reason_lower:
                         rejection_stats['earnings_blackout'] += 1
-                    elif 'quality' in reject_reason:
+                    elif 'quality' in reason_lower:
                         rejection_stats['quality_reject'] += 1
                     else:
                         rejection_stats['other_reject'] += 1
@@ -298,6 +337,10 @@ class AISignalGenerator:
                 self.logger.info(f"   • Momentum filter: {rejection_stats['momentum_reject']} (falling knife <-5%)")
             if rejection_stats['rsi_high'] > 0:
                 self.logger.info(f"   • RSI too high: {rejection_stats['rsi_high']} (not oversold, RSI >35)")
+            if rejection_stats['momentum_gate_reject'] > 0:
+                self.logger.info(f"   • Momentum setup gates: {rejection_stats['momentum_gate_reject']} (first-fail gate attribution)")
+            if rejection_stats['swing_gate_reject'] > 0:
+                self.logger.info(f"   • Swing pullback setup gates: {rejection_stats['swing_gate_reject']} (first-fail gate attribution)")
             if rejection_stats['confidence_low'] > 0:
                 self.logger.info(f"   • Low confidence: {rejection_stats['confidence_low']} (<{self.config.confidence_threshold:.0%} threshold)")
             if rejection_stats['liquidity_low'] > 0:
@@ -743,7 +786,8 @@ class AISignalGenerator:
                         f"   ❌ {symbol}: No strategy trigger - Gap={gap_and_go_signal}, "
                         f"Fade={fade_short_signal}, Momentum={momentum_signal}, Pullback={swing_pullback_signal}, RSI={current_rsi:.1f}"
                     )
-                    self._current_rejection = f"No strategy trigger (RSI={current_rsi:.1f})"
+                    if not self._current_rejection:
+                        self._current_rejection = f"No strategy trigger (RSI={current_rsi:.1f})"
                 else:
                     self.logger.info(
                         f"   ❌ {symbol}: Confidence too low - best={base_confidence:.2f} < {confidence_threshold:.2f}"
@@ -1347,8 +1391,10 @@ class AISignalGenerator:
             # Flat-to-weak direction over 5d and modest distance from trend anchor.
             ret_5d = (current_price - close.iloc[-5]) / close.iloc[-5] if len(close) >= 5 else 0.0
             dist_to_sma = abs((current_price - sma20) / sma20)
+            max_abs_5d = getattr(self.config, 'swing_weak_trend_abs_5d_return_max', 0.03)
+            max_dist_to_sma = getattr(self.config, 'swing_weak_trend_dist_to_sma_max', 0.04)
 
-            return abs(ret_5d) <= 0.03 and dist_to_sma <= 0.04
+            return abs(ret_5d) <= max_abs_5d and dist_to_sma <= max_dist_to_sma
         except Exception:
             return False
 
@@ -1504,36 +1550,62 @@ class AISignalGenerator:
     def _check_swing_pullback(self, symbol: str, data: pd.DataFrame, current_rsi: float) -> Optional[dict]:
         try:
             if len(data) < 20:
+                self._set_strategy_gate_rejection("SWING_PULLBACK", "data_window", "Need at least 20 bars")
                 return None
 
             now = datetime.now()
-            if not (10 <= now.hour < 14 or (now.hour == 14 and now.minute <= 30)):
+            swing_scan_start = getattr(self.config, 'swing_pullback_scan_start', '09:35')
+            swing_scan_end = getattr(self.config, 'swing_pullback_scan_end', '14:30')
+            if not self._is_within_scan_window(now, swing_scan_start, swing_scan_end):
+                self._set_strategy_gate_rejection("SWING_PULLBACK", "time_window", "Outside swing pullback scan window")
                 return None
 
             current_price = data['close'].iloc[-1]
             support_context = self._build_support_context(data, 'swing_pullback_support_tolerance')
             if not support_context or not support_context['near_support']:
+                self._set_strategy_gate_rejection("SWING_PULLBACK", "support_proximity", "Price not near pullback support")
                 return None
 
             sma20 = support_context['sma20']
             if sma20 <= 0:
+                self._set_strategy_gate_rejection("SWING_PULLBACK", "trend_anchor", "Invalid SMA20 anchor")
                 return None
 
             swing_rsi_min = getattr(self.config, 'swing_pullback_rsi_min', 38.0)
             swing_rsi_max = getattr(self.config, 'swing_pullback_rsi_max', 52.0)
             if not (swing_rsi_min <= current_rsi <= swing_rsi_max):
+                self._set_strategy_gate_rejection(
+                    "SWING_PULLBACK",
+                    "rsi_band",
+                    f"RSI {current_rsi:.1f} outside [{swing_rsi_min:.1f}, {swing_rsi_max:.1f}]",
+                )
                 return None
 
             three_day_return = (current_price - data['close'].iloc[-3]) / data['close'].iloc[-3]
             if not (-0.08 <= three_day_return <= -0.005):
+                self._set_strategy_gate_rejection(
+                    "SWING_PULLBACK",
+                    "three_day_return",
+                    f"3d return {three_day_return*100:.1f}% outside [-8.0%, -0.5%]",
+                )
                 return None
 
             price_vs_sma = (current_price - sma20) / sma20
             if not (-0.03 <= price_vs_sma <= 0.01):
+                self._set_strategy_gate_rejection(
+                    "SWING_PULLBACK",
+                    "price_vs_sma",
+                    f"Price vs SMA {price_vs_sma*100:.1f}% outside [-3.0%, +1.0%]",
+                )
                 return None
 
             adr = ((data['high'] - data['low']) / data['close']).tail(14).mean()
             if adr < 0.018:
+                self._set_strategy_gate_rejection(
+                    "SWING_PULLBACK",
+                    "adr_floor",
+                    f"ADR {adr*100:.2f}% below min 1.80%",
+                )
                 return None
 
             avg_volume_20d = data['volume'].tail(20).mean()
@@ -1541,6 +1613,11 @@ class AISignalGenerator:
             volume_ratio = (current_volume / avg_volume_20d) if avg_volume_20d > 0 else 0.0
             min_volume_ratio = getattr(self.config, 'swing_pullback_min_volume_ratio', 0.85)
             if volume_ratio < min_volume_ratio:
+                self._set_strategy_gate_rejection(
+                    "SWING_PULLBACK",
+                    "volume_ratio",
+                    f"Volume ratio {volume_ratio:.2f} below min {min_volume_ratio:.2f}",
+                )
                 return None
 
             pullback_volume = self._check_pullback_volume_contraction(
@@ -1548,10 +1625,20 @@ class AISignalGenerator:
                 getattr(self.config, 'swing_pullback_volume_max_ratio', 1.05),
             )
             if not pullback_volume or not pullback_volume['passed']:
+                self._set_strategy_gate_rejection(
+                    "SWING_PULLBACK",
+                    "pullback_volume",
+                    "Pullback volume indicates distribution",
+                )
                 return None
 
             reversal = self._check_reversal_confirmation(data, support_context)
             if not reversal or not reversal['passed']:
+                self._set_strategy_gate_rejection(
+                    "SWING_PULLBACK",
+                    "reversal_confirmation",
+                    "No valid reversal confirmation",
+                )
                 return None
 
             bounce = self._check_bounce_volume_expansion(
@@ -1559,6 +1646,11 @@ class AISignalGenerator:
                 getattr(self.config, 'swing_pullback_bounce_volume_min_ratio', 1.0),
             )
             if not bounce or not bounce['passed']:
+                self._set_strategy_gate_rejection(
+                    "SWING_PULLBACK",
+                    "bounce_volume",
+                    "Bounce volume did not improve",
+                )
                 return None
 
             extension = self._check_extension_from_support(
@@ -1567,6 +1659,11 @@ class AISignalGenerator:
                 getattr(self.config, 'swing_pullback_extension_reject_pct', 0.05),
             )
             if not extension or not extension['passed']:
+                self._set_strategy_gate_rejection(
+                    "SWING_PULLBACK",
+                    "extension",
+                    "Entry too extended from support",
+                )
                 return None
 
             rsi_score = 1.0 - min(abs(current_rsi - 45.0) / 15.0, 1.0)
@@ -1717,7 +1814,9 @@ class AISignalGenerator:
     def _check_momentum(self, symbol: str, data: pd.DataFrame, current_rsi: float) -> Optional[dict]:
         try:
             now = datetime.now()
-            if not (10 <= now.hour < 14 or (now.hour == 14 and now.minute <= 30)):
+            momentum_scan_start = getattr(self.config, 'momentum_scan_start', '10:30')
+            momentum_scan_end = getattr(self.config, 'momentum_scan_end', '14:30')
+            if not self._is_within_scan_window(now, momentum_scan_start, momentum_scan_end):
                 return None
 
             if len(data) < 20:
@@ -1732,36 +1831,76 @@ class AISignalGenerator:
             min_volume_ratio = getattr(self.config, 'momentum_min_volume_ratio', 1.0)
 
             if not (rsi_min <= current_rsi <= rsi_max):
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "rsi_band",
+                    f"RSI {current_rsi:.1f} outside [{rsi_min:.1f}, {rsi_max:.1f}]",
+                )
                 return None
 
             current_price = data['close'].iloc[-1]
             sma = data['close'].rolling(sma_period).mean().iloc[-1]
             ema9 = data['close'].ewm(span=9, adjust=False).mean().iloc[-1]
             ema20 = data['close'].ewm(span=20, adjust=False).mean().iloc[-1]
-            if current_price < sma or ema9 < ema20 or current_price < ema20:
+            ema_break_tolerance = getattr(self.config, 'momentum_ema_break_tolerance_pct', 0.0)
+            ema_floor = ema20 * (1 - max(ema_break_tolerance, 0.0))
+            if current_price < sma or ema9 < ema20 or current_price < ema_floor:
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "trend_structure",
+                    (
+                        "Price/EMA structure not bullish "
+                        "(price<SMA or ema9<ema20 or price<ema20-tolerance)"
+                    ),
+                )
                 return None
 
             price_vs_sma = (current_price - sma) / sma
             five_day_ago = data['close'].iloc[-5]
             five_day_return = (current_price - five_day_ago) / five_day_ago
             if not (min_5d_return <= five_day_return <= max_5d_return):
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "five_day_return",
+                    f"5d return {five_day_return*100:.1f}% outside [{min_5d_return*100:.1f}%, {max_5d_return*100:.1f}%]",
+                )
                 return None
 
             adr = ((data['high'] - data['low']) / data['close']).tail(14).mean()
             if adr < min_adr:
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "adr_floor",
+                    f"ADR {adr*100:.2f}% below min {min_adr*100:.2f}%",
+                )
                 return None
 
             avg_volume_20d = data['volume'].tail(20).mean()
             current_volume = data['volume'].iloc[-1]
             volume_ratio = (current_volume / avg_volume_20d) if avg_volume_20d > 0 else 0.0
             if volume_ratio < min_volume_ratio:
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "volume_ratio",
+                    f"Volume ratio {volume_ratio:.2f} below min {min_volume_ratio:.2f}",
+                )
                 return None
 
             recent_high = data['high'].iloc[-5:-1].max()
             if recent_high <= 0:
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "recent_high",
+                    "Insufficient valid recent highs for pullback check",
+                )
                 return None
             pullback_from_high = (current_price - recent_high) / recent_high
             if not (-0.05 <= pullback_from_high <= 0.01):
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "pullback_depth",
+                    f"Pullback {pullback_from_high*100:.1f}% not within [-5.0%, +1.0%]",
+                )
                 return None
 
             support_context = self._build_support_context(
@@ -1770,6 +1909,11 @@ class AISignalGenerator:
                 'momentum_pullback_ema_tolerance',
             )
             if not support_context or not support_context['near_support'] or not support_context['near_ema']:
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "support_proximity",
+                    "Price not near support and EMA pullback zone",
+                )
                 return None
 
             pullback_volume = self._check_pullback_volume_contraction(
@@ -1777,10 +1921,20 @@ class AISignalGenerator:
                 getattr(self.config, 'momentum_pullback_volume_max_ratio', 0.95),
             )
             if not pullback_volume or not pullback_volume['passed']:
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "pullback_volume",
+                    "Pullback volume did not contract enough",
+                )
                 return None
 
             reversal = self._check_reversal_confirmation(data, support_context)
             if not reversal or not reversal['passed']:
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "reversal_confirmation",
+                    "No valid reversal confirmation near support",
+                )
                 return None
 
             bounce = self._check_bounce_volume_expansion(
@@ -1788,6 +1942,11 @@ class AISignalGenerator:
                 getattr(self.config, 'momentum_bounce_volume_min_ratio', 1.05),
             )
             if not bounce or not bounce['passed']:
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "bounce_volume",
+                    "Bounce volume did not re-expand",
+                )
                 return None
 
             extension = self._check_extension_from_support(
@@ -1796,6 +1955,11 @@ class AISignalGenerator:
                 getattr(self.config, 'momentum_extension_reject_pct', 0.06),
             )
             if not extension or not extension['passed']:
+                self._set_strategy_gate_rejection(
+                    "MOMENTUM",
+                    "extension",
+                    "Price is too extended from support",
+                )
                 return None
 
             rsi_score = 1.0 - abs(current_rsi - 55) / 20

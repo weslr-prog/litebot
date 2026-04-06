@@ -20,6 +20,24 @@ class FixedDateTime(datetime):
         return cls(2026, 3, 31, 11, 0, 0)
 
 
+class FixedDateTime1015(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return cls(2026, 3, 31, 10, 15, 0)
+
+
+class FixedDateTime0950(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return cls(2026, 3, 31, 9, 50, 0)
+
+
+class FixedDateTime0934(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return cls(2026, 3, 31, 9, 34, 0)
+
+
 class TestAISignalGenerator:
     """Test AISignalGenerator"""
     
@@ -326,6 +344,122 @@ class TestAISignalGenerator:
         assert support_stop < entry_price, (
             f"Support stop {support_stop:.2f} must be below entry {entry_price:.2f}"
         )
+
+    def test_check_momentum_uses_configured_scan_window(self, monkeypatch):
+        config = ShortCycleConfig(portfolio_value=1000.0, confidence_threshold=0.35)
+        generator = AISignalGenerator(config)
+        monkeypatch.setattr(signal_generator_module, "datetime", FixedDateTime1015)
+
+        close = [100.0, 100.4, 100.8, 101.3, 101.9, 102.5, 103.1, 103.7, 104.2, 104.8,
+                 105.3, 105.8, 106.2, 106.7, 107.1, 107.6, 108.0, 108.4, 108.9, 109.3,
+                 106.4, 107.2, 106.8, 108.4, 109.0]
+        open_ = [price - 0.2 for price in close]
+        high = [price + 1.0 for price in close]
+        low = [price - 1.8 for price in close]
+        volume = [1_000_000] * 20 + [760_000, 700_000, 650_000, 1_120_000, 1_180_000]
+        data = pd.DataFrame({"open": open_, "high": high, "low": low, "close": close, "volume": volume})
+
+        config.momentum_scan_start = "10:30"
+        config.momentum_scan_end = "14:30"
+        result_blocked = generator._check_momentum("AAPL", data, current_rsi=56.0)
+        assert result_blocked is None
+
+        config.momentum_scan_start = "09:35"
+        result_allowed = generator._check_momentum("AAPL", data, current_rsi=56.0)
+        assert result_allowed is not None
+
+    def test_check_momentum_applies_ema_tolerance_in_trend_structure(self, monkeypatch):
+        config = ShortCycleConfig(portfolio_value=1000.0, confidence_threshold=0.35)
+        config.momentum_scan_start = "09:35"
+        config.momentum_scan_end = "14:30"
+        config.momentum_sma_period = 1
+        config.momentum_min_volume_ratio = 1.0
+        config.momentum_min_adr_pct = 0.01
+        config.momentum_min_5d_return = -0.10
+        config.momentum_max_5d_return = 0.20
+        generator = AISignalGenerator(config)
+        monkeypatch.setattr(signal_generator_module, "datetime", FixedDateTime1015)
+
+        # Isolate trend_structure gate behavior.
+        monkeypatch.setattr(generator, "_build_support_context", lambda *_args, **_kwargs: {
+            "near_support": True,
+            "near_ema": True,
+            "support_price": 120.0,
+            "support_distance": 0.01,
+            "support_name": "ema20",
+            "sma20": 112.0,
+        })
+        monkeypatch.setattr(generator, "_check_pullback_volume_contraction", lambda *_args, **_kwargs: {"passed": True, "ratio": 0.9})
+        monkeypatch.setattr(generator, "_check_reversal_confirmation", lambda *_args, **_kwargs: {"passed": True, "close_location": 0.65})
+        monkeypatch.setattr(generator, "_check_bounce_volume_expansion", lambda *_args, **_kwargs: {"passed": True, "ratio": 1.2})
+        monkeypatch.setattr(generator, "_check_extension_from_support", lambda *_args, **_kwargs: {"passed": True, "extension_pct": 0.01})
+
+        close = [145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
+             145, 145, 145, 145, 145, 145, 145, 145, 145, 145,
+             146, 147, 148, 149, 144]
+        open_ = [c - 0.3 for c in close]
+        high = [c + 1.0 for c in close]
+        low = [c - 1.0 for c in close]
+        volume = [1_200_000] * len(close)
+        data = pd.DataFrame({"open": open_, "high": high, "low": low, "close": close, "volume": volume})
+
+        config.momentum_ema_break_tolerance_pct = 0.0
+        rejected = generator._check_momentum("AAPL", data, current_rsi=56.0)
+        assert rejected is None
+
+        config.momentum_ema_break_tolerance_pct = 0.02
+        accepted = generator._check_momentum("AAPL", data, current_rsi=56.0)
+        assert accepted is not None
+
+    def test_check_swing_pullback_uses_configured_scan_window(self, monkeypatch):
+        config = ShortCycleConfig(portfolio_value=1000.0, confidence_threshold=0.35)
+        generator = AISignalGenerator(config)
+
+        close = [100.0, 100.2, 100.1, 100.3, 100.0, 100.1, 99.9, 100.0, 99.8, 100.1,
+                 99.9, 100.0, 100.2, 99.8, 100.0, 99.7, 99.8, 99.4, 99.1, 98.8,
+                 98.4, 98.0, 97.7, 97.9, 98.2]
+        open_ = [price - 0.1 for price in close]
+        high = [price + 1.0 for price in close]
+        low = [price - 1.8 for price in close]
+        volume = [900_000] * 20 + [820_000, 780_000, 740_000, 760_000, 780_000]
+        data = pd.DataFrame({"open": open_, "high": high, "low": low, "close": close, "volume": volume})
+
+        config.swing_pullback_scan_start = "09:35"
+        config.swing_pullback_scan_end = "14:30"
+
+        monkeypatch.setattr(signal_generator_module, "datetime", FixedDateTime0934)
+        generator._current_rejection = None
+        outside = generator._check_swing_pullback("AAPL", data, current_rsi=45.0)
+        assert outside is None
+        assert "time_window" in (generator._current_rejection or "")
+
+        monkeypatch.setattr(signal_generator_module, "datetime", FixedDateTime0950)
+        generator._current_rejection = None
+        inside = generator._check_swing_pullback("AAPL", data, current_rsi=45.0)
+        assert inside is None
+        assert "time_window" not in (generator._current_rejection or "")
+
+    def test_check_swing_pullback_scan_window_fallback_when_fields_absent(self, monkeypatch):
+        config = ShortCycleConfig(portfolio_value=1000.0, confidence_threshold=0.35)
+        generator = AISignalGenerator(config)
+        monkeypatch.setattr(signal_generator_module, "datetime", FixedDateTime0934)
+
+        monkeypatch.delattr(config, "swing_pullback_scan_start", raising=False)
+        monkeypatch.delattr(config, "swing_pullback_scan_end", raising=False)
+
+        close = [100.0, 100.2, 100.1, 100.3, 100.0, 100.1, 99.9, 100.0, 99.8, 100.1,
+                 99.9, 100.0, 100.2, 99.8, 100.0, 99.7, 99.8, 99.4, 99.1, 98.8,
+                 98.4, 98.0, 97.7, 97.9, 98.2]
+        open_ = [price - 0.1 for price in close]
+        high = [price + 1.0 for price in close]
+        low = [price - 1.8 for price in close]
+        volume = [900_000] * 20 + [820_000, 780_000, 740_000, 760_000, 780_000]
+        data = pd.DataFrame({"open": open_, "high": high, "low": low, "close": close, "volume": volume})
+
+        generator._current_rejection = None
+        result = generator._check_swing_pullback("AAPL", data, current_rsi=45.0)
+        assert result is None
+        assert "time_window" in (generator._current_rejection or "")
 
 
 if __name__ == "__main__":

@@ -156,7 +156,7 @@ class ShortCycleConfig:
     momentum_sma_period: int = 20  # SMA for trend confirmation
     momentum_rsi_min: float = 45.0  # RSI floor (not oversold)
     momentum_rsi_max: float = 72.0  # Slightly wider ceiling to reduce borderline RSI rejections
-    momentum_ema_break_tolerance_pct: float = 0.003  # Allow up to 0.3% below EMA20 before hard reject
+    momentum_ema_break_tolerance_pct: float = 0.02  # Allow up to 2.0% below EMA20 before hard reject
     momentum_min_adr_pct: float = 0.02  # Minimum 2% ADR for volatility
     momentum_min_5d_return: float = 0.02  # Allow earlier trend continuation (+2% in 5 days)
     momentum_max_5d_return: float = 0.15  # Not more than 15% (avoid chasing)
@@ -171,6 +171,10 @@ class ShortCycleConfig:
 
     # Swing pullback fallback (for choppy / weak-trend regimes)
     enable_swing_pullback: bool = True
+    # Regime routing thresholds for swing fallback activation.
+    # Slightly broadened to capture mixed tape while preserving expectancy discipline.
+    swing_weak_trend_abs_5d_return_max: float = 0.04  # Was implicit 3%; allow up to +/-4% drift over 5d
+    swing_weak_trend_dist_to_sma_max: float = 0.05  # Was implicit 4%; allow modestly wider distance to SMA20
     swing_pullback_rsi_min: float = 38.0  # Lower bound for weak/choppy pullback context
     swing_pullback_rsi_max: float = 56.0  # Slightly wider upper bound to admit borderline pullback resets
     swing_pullback_min_volume_ratio: float = 0.85  # Allow slightly softer volume than momentum
@@ -178,6 +182,8 @@ class ShortCycleConfig:
     swing_pullback_volume_max_ratio: float = 1.05  # Pullback volume should stay controlled, not distributive
     swing_pullback_bounce_volume_min_ratio: float = 1.0  # Bounce should show at least modest volume improvement
     swing_pullback_extension_reject_pct: float = 0.05  # Reject bounce-chase entries too far from support
+    swing_pullback_scan_start: str = "09:35"  # Start earlier to capture opening pullback reversals
+    swing_pullback_scan_end: str = "14:30"  # End before late-day liquidity fade
     
     # Default targets (SWING FIX Feb 13, 2026: UNIFIED for weekly swing strategy)
     # Single source of truth - wider stops survive mid-cap volatility
