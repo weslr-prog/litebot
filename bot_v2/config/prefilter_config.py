@@ -20,18 +20,16 @@ SIMPLE_PREFILTER_CONFIG = {
     'min_price': 5.0,           # $5 minimum (quality mid-caps, avoid penny stock gaps)
     'max_price': 50.0,          # $50 max (sweet spot for gaps with momentum)
     
-    # Stage 2: Volume (strict liquidity for gaps and fades)
-    # Jan 8: Increased minimum for gap continuation and fade reversals
-    'min_volume': 3_000_000,    # 3M shares minimum (gaps need volume)
+    # Stage 2: Volume (conservative expansion for broader candidate flow)
+    # Apr 7: Lowered floors to move candidates from ~32 toward ~50 while preserving liquidity
+    'min_volume': 1_500_000,    # 1.5M shares minimum (still liquid, broader opportunity set)
     'max_volume': 30_000_000,   # 30M shares maximum (allow more liquid names)
-    'min_dollar_volume': 30_000_000,  # $30M minimum daily dollar volume (gaps need liquidity)
+    'min_dollar_volume': 15_000_000,  # $15M minimum daily dollar volume (conservative expansion)
     
-    # Stage 3: Volatility (SWING-OPTIMIZED — Feb 13, 2026)
-    # Tightened from 3-8% to 3.5-6.0% based on performance data:
-    # ATR 3.5-5.5% zone had 45% win rate and 1.58 R-ratio (materially better)
-    # ATR >6.5% are news-driven, reversal-prone, stop-hunting — bad for 2-5 day holds
-    'min_atr_pct': 0.035,       # 3.5% minimum daily range (was 3.0%)
-    'max_atr_pct': 0.060,       # 6.0% maximum (was 8.0% — removes noisy names)
+    # Stage 3: Volatility (conservative expansion — Apr 7, 2026)
+    # Widened from 3.5-6.0% to 2.8-6.8% to increase candidate flow with controlled risk
+    'min_atr_pct': 0.028,       # 2.8% minimum daily range (admits more steady movers)
+    'max_atr_pct': 0.068,       # 6.8% maximum (admits slightly higher-volatility setups)
     
     # Data Requirements
     'min_data_rows': 15,        # Minimum 15 days (yfinance limitation)
