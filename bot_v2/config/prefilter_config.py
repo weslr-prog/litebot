@@ -15,34 +15,34 @@ Date: January 8, 2026
 # Simple 3-Stage PreFilter Configuration (DUAL-STRATEGY OPTIMIZED)
 SIMPLE_PREFILTER_CONFIG = {
     # Stage 1: Price Range (Gap & Go optimized)
-    # Jan 8: Expanded to $5-$50 for gap continuations
+    # Apr 23: Recovery widening to $75 to restore candidate throughput
     # Lower bound allows quality $5-10 stocks; upper avoids penny gaps
     'min_price': 5.0,           # $5 minimum (quality mid-caps, avoid penny stock gaps)
-    'max_price': 50.0,          # $50 max (sweet spot for gaps with momentum)
+    'max_price': 75.0,          # Recovery mode: admit liquid mid-caps above $50
     
     # Stage 2: Volume (conservative expansion for broader candidate flow)
-    # Apr 7: Lowered floors to move candidates from ~32 toward ~50 while preserving liquidity
+    # Apr 23: Recovery mode - broader but still tradable liquidity floor
     'min_volume': 1_500_000,    # 1.5M shares minimum (still liquid, broader opportunity set)
     'max_volume': 30_000_000,   # 30M shares maximum (allow more liquid names)
-    'min_dollar_volume': 15_000_000,  # $15M minimum daily dollar volume (conservative expansion)
+    'min_dollar_volume': 10_000_000,  # Recovery mode: $10M floor to avoid starving universe
     
     # Stage 3: Volatility (conservative expansion — Apr 7, 2026)
-    # Widened from 3.5-6.0% to 2.8-6.8% to increase candidate flow with controlled risk
-    'min_atr_pct': 0.028,       # 2.8% minimum daily range (admits more steady movers)
-    'max_atr_pct': 0.068,       # 6.8% maximum (admits slightly higher-volatility setups)
+    # Recovery mode: widen volatility band to increase candidate flow in mixed regimes
+    'min_atr_pct': 0.020,       # 2.0% minimum daily range
+    'max_atr_pct': 0.100,       # 10.0% maximum daily range
     
     # Data Requirements
     'min_data_rows': 15,        # Minimum 15 days (yfinance limitation)
     
     # ENABLED Features for Gap & Go (Jan 8, 2026)
     'enable_breakout': False,        # Not needed for gaps
-    'enable_momentum': False,        # Not needed (RSI filter in signal gen)
+    'enable_momentum': True,         # Recovery mode: align prefilter flags with active momentum strategy
     'enable_gap_detection': True,    # ✅ ENABLED for Gap & Go strategy!
     'enable_regime': False,          # Not needed
     
     # Target Candidate Range (dual-strategy optimized)
     'target_min_candidates': 30,     # More candidates for gap scanning
-    'target_max_candidates': 60      # Allow more for dual strategies
+    'target_max_candidates': 100     # Recovery mode: broader pool for no-activity recovery
 }
 
 

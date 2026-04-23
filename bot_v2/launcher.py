@@ -853,17 +853,28 @@ class BotV2Launcher:
         if current_time >= dt.time(7, 0) and current_time < dt.time(9, 30):
             return 'premarket'
         
-        # Entry window: 9:45 AM - 10:30 AM (extended for better opportunity capture)
-        if current_time >= dt.time(9, 45) and current_time < dt.time(10, 30):
+        # Entry window: 9:35 AM - 10:30 AM (recovery mode: catch early post-open setups)
+        if current_time >= dt.time(9, 35) and current_time < dt.time(10, 30):
             return 'entry_window'
-        
-        # Continuous entry scanning: 10:30 AM - 1:00 PM (if not at max positions)
-        if current_time >= dt.time(10, 30) and current_time < dt.time(13, 0):
+
+        # Late-entry boundaries from config (used by both continuous and late phases)
+        late_entry_start_str = getattr(self.config, 'late_entry_start_time', '11:00')
+        late_entry_end_str = getattr(self.config, 'late_entry_end_time', '15:00')
+        try:
+            late_start_hour, late_start_min = [int(x) for x in late_entry_start_str.split(':', 1)]
+            late_end_hour, late_end_min = [int(x) for x in late_entry_end_str.split(':', 1)]
+            late_entry_start = dt.time(late_start_hour, late_start_min)
+            late_entry_end = dt.time(late_end_hour, late_end_min)
+        except Exception:
+            late_entry_start = dt.time(11, 0)
+            late_entry_end = dt.time(15, 0)
+
+        # Continuous entry scanning: 10:30 AM until configured late-entry start
+        if current_time >= dt.time(10, 30) and current_time < late_entry_start:
             return 'continuous_entry'
-        
-        # Late entry window: 1:00 PM - 2:30 PM (higher bar, reduced size)
-        # Best for afternoon momentum continuation plays
-        if current_time >= dt.time(13, 0) and current_time < dt.time(14, 30):
+
+        # Late entry window: config-driven boundaries
+        if current_time >= late_entry_start and current_time < late_entry_end:
             if getattr(self.config, 'enable_late_entry', True):
                 return 'late_entry'
             return 'continuous_entry'  # Fall back to continuous if late entry disabled
@@ -1290,6 +1301,15 @@ class BotV2Launcher:
             
             signals = self._dedupe_signals_by_symbol(signals)
             self.logger.info(f"✅ Generated {len(signals)} entry signals")
+            if len(signals) == 0:
+                counts = signal_rejections.get('counts', {}) if signal_rejections else {}
+                top_reasons = [
+                    f"{reason}={count}"
+                    for reason, count in sorted(counts.items(), key=lambda item: item[1], reverse=True)
+                    if count > 0
+                ][:6]
+                top_text = ', '.join(top_reasons) if top_reasons else 'none'
+                self.logger.warning(f"⚠️ No entry signals this scan. Top rejection counts: {top_text}")
             self.session_data['signals_generated'] += len(signals)
             
             # Enhanced logging: Signal generation

@@ -27,7 +27,7 @@ class ShortCycleConfig:
     
     # Position parameters - fewer, larger positions (Jan 24, 2026: 75% utilization strategy)
     max_positions_per_day: int = 5  # 5 positions × $150 = $750 max daily exposure (75% utilization)
-    max_daily_entries: int = 4  # Reduced entry churn during momentum-only operation
+    max_daily_entries: int = 8  # Aggressive recovery: allow more intraday attempts while flow recovers
     min_position_size_dollars: float = 50.0  # Minimum $50 per position (meaningful trades only)
     max_position_size_percent: float = 0.15  # 15% max position size per trade
     max_universe_size: int = 500  # Maximum number of symbols in trading universe (scaled for 3-strategy stack)
@@ -61,23 +61,22 @@ class ShortCycleConfig:
     # Risk parameters (Dual-Strategy System: Gap & Go + Fade/Short)
     max_daily_loss_percent: float = 0.08  # 8% daily loss limit
     max_weekly_loss_percent: float = 0.15   # 15% weekly loss limit
-    confidence_threshold: float = 0.35  # Raised to 35% to reject low-quality momentum setups
+    confidence_threshold: float = 0.25  # Aggressive recovery: lower floor to restore signal throughput
     
     # Triple-Strategy Configuration (Jan 13, 2026: Gap & Go + Fade + Momentum)
     # Gap & Go: 830% return / 748 trades = 1.11% per trade
     # Fade/Short: 174% return / 914 trades = 0.19% per trade
     # Momentum: Trend continuation plays for mid-day entries
     # Gap & Go is 5.8x more profitable per trade → allocate most capital
-    # TIER 1 FIX (Feb 25, 2026): Gap & Go DISABLED — cannot detect gaps with yfinance daily bars.
-    # Fade/Short DISABLED — buys overbought stocks long instead of shorting them.
-    # Momentum is the ONLY active strategy until data pipeline is upgraded.
-    enable_gap_and_go: bool = False  # DISABLED: Cannot detect intraday gaps with daily bars
+    # Recovery mode (Apr 23, 2026): Re-open flow with Gap & Go + Momentum.
+    # Keep Fade/Short disabled until short-side logic is fully corrected.
+    enable_gap_and_go: bool = True  # Recovery mode: re-enabled to restore signal diversity
     enable_fade_short: bool = False  # DISABLED: Buys at overbought extremes (backwards logic)
-    enable_momentum: bool = True  # SOLE STRATEGY: Trend continuation (100% capital)
-    gap_and_go_allocation: float = 0.00  # DISABLED
+    enable_momentum: bool = True  # Recovery mode: still active as core trend strategy
+    gap_and_go_allocation: float = 0.65  # Recovery mode: primary allocation to reopen morning flow
     fade_short_allocation: float = 0.00  # DISABLED
-    momentum_allocation: float = 1.00  # 100% to Momentum (sole active strategy)
-    gap_and_go_priority: bool = False  # DISABLED — no conflicts possible with single strategy
+    momentum_allocation: float = 0.35  # Recovery mode: retain momentum but not as sole strategy
+    gap_and_go_priority: bool = True  # Recovery mode: deterministic conflict handling
     
     # Strategy-specific profit/stop targets (SWING FIX Feb 13, 2026)
     # CRITICAL: Old 2% stop was getting hit by normal mid-cap daily noise
@@ -150,24 +149,24 @@ class ShortCycleConfig:
     fade_scan_end: str = "14:00"  # Stop scanning before close
     
     # Momentum Strategy parameters (Jan 13, 2026 - Trend Continuation)
-    # March 17, 2026: Relaxed slightly for momentum-only operation.
+    # Apr 23, 2026: Aggressive recovery widening to restore activity.
     # Entry: Price above SMA20, RSI 45-70, ADR > 2%
     # Best for: Stocks with established uptrend, looking for continuation
     momentum_sma_period: int = 20  # SMA for trend confirmation
-    momentum_rsi_min: float = 45.0  # RSI floor (not oversold)
-    momentum_rsi_max: float = 72.0  # Slightly wider ceiling to reduce borderline RSI rejections
-    momentum_ema_break_tolerance_pct: float = 0.02  # Allow up to 2.0% below EMA20 before hard reject
-    momentum_min_adr_pct: float = 0.02  # Minimum 2% ADR for volatility
+    momentum_rsi_min: float = 40.0  # Recovery mode: wider RSI floor to admit more continuation setups
+    momentum_rsi_max: float = 75.0  # Recovery mode: wider ceiling to reduce near-threshold rejects
+    momentum_ema_break_tolerance_pct: float = 0.04  # Recovery mode: allow deeper but still controlled pullbacks
+    momentum_min_adr_pct: float = 0.015  # Recovery mode: include moderate-volatility symbols
     momentum_min_5d_return: float = 0.02  # Allow earlier trend continuation (+2% in 5 days)
-    momentum_max_5d_return: float = 0.15  # Not more than 15% (avoid chasing)
-    momentum_min_volume_ratio: float = 1.05  # Keep volume confirmation while reducing over-filtering
+    momentum_max_5d_return: float = 0.22  # Recovery mode: avoid over-filtering stronger momentum legs
+    momentum_min_volume_ratio: float = 1.0  # Recovery mode: accept neutral volume confirmations
     momentum_pullback_ema_tolerance: float = 0.02  # Pullback should stay near 9/20 EMA support
     momentum_support_tolerance: float = 0.03  # Allow modest distance from nearby price support
-    momentum_pullback_volume_max_ratio: float = 0.95  # Pullback should contract versus prior advance
-    momentum_bounce_volume_min_ratio: float = 1.05  # Bounce should re-expand volume above pullback average
-    momentum_extension_reject_pct: float = 0.06  # Reject entries already too extended from support
-    momentum_scan_start: str = "10:30"  # Start after initial volatility settles
-    momentum_scan_end: str = "14:30"  # End before close
+    momentum_pullback_volume_max_ratio: float = 1.05  # Recovery mode: allow less strict pullback contraction
+    momentum_bounce_volume_min_ratio: float = 1.0  # Recovery mode: allow flat-to-improving bounce volume
+    momentum_extension_reject_pct: float = 0.10  # Recovery mode: wider extension tolerance
+    momentum_scan_start: str = "09:35"  # Recovery mode: include early post-open opportunities
+    momentum_scan_end: str = "15:30"  # Recovery mode: include late-day continuation scans
 
     # Swing pullback fallback (for choppy / weak-trend regimes)
     enable_swing_pullback: bool = True
@@ -213,10 +212,10 @@ class ShortCycleConfig:
     
     # Late Entry Parameters (Jan 13, 2026: Afternoon scan for additional opportunities)
     enable_late_entry: bool = True  # Enable afternoon entry scans
-    late_entry_start_time: str = "13:00"  # Start late entry scan at 1:00 PM
-    late_entry_end_time: str = "14:30"  # End late entry scan at 2:30 PM
-    late_entry_confidence_multiplier: float = 1.3  # Require 30% higher confidence for late entries
-    late_entry_position_size_pct: float = 0.60  # Reduce late-entry size to 60% of normal position
+    late_entry_start_time: str = "11:00"  # Recovery mode: start late-entry style scanning earlier
+    late_entry_end_time: str = "15:00"  # Recovery mode: extend late-entry style window
+    late_entry_confidence_multiplier: float = 1.15  # Recovery mode: reduce late-entry strictness
+    late_entry_position_size_pct: float = 0.75  # Recovery mode: increase size for qualified late entries
     late_entry_scan_interval_minutes: int = 15  # Scan every 15 minutes during late window
     late_entry_min_adr_pct: float = 0.025  # Require 2.5% ADR for late entries (more volatility needed)
 
