@@ -302,11 +302,13 @@ class AISignalGenerator:
                         rejection_stats['momentum_gate_reject'] += 1
                     elif 'swing_pullback gate [' in reason_lower:
                         rejection_stats['swing_gate_reject'] += 1
-                    elif 'sma' in reason_lower or 'below' in reason_lower:
+                    elif 'below 20 ema' in reason_lower or 'sma' in reason_lower or 'below' in reason_lower:
+                        rejection_stats['sma_reject'] += 1
+                    elif 'ema slope' in reason_lower or 'downtrend' in reason_lower:
                         rejection_stats['sma_reject'] += 1
                     elif 'momentum' in reason_lower or 'falling' in reason_lower:
                         rejection_stats['momentum_reject'] += 1
-                    elif 'rsi too high' in reason_lower:
+                    elif 'rsi' in reason_lower:
                         rejection_stats['rsi_high'] += 1
                     elif 'confidence' in reason_lower:
                         rejection_stats['confidence_low'] += 1
@@ -316,6 +318,8 @@ class AISignalGenerator:
                         rejection_stats['earnings_blackout'] += 1
                     elif 'quality' in reason_lower:
                         rejection_stats['quality_reject'] += 1
+                    elif 'insufficient data' in reason_lower:
+                        rejection_stats['data_insufficient'] += 1
                     else:
                         rejection_stats['other_reject'] += 1
             except Exception as e:
@@ -332,15 +336,15 @@ class AISignalGenerator:
                 for detail in rejection_details:
                     self.logger.info(f"      • {detail}")
             if rejection_stats['sma_reject'] > 0:
-                self.logger.info(f"   • SMA filter: {rejection_stats['sma_reject']} (>6% below trend)")
+                self.logger.info(f"   • SMA filter: {rejection_stats['sma_reject']} (>10% below 20-EMA trend - OPTIMIZATION: relaxed from >6%)")
             if rejection_stats['momentum_reject'] > 0:
                 self.logger.info(f"   • Momentum filter: {rejection_stats['momentum_reject']} (falling knife <-5%)")
             if rejection_stats['rsi_high'] > 0:
                 self.logger.info(f"   • RSI too high: {rejection_stats['rsi_high']} (not oversold, RSI >35)")
             if rejection_stats['momentum_gate_reject'] > 0:
-                self.logger.info(f"   • Momentum setup gates: {rejection_stats['momentum_gate_reject']} (first-fail gate attribution)")
+                self.logger.info(f"   • Momentum setup gates: {rejection_stats['momentum_gate_reject']} (volume ratio <0.75x, support >4.5%, or 5d return - OPTIMIZATION: relaxed)")
             if rejection_stats['swing_gate_reject'] > 0:
-                self.logger.info(f"   • Swing pullback setup gates: {rejection_stats['swing_gate_reject']} (first-fail gate attribution)")
+                self.logger.info(f"   • Swing pullback setup gates: {rejection_stats['swing_gate_reject']} (volume ratio <0.65x, support >4.5%, or RSI/price bands - OPTIMIZATION: relaxed)")
             if rejection_stats['confidence_low'] > 0:
                 self.logger.info(f"   • Low confidence: {rejection_stats['confidence_low']} (<{self.config.confidence_threshold:.0%} threshold)")
             if rejection_stats['liquidity_low'] > 0:
@@ -532,7 +536,8 @@ class AISignalGenerator:
                     # Old filter rejected ALL sideways markets (slope=0). This killed
                     # signal generation — 86% of scans returned zero signals.
                     # Now allows flat/slightly declining trends, only rejects clear downtrends.
-                    if ema_slope_pct < -0.5:
+                    # Jul 15: Further loosened to -2.0% to reduce sma_reject in choppy tape.
+                    if ema_slope_pct < -2.0:
                         self.logger.info(
                             f"   ❌ {symbol}: 20 EMA slope too negative ({ema_slope_pct:+.2f}% over 3 bars — downtrend)"
                         )
@@ -552,9 +557,9 @@ class AISignalGenerator:
                 current_price = data_normalized['close'].iloc[-1]
                 five_day_momentum = (current_price - five_day_ago_price) / five_day_ago_price
                 
-                if five_day_momentum < -0.05:  # Still falling 5%+ over 5 days (was -3%)
+                if five_day_momentum < -0.08:  # Loosened to -8% — only reject sharp downtrends
                     self.logger.info(
-                        f"   ❌ {symbol}: 5-day momentum {five_day_momentum*100:.1f}% (>-5% = falling knife)"
+                        f"   ❌ {symbol}: 5-day momentum {five_day_momentum*100:.1f}% (>-8% = falling knife)"
                     )
                     self._current_rejection = f"Momentum falling knife ({five_day_momentum*100:.1f}%)"
                     return None
@@ -1332,13 +1337,32 @@ class AISignalGenerator:
             rsi = 100 - (100 / (1 + gain / loss))
             current_rsi = rsi.iloc[-1]
             
-            # RSI must be < 75 (not too overbought)
+            # RSI must be < 72 (not too overbought) — tightened from 75
             if current_rsi >= self.config.gap_rsi_max:
                 return None
             
             # Gap must be holding (price > yesterday's close)
             if current_close < yesterday_close:
                 return None  # Gap fading, skip
+            
+            # Volume check: require at least 1.5x average volume for gap entries
+            avg_volume_20d = data['volume'].tail(20).mean()
+            current_volume = data['volume'].iloc[-1]
+            if avg_volume_20d > 0:
+                volume_ratio = current_volume / avg_volume_20d
+                if volume_ratio < 1.5:
+                    self.logger.debug(
+                        f"❌ {symbol}: Gap volume ratio {volume_ratio:.2f}x < 1.5x minimum"
+                    )
+                    return None
+            
+            # Gap extension check: reject if price has run >3% above open (chasing)
+            gap_extension = (current_close - today_open) / today_open
+            if gap_extension > 0.03:
+                self.logger.debug(
+                    f"❌ {symbol}: Gap extension {gap_extension*100:.1f}% > 3% — chasing"
+                )
+                return None
             
             # Calculate confidence based on gap size and RSI
             # Larger gaps = higher confidence (up to 8%)
@@ -1582,11 +1606,11 @@ class AISignalGenerator:
                 return None
 
             three_day_return = (current_price - data['close'].iloc[-3]) / data['close'].iloc[-3]
-            if not (-0.08 <= three_day_return <= -0.005):
+            if not (-0.10 <= three_day_return <= -0.003):
                 self._set_strategy_gate_rejection(
                     "SWING_PULLBACK",
                     "three_day_return",
-                    f"3d return {three_day_return*100:.1f}% outside [-8.0%, -0.5%]",
+                    f"3d return {three_day_return*100:.1f}% outside [-10.0%, -0.3%]",
                 )
                 return None
 
@@ -1829,14 +1853,36 @@ class AISignalGenerator:
             min_5d_return = getattr(self.config, 'momentum_min_5d_return', 0.03)
             max_5d_return = getattr(self.config, 'momentum_max_5d_return', 0.15)
             min_volume_ratio = getattr(self.config, 'momentum_min_volume_ratio', 1.0)
+            scored_mode = getattr(self.config, 'momentum_scored_mode', False)
+            min_gate_score = getattr(self.config, 'momentum_min_gate_score', 0.60)
+
+            # Track gate pass/fail for scored mode
+            gate_results = {}
+            gate_weights = {
+                'rsi_band': 0.15,
+                'trend_structure': 0.15,
+                'five_day_return': 0.10,
+                'adr_floor': 0.05,
+                'volume_ratio': 0.05,
+                'pullback_depth': 0.10,
+                'support_proximity': 0.15,
+                'pullback_volume': 0.05,
+                'reversal_confirmation': 0.10,
+                'bounce_volume': 0.05,
+                'extension': 0.05,
+            }
 
             if not (rsi_min <= current_rsi <= rsi_max):
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "rsi_band",
-                    f"RSI {current_rsi:.1f} outside [{rsi_min:.1f}, {rsi_max:.1f}]",
-                )
-                return None
+                if not scored_mode:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "rsi_band",
+                        f"RSI {current_rsi:.1f} outside [{rsi_min:.1f}, {rsi_max:.1f}]",
+                    )
+                    return None
+                gate_results['rsi_band'] = False
+            else:
+                gate_results['rsi_band'] = True
 
             current_price = data['close'].iloc[-1]
             sma = data['close'].rolling(sma_period).mean().iloc[-1]
@@ -1844,64 +1890,92 @@ class AISignalGenerator:
             ema20 = data['close'].ewm(span=20, adjust=False).mean().iloc[-1]
             ema_break_tolerance = getattr(self.config, 'momentum_ema_break_tolerance_pct', 0.0)
             ema_floor = ema20 * (1 - max(ema_break_tolerance, 0.0))
-            if current_price < sma or ema9 < ema20 or current_price < ema_floor:
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "trend_structure",
-                    (
-                        "Price/EMA structure not bullish "
-                        "(price<SMA or ema9<ema20 or price<ema20-tolerance)"
-                    ),
-                )
-                return None
+            trend_soft_mode = getattr(self.config, 'momentum_trend_soft_mode', False)
+            trend_fail = current_price < sma or ema9 < ema20 or current_price < ema_floor
+            if trend_fail:
+                if trend_soft_mode and ema9 > ema20 and current_rsi > 45.0:
+                    gate_results['trend_structure'] = True  # Soft pass
+                elif scored_mode:
+                    gate_results['trend_structure'] = False
+                else:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "trend_structure",
+                        (
+                            "Price/EMA structure not bullish "
+                            "(price<SMA or ema9<ema20 or price<ema20-tolerance)"
+                        ),
+                    )
+                    return None
+            else:
+                gate_results['trend_structure'] = True
 
             price_vs_sma = (current_price - sma) / sma
             five_day_ago = data['close'].iloc[-5]
             five_day_return = (current_price - five_day_ago) / five_day_ago
             if not (min_5d_return <= five_day_return <= max_5d_return):
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "five_day_return",
-                    f"5d return {five_day_return*100:.1f}% outside [{min_5d_return*100:.1f}%, {max_5d_return*100:.1f}%]",
-                )
-                return None
+                if not scored_mode:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "five_day_return",
+                        f"5d return {five_day_return*100:.1f}% outside [{min_5d_return*100:.1f}%, {max_5d_return*100:.1f}%]",
+                    )
+                    return None
+                gate_results['five_day_return'] = False
+            else:
+                gate_results['five_day_return'] = True
 
             adr = ((data['high'] - data['low']) / data['close']).tail(14).mean()
             if adr < min_adr:
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "adr_floor",
-                    f"ADR {adr*100:.2f}% below min {min_adr*100:.2f}%",
-                )
-                return None
+                if not scored_mode:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "adr_floor",
+                        f"ADR {adr*100:.2f}% below min {min_adr*100:.2f}%",
+                    )
+                    return None
+                gate_results['adr_floor'] = False
+            else:
+                gate_results['adr_floor'] = True
 
             avg_volume_20d = data['volume'].tail(20).mean()
             current_volume = data['volume'].iloc[-1]
             volume_ratio = (current_volume / avg_volume_20d) if avg_volume_20d > 0 else 0.0
             if volume_ratio < min_volume_ratio:
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "volume_ratio",
-                    f"Volume ratio {volume_ratio:.2f} below min {min_volume_ratio:.2f}",
-                )
-                return None
+                if not scored_mode:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "volume_ratio",
+                        f"Volume ratio {volume_ratio:.2f} below min {min_volume_ratio:.2f}",
+                    )
+                    return None
+                gate_results['volume_ratio'] = False
+            else:
+                gate_results['volume_ratio'] = True
 
             recent_high = data['high'].iloc[-5:-1].max()
             if recent_high <= 0:
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "recent_high",
-                    "Insufficient valid recent highs for pullback check",
-                )
-                return None
-            pullback_from_high = (current_price - recent_high) / recent_high
-            if not (-0.05 <= pullback_from_high <= 0.01):
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "pullback_depth",
-                    f"Pullback {pullback_from_high*100:.1f}% not within [-5.0%, +1.0%]",
-                )
-                return None
+                if not scored_mode:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "recent_high",
+                        "Insufficient valid recent highs for pullback check",
+                    )
+                    return None
+                gate_results['pullback_depth'] = False
+            else:
+                pullback_from_high = (current_price - recent_high) / recent_high
+                if not (-0.06 <= pullback_from_high <= 0.015):
+                    if not scored_mode:
+                        self._set_strategy_gate_rejection(
+                            "MOMENTUM",
+                            "pullback_depth",
+                            f"Pullback {pullback_from_high*100:.1f}% not within [-6.0%, +1.5%]",
+                        )
+                        return None
+                    gate_results['pullback_depth'] = False
+                else:
+                    gate_results['pullback_depth'] = True
 
             support_context = self._build_support_context(
                 data,
@@ -1909,66 +1983,104 @@ class AISignalGenerator:
                 'momentum_pullback_ema_tolerance',
             )
             if not support_context or not support_context['near_support'] or not support_context['near_ema']:
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "support_proximity",
-                    "Price not near support and EMA pullback zone",
-                )
-                return None
+                if not scored_mode:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "support_proximity",
+                        "Price not near support and EMA pullback zone",
+                    )
+                    return None
+                gate_results['support_proximity'] = False
+            else:
+                gate_results['support_proximity'] = True
 
             pullback_volume = self._check_pullback_volume_contraction(
                 data,
                 getattr(self.config, 'momentum_pullback_volume_max_ratio', 0.95),
             )
             if not pullback_volume or not pullback_volume['passed']:
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "pullback_volume",
-                    "Pullback volume did not contract enough",
-                )
-                return None
+                if not scored_mode:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "pullback_volume",
+                        "Pullback volume did not contract enough",
+                    )
+                    return None
+                gate_results['pullback_volume'] = False
+            else:
+                gate_results['pullback_volume'] = True
 
-            reversal = self._check_reversal_confirmation(data, support_context)
+            reversal = self._check_reversal_confirmation(data, support_context) if support_context else None
             if not reversal or not reversal['passed']:
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "reversal_confirmation",
-                    "No valid reversal confirmation near support",
-                )
-                return None
+                if not scored_mode:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "reversal_confirmation",
+                        "No valid reversal confirmation near support",
+                    )
+                    return None
+                gate_results['reversal_confirmation'] = False
+            else:
+                gate_results['reversal_confirmation'] = True
 
             bounce = self._check_bounce_volume_expansion(
                 data,
                 getattr(self.config, 'momentum_bounce_volume_min_ratio', 1.05),
             )
             if not bounce or not bounce['passed']:
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "bounce_volume",
-                    "Bounce volume did not re-expand",
-                )
-                return None
+                if not scored_mode:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "bounce_volume",
+                        "Bounce volume did not re-expand",
+                    )
+                    return None
+                gate_results['bounce_volume'] = False
+            else:
+                gate_results['bounce_volume'] = True
 
             extension = self._check_extension_from_support(
                 current_price,
                 support_context,
                 getattr(self.config, 'momentum_extension_reject_pct', 0.06),
-            )
+            ) if support_context else None
             if not extension or not extension['passed']:
-                self._set_strategy_gate_rejection(
-                    "MOMENTUM",
-                    "extension",
-                    "Price is too extended from support",
+                if not scored_mode:
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "extension",
+                        "Price is too extended from support",
+                    )
+                    return None
+                gate_results['extension'] = False
+            else:
+                gate_results['extension'] = True
+
+            # In scored mode, compute gate score and pass if above threshold
+            if scored_mode:
+                total_weight = sum(gate_weights.values())
+                passed_weight = sum(gate_weights[g] for g, passed in gate_results.items() if passed)
+                gate_score = passed_weight / total_weight if total_weight > 0 else 0.0
+                if gate_score < min_gate_score:
+                    failed_gates = [g for g, passed in gate_results.items() if not passed]
+                    self._set_strategy_gate_rejection(
+                        "MOMENTUM",
+                        "gate_score",
+                        f"Gate score {gate_score:.2f} < {min_gate_score:.2f} (failed: {', '.join(failed_gates)})",
+                    )
+                    return None
+                self.logger.debug(
+                    f"⚡ {symbol}: Scored momentum pass — gate_score={gate_score:.2f} "
+                    f"(passed {len([g for g in gate_results.values() if g])}/{len(gate_results)})"
                 )
-                return None
 
             rsi_score = 1.0 - abs(current_rsi - 55) / 20
-            return_score = min((five_day_return - min_5d_return) / (max_5d_return - min_5d_return), 1.0)
-            support_score = 1.0 - min(support_context['support_distance'] / max(getattr(self.config, 'momentum_support_tolerance', 0.03), 1e-6), 1.0)
-            pullback_score = 1.0 - min(abs(pullback_from_high) / 0.05, 1.0)
-            reversal_score = reversal['close_location']
-            bounce_score = min(max((bounce['ratio'] - 1.0) / 0.6, 0.0), 1.0)
-            volume_score = 1.0 - min(pullback_volume['ratio'] / max(getattr(self.config, 'momentum_pullback_volume_max_ratio', 0.95), 1e-6), 1.0)
+            return_score = min((five_day_return - min_5d_return) / (max_5d_return - min_5d_return), 1.0) if 'five_day_return' in gate_results and gate_results['five_day_return'] else 0.5
+            support_score = 1.0 - min(support_context['support_distance'] / max(getattr(self.config, 'momentum_support_tolerance', 0.03), 1e-6), 1.0) if support_context else 0.5
+            pullback_score = 1.0 - min(abs(pullback_from_high) / 0.05, 1.0) if 'pullback_from_high' in dir() else 0.5
+            reversal_score = reversal['close_location'] if reversal else 0.5
+            bounce_score = min(max((bounce['ratio'] - 1.0) / 0.6, 0.0), 1.0) if bounce else 0.5
+            volume_score = 1.0 - min(pullback_volume['ratio'] / max(getattr(self.config, 'momentum_pullback_volume_max_ratio', 0.95), 1e-6), 1.0) if pullback_volume else 0.5
             adr_bonus = min((adr - min_adr) / 0.02, 0.15)
 
             confidence = min(
@@ -1990,13 +2102,13 @@ class AISignalGenerator:
                 'five_day_return': five_day_return,
                 'adr': adr,
                 'volume_ratio': volume_ratio,
-                'support_price': support_context['support_price'],
-                'support_distance': support_context['support_distance'],
-                'support_name': support_context['support_name'],
-                'pullback_from_high': pullback_from_high,
-                'pullback_volume_ratio': pullback_volume['ratio'],
-                'bounce_volume_ratio': bounce['ratio'],
-                'extension_pct': extension['extension_pct'],
+                'support_price': support_context['support_price'] if support_context else None,
+                'support_distance': support_context['support_distance'] if support_context else None,
+                'support_name': support_context['support_name'] if support_context else None,
+                'pullback_from_high': pullback_from_high if 'pullback_from_high' in dir() else None,
+                'pullback_volume_ratio': pullback_volume['ratio'] if pullback_volume else None,
+                'bounce_volume_ratio': bounce['ratio'] if bounce else None,
+                'extension_pct': extension['extension_pct'] if extension else None,
                 'confidence': confidence,
             }
 

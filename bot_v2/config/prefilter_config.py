@@ -15,21 +15,21 @@ Date: January 8, 2026
 # Simple 3-Stage PreFilter Configuration (DUAL-STRATEGY OPTIMIZED)
 SIMPLE_PREFILTER_CONFIG = {
     # Stage 1: Price Range (Gap & Go optimized)
-    # Apr 23: Recovery widening to $75 to restore candidate throughput
+    # Jun 23: Further widened to $100 to restore candidate throughput
     # Lower bound allows quality $5-10 stocks; upper avoids penny gaps
     'min_price': 5.0,           # $5 minimum (quality mid-caps, avoid penny stock gaps)
-    'max_price': 75.0,          # Recovery mode: admit liquid mid-caps above $50
+    'max_price': 100.0,         # PERF TUNING (Jun 23): Widened to $100 to admit more liquid mid-caps
     
     # Stage 2: Volume (conservative expansion for broader candidate flow)
-    # Apr 23: Recovery mode - broader but still tradable liquidity floor
-    'min_volume': 1_500_000,    # 1.5M shares minimum (still liquid, broader opportunity set)
-    'max_volume': 30_000_000,   # 30M shares maximum (allow more liquid names)
-    'min_dollar_volume': 10_000_000,  # Recovery mode: $10M floor to avoid starving universe
+    # Jun 23: Further relaxed to increase candidate flow
+    'min_volume': 1_000_000,    # PERF TUNING (Jun 23): 1M shares minimum for broader opportunity set
+    'max_volume': 50_000_000,   # PERF TUNING (Jun 23): 50M shares maximum (allow more liquid names)
+    'min_dollar_volume': 5_000_000,  # PERF TUNING (Jun 23): $5M floor to avoid starving universe
     
-    # Stage 3: Volatility (conservative expansion — Apr 7, 2026)
+    # Stage 3: Volatility (conservative expansion — Jun 23, 2026)
     # Recovery mode: widen volatility band to increase candidate flow in mixed regimes
-    'min_atr_pct': 0.020,       # 2.0% minimum daily range
-    'max_atr_pct': 0.100,       # 10.0% maximum daily range
+    'min_atr_pct': 0.015,       # PERF TUNING (Jun 23): 1.5% minimum daily range (was 2.0%)
+    'max_atr_pct': 0.120,       # PERF TUNING (Jun 23): 12.0% maximum daily range (was 10.0%)
     
     # Data Requirements
     'min_data_rows': 15,        # Minimum 15 days (yfinance limitation)

@@ -61,7 +61,7 @@ class ShortCycleConfig:
     # Risk parameters (Dual-Strategy System: Gap & Go + Fade/Short)
     max_daily_loss_percent: float = 0.08  # 8% daily loss limit
     max_weekly_loss_percent: float = 0.15   # 15% weekly loss limit
-    confidence_threshold: float = 0.25  # Aggressive recovery: lower floor to restore signal throughput
+    confidence_threshold: float = 0.18  # OPTIMIZATION (May 19): Lowered from 0.25 to restore signal throughput (recovery mode continuation)
     
     # Triple-Strategy Configuration (Jan 13, 2026: Gap & Go + Fade + Momentum)
     # Gap & Go: 830% return / 748 trades = 1.11% per trade
@@ -83,11 +83,11 @@ class ShortCycleConfig:
     # Mid-caps with ADR > 2% routinely swing 2-4% before continuing
     # Widened to 4% structure stops, sized down to keep same $ risk
     gap_and_go_profit_target_pct: float = 0.06  # 6% profit target (raised from 3%)
-    gap_and_go_stop_loss_pct: float = 0.04  # 4% stop loss (raised from 2%)
+    gap_and_go_stop_loss_pct: float = 0.05  # PERF TUNING (Jun 11): Widened to 5% to reduce premature stops on volatile gap names
     fade_short_profit_target_pct: float = 0.04  # 4% profit target (raised from 2%)
     fade_short_stop_loss_pct: float = 0.03  # 3% stop loss (raised from 1.5%)
     momentum_profit_target_pct: float = 0.06  # 6% profit target (raised from 2.5%)
-    momentum_stop_loss_pct: float = 0.04  # 4% stop loss (raised from 1.5%)
+    momentum_stop_loss_pct: float = 0.05  # PERF TUNING (Jun 11): Widened to 5% to reduce noise-driven exits on mid-caps
     
     # High-Volatility Stocks - Special Handling (Jan 14, 2026)
     # These stocks have high intraday volatility and benefit from longer holds
@@ -138,7 +138,7 @@ class ShortCycleConfig:
     # Gap & Go parameters
     gap_min_pct: float = 0.02  # Minimum 2% gap
     gap_max_pct: float = 0.08  # Maximum 8% gap (avoid gap-and-crash)
-    gap_rsi_max: float = 75.0  # RSI must be < 75 at gap (not too overbought)
+    gap_rsi_max: float = 75.0  # PERF TUNING (Jul 15): Reverted to 75 — June 23 tightening was counterproductive
     gap_scan_time: str = "09:35"  # Scan for gaps 5 mins after open
     
     # Fade/Short parameters
@@ -153,20 +153,25 @@ class ShortCycleConfig:
     # Entry: Price above SMA20, RSI 45-70, ADR > 2%
     # Best for: Stocks with established uptrend, looking for continuation
     momentum_sma_period: int = 20  # SMA for trend confirmation
-    momentum_rsi_min: float = 40.0  # Recovery mode: wider RSI floor to admit more continuation setups
-    momentum_rsi_max: float = 75.0  # Recovery mode: wider ceiling to reduce near-threshold rejects
-    momentum_ema_break_tolerance_pct: float = 0.04  # Recovery mode: allow deeper but still controlled pullbacks
+    momentum_rsi_min: float = 30.0  # PERF TUNING (Jul 15): Widened floor to 30 to admit more continuation setups
+    momentum_rsi_max: float = 80.0  # PERF TUNING (Jun 11): Widened ceiling to 80 to admit strong momentum near overbought
+    momentum_ema_break_tolerance_pct: float = 0.10  # OPTIMIZATION (May 19): Increased from 0.04 to 0.10 (allow 10% below EMA for corrective markets)
+    momentum_trend_soft_mode: bool = True  # PERF TUNING (Jun 11): Allow price slightly below SMA20 when EMA9>EMA20 and RSI>45
     momentum_min_adr_pct: float = 0.015  # Recovery mode: include moderate-volatility symbols
     momentum_min_5d_return: float = 0.02  # Allow earlier trend continuation (+2% in 5 days)
     momentum_max_5d_return: float = 0.22  # Recovery mode: avoid over-filtering stronger momentum legs
-    momentum_min_volume_ratio: float = 1.0  # Recovery mode: accept neutral volume confirmations
-    momentum_pullback_ema_tolerance: float = 0.02  # Pullback should stay near 9/20 EMA support
-    momentum_support_tolerance: float = 0.03  # Allow modest distance from nearby price support
+    momentum_min_volume_ratio: float = 0.50  # PERF TUNING (Jul 15): Reduced to 0.50 to admit more setups in low-vol regimes
+    momentum_pullback_ema_tolerance: float = 0.04  # PERF TUNING (Jul 15): Loosened to 0.04 for looser EMA pullback
+    momentum_support_tolerance: float = 0.080  # PERF TUNING (Jul 15): Widened to 8% to admit more pullback entries
     momentum_pullback_volume_max_ratio: float = 1.05  # Recovery mode: allow less strict pullback contraction
-    momentum_bounce_volume_min_ratio: float = 1.0  # Recovery mode: allow flat-to-improving bounce volume
-    momentum_extension_reject_pct: float = 0.10  # Recovery mode: wider extension tolerance
+    momentum_bounce_volume_min_ratio: float = 0.85  # PERF TUNING (Jul 15): Softer bounce confirmation
+    momentum_extension_reject_pct: float = 0.15  # PERF TUNING (Jul 15): Wider extension tolerance
     momentum_scan_start: str = "09:35"  # Recovery mode: include early post-open opportunities
     momentum_scan_end: str = "15:30"  # Recovery mode: include late-day continuation scans
+    # Scored gate mode: instead of hard-conjunction (all gates must pass),
+    # accumulate a quality score and pass if score >= momentum_min_gate_score
+    momentum_scored_mode: bool = True  # PERF TUNING (Jul 15): Enable scored gate instead of all-or-nothing
+    momentum_min_gate_score: float = 0.60  # PERF TUNING (Jul 15): Pass if >=60% of gates pass
 
     # Swing pullback fallback (for choppy / weak-trend regimes)
     enable_swing_pullback: bool = True
@@ -175,14 +180,14 @@ class ShortCycleConfig:
     swing_weak_trend_abs_5d_return_max: float = 0.04  # Was implicit 3%; allow up to +/-4% drift over 5d
     swing_weak_trend_dist_to_sma_max: float = 0.05  # Was implicit 4%; allow modestly wider distance to SMA20
     swing_pullback_rsi_min: float = 38.0  # Lower bound for weak/choppy pullback context
-    swing_pullback_rsi_max: float = 56.0  # Slightly wider upper bound to admit borderline pullback resets
-    swing_pullback_min_volume_ratio: float = 0.85  # Allow slightly softer volume than momentum
-    swing_pullback_support_tolerance: float = 0.035  # Support can be slightly wider in choppy tape
+    swing_pullback_rsi_max: float = 58.0  # PERF TUNING (Jun 11): Widened to 58 to admit more borderline pullback resets
+    swing_pullback_min_volume_ratio: float = 0.65  # OPTIMIZATION (May 19): Reduced from 0.85 to 0.65 (accept lighter volume in low-vol regimes)
+    swing_pullback_support_tolerance: float = 0.045  # OPTIMIZATION (May 19): Increased from 0.035 to 0.045 (wider support proximity)
     swing_pullback_volume_max_ratio: float = 1.05  # Pullback volume should stay controlled, not distributive
-    swing_pullback_bounce_volume_min_ratio: float = 1.0  # Bounce should show at least modest volume improvement
-    swing_pullback_extension_reject_pct: float = 0.05  # Reject bounce-chase entries too far from support
+    swing_pullback_bounce_volume_min_ratio: float = 0.85  # PERF TUNING (Jun 23): Softer bounce confirmation
+    swing_pullback_extension_reject_pct: float = 0.06  # PERF TUNING (Jun 23): Wider extension tolerance
     swing_pullback_scan_start: str = "09:35"  # Start earlier to capture opening pullback reversals
-    swing_pullback_scan_end: str = "14:30"  # End before late-day liquidity fade
+    swing_pullback_scan_end: str = "15:30"  # PERF TUNING (Jun 23): Extended to 15:30 for more afternoon pullback opportunities
     
     # Default targets (SWING FIX Feb 13, 2026: UNIFIED for weekly swing strategy)
     # Single source of truth - wider stops survive mid-cap volatility
@@ -213,8 +218,11 @@ class ShortCycleConfig:
     # Late Entry Parameters (Jan 13, 2026: Afternoon scan for additional opportunities)
     enable_late_entry: bool = True  # Enable afternoon entry scans
     late_entry_start_time: str = "11:00"  # Recovery mode: start late-entry style scanning earlier
-    late_entry_end_time: str = "15:00"  # Recovery mode: extend late-entry style window
-    late_entry_confidence_multiplier: float = 1.15  # Recovery mode: reduce late-entry strictness
+    late_entry_end_time: str = "15:15"  # Productivity tuning: slightly longer late-entry window
+    late_entry_confidence_multiplier: float = 1.10  # Productivity tuning: admit more qualified afternoon setups
+    late_entry_drought_trigger_scans: int = 3  # Start adaptive softening after this many zero-signal scans
+    late_entry_drought_multiplier_step: float = 0.02  # Reduce confidence multiplier by 0.02 per extra drought scan
+    late_entry_drought_multiplier_floor: float = 0.95  # Never soften below this multiplier
     late_entry_position_size_pct: float = 0.75  # Recovery mode: increase size for qualified late entries
     late_entry_scan_interval_minutes: int = 15  # Scan every 15 minutes during late window
     late_entry_min_adr_pct: float = 0.025  # Require 2.5% ADR for late entries (more volatility needed)
@@ -223,6 +231,8 @@ class ShortCycleConfig:
     min_hold_time_minutes: int = 30
     entry_cooldown_minutes: int = 120
     duplicate_entry_window_minutes: int = 30
+    rejected_symbol_cooldown_minutes: int = 45  # Cooldown after rejection before re-attempt
+    symbol_loss_cooldown_days: int = 3  # PERF TUNING (Jun 23): Block re-entry for 3 trading days after a loss
     
     # Backtesting parameters
     enable_forced_d1_exit: bool = False  # DISABLED - no D+1 forced exits (was True)

@@ -116,6 +116,7 @@ class BotV2Launcher:
         self._entry_guard_date = dt.date.today()
         self._entered_symbols_today = set()
         self._rejected_symbols_today = {}
+        self._symbol_loss_cooldown = {}  # symbol -> datetime of last loss (for 3-day cooldown)
         
         # Session tracking for daily summary
         self.session_data = self._new_session_data()
@@ -142,8 +143,62 @@ class BotV2Launcher:
             'entries_executed': [],
             'rejections': {},  # reason -> count
             'rejection_samples': {},  # reason -> symbols (capped)
-            'exit_reasons': {}  # normalized exit reason tag -> count
+            'exit_reasons': {},  # normalized exit reason tag -> count
+            'throughput_snapshots': [],  # per-scan acceptance telemetry
+            'no_signal_streak': 0,
         }
+
+    def _record_throughput_snapshot(
+        self,
+        phase: str,
+        candidates_in: int,
+        signals_out: int,
+        rejection_stats: Optional[Dict[str, Any]] = None,
+    ):
+        """Track per-scan throughput and warn when no-signal streaks persist."""
+        counts = (rejection_stats or {}).get('counts', {}) or {}
+        rejected = int((rejection_stats or {}).get('total_rejected') or sum(int(v) for v in counts.values() if v))
+        candidates_in = max(int(candidates_in or 0), 0)
+        signals_out = max(int(signals_out or 0), 0)
+        acceptance_pct = (signals_out / candidates_in * 100.0) if candidates_in > 0 else 0.0
+
+        if signals_out == 0:
+            self.session_data['no_signal_streak'] = int(self.session_data.get('no_signal_streak', 0)) + 1
+        else:
+            self.session_data['no_signal_streak'] = 0
+
+        snapshot = {
+            'timestamp': dt.datetime.now(self.tz).isoformat(),
+            'phase': phase,
+            'candidates_in': candidates_in,
+            'signals_out': signals_out,
+            'rejected': rejected,
+            'acceptance_pct': round(acceptance_pct, 2),
+            'no_signal_streak': int(self.session_data.get('no_signal_streak', 0)),
+        }
+
+        self.session_data['throughput_snapshots'].append(snapshot)
+        # Keep summary payload bounded for daily reports.
+        if len(self.session_data['throughput_snapshots']) > 300:
+            self.session_data['throughput_snapshots'] = self.session_data['throughput_snapshots'][-300:]
+
+        self.logger.info(
+            f"📈 Throughput [{phase}] candidates={candidates_in}, signals={signals_out}, "
+            f"acceptance={acceptance_pct:.1f}%"
+        )
+
+        streak = int(self.session_data.get('no_signal_streak', 0))
+        if streak >= 3:
+            top_reasons = [
+                f"{reason}={count}"
+                for reason, count in sorted(counts.items(), key=lambda item: item[1], reverse=True)
+                if int(count) > 0
+            ][:5]
+            top_text = ', '.join(top_reasons) if top_reasons else 'none'
+            self.logger.warning(
+                f"⚠️ Throughput alert: {streak} consecutive scans with zero signals. "
+                f"Top rejection counts: {top_text}"
+            )
 
     def _record_rejection(self, reason: str, symbol: Optional[str] = None):
         """Track rejection reasons as counts (with optional symbol samples)."""
@@ -221,7 +276,7 @@ class BotV2Launcher:
         self._entered_symbols_today.add(symbol.upper())
 
     def _should_block_entry_symbol(self, symbol: str) -> bool:
-        """Block entries for symbols already active or already entered today."""
+        """Block entries for symbols already active, already entered today, or on loss cooldown."""
         self._reset_daily_entry_guards_if_needed()
         sym = (symbol or "").upper()
         if not sym:
@@ -235,7 +290,25 @@ class BotV2Launcher:
         if sym in active_symbols:
             return True
 
-        return sym in self._entered_symbols_today
+        if sym in self._entered_symbols_today:
+            return True
+
+        # Per-symbol loss cooldown: configurable trading days after a losing exit
+        loss_cooldown = self._symbol_loss_cooldown.get(sym)
+        if loss_cooldown:
+            cooldown_days = int(getattr(self.config, 'symbol_loss_cooldown_days', 3))
+            days_since_loss = (dt.datetime.now(self.tz) - loss_cooldown).days
+            if days_since_loss < cooldown_days:
+                self.logger.info(
+                    f"🚫 {sym} blocked by loss cooldown: {days_since_loss} days since last loss "
+                    f"(cooldown: {cooldown_days} days)"
+                )
+                return True
+            else:
+                # Cooldown expired, clean up
+                self._symbol_loss_cooldown.pop(sym, None)
+
+        return False
 
     def _record_rejected_symbol(self, symbol: str):
         """Track temporary entry rejections to avoid immediate re-attempt loops."""
@@ -258,6 +331,21 @@ class BotV2Launcher:
         cooldown_minutes = int(getattr(self.config, 'rejected_symbol_cooldown_minutes', 45))
         elapsed = (dt.datetime.now(self.tz) - last_rejection).total_seconds() / 60.0
         return elapsed < cooldown_minutes
+
+    def _is_symbol_on_loss_cooldown(self, symbol: str) -> bool:
+        """Check if symbol is on loss cooldown (separate from rejection cooldown)."""
+        self._reset_daily_entry_guards_if_needed()
+        sym = (symbol or "").upper()
+        if not sym:
+            return True
+
+        loss_cooldown = self._symbol_loss_cooldown.get(sym)
+        if not loss_cooldown:
+            return False
+
+        cooldown_days = int(getattr(self.config, 'symbol_loss_cooldown_days', 3))
+        days_since_loss = (dt.datetime.now(self.tz) - loss_cooldown).days
+        return days_since_loss < cooldown_days
 
     def _dedupe_signals_by_symbol(self, signals: List[Any]) -> List[Any]:
         """Keep highest-confidence signal per symbol to avoid duplicate same-cycle entries."""
@@ -1110,6 +1198,25 @@ class BotV2Launcher:
         self.logger.info("=" * 80)
         
         try:
+            throughput = self.session_data.get('throughput_snapshots', [])
+            total_candidates = sum(int(s.get('candidates_in', 0) or 0) for s in throughput)
+            total_signals = sum(int(s.get('signals_out', 0) or 0) for s in throughput)
+            acceptance_pct = (total_signals / total_candidates * 100.0) if total_candidates > 0 else 0.0
+            rejections = self.session_data.get('rejections', {}) or {}
+            top_rejection = 'none'
+            if rejections:
+                reason, count = max(rejections.items(), key=lambda item: int(item[1]))
+                top_rejection = f"{reason}={int(count)}"
+
+            self.logger.info(
+                f"📌 Productivity KPI: scans={int(self.session_data.get('scans_run', 0))}, "
+                f"signals={int(self.session_data.get('signals_generated', 0))}, "
+                f"entries={len(self.session_data.get('entries_executed', []))}, "
+                f"acceptance={acceptance_pct:.1f}%, "
+                f"no_signal_streak={int(self.session_data.get('no_signal_streak', 0))}, "
+                f"top_rejection={top_rejection}"
+            )
+
             summary = self.daily_summary.generate_summary(self.session_data)
             self.daily_summary.print_summary(summary, show_details=False)
             
@@ -1288,6 +1395,29 @@ class BotV2Launcher:
             
             # Generate signals on pre-filtered candidates
             active_positions = self.position_tracker.get_active_positions()
+
+            # Progressive drought relaxation: relax GATE strictness after consecutive zero-signal scans
+            # (confidence is NOT the bottleneck — gates reject 100% before confidence is evaluated)
+            no_signal_streak = int(self.session_data.get('no_signal_streak', 0))
+            _original_support_tol = self.config.momentum_support_tolerance
+            _original_min_vol = self.config.momentum_min_volume_ratio
+            _original_min_gate_score = getattr(self.config, 'momentum_min_gate_score', 0.60)
+            if no_signal_streak >= 5:
+                _drought_steps = no_signal_streak - 4
+                # Widen support tolerance and lower volume floor progressively
+                self.config.momentum_support_tolerance = min(0.12, _original_support_tol + _drought_steps * 0.01)
+                self.config.momentum_min_volume_ratio = max(0.30, _original_min_vol - _drought_steps * 0.05)
+                self.config.momentum_min_gate_score = max(0.45, _original_min_gate_score - _drought_steps * 0.02)
+                if (self.config.momentum_support_tolerance != _original_support_tol or
+                        self.config.momentum_min_volume_ratio != _original_min_vol or
+                        self.config.momentum_min_gate_score != _original_min_gate_score):
+                    self.logger.info(
+                        f"⚡ Drought relaxation: support_tol {_original_support_tol:.3f}→{self.config.momentum_support_tolerance:.3f}, "
+                        f"min_vol {_original_min_vol:.2f}→{self.config.momentum_min_volume_ratio:.2f}, "
+                        f"gate_score {_original_min_gate_score:.2f}→{self.config.momentum_min_gate_score:.2f} "
+                        f"(streak={no_signal_streak})"
+                    )
+
             signal_start = time.time()
             signals = self.signal_generator.generate_signals(
                 universe=candidates,  # Use pre-filtered candidates
@@ -1298,6 +1428,20 @@ class BotV2Launcher:
             signal_rejections = self.signal_generator.get_last_rejection_stats()
             self._record_rejection_counts(signal_rejections.get('counts', {}))
             self._log_signal_rejections("entry_window", signal_rejections)
+
+            # Restore gate params if signals were generated (drought broken)
+            if len(signals) > 0 and (
+                    self.config.momentum_support_tolerance != _original_support_tol or
+                    self.config.momentum_min_volume_ratio != _original_min_vol or
+                    self.config.momentum_min_gate_score != _original_min_gate_score):
+                self.config.momentum_support_tolerance = _original_support_tol
+                self.config.momentum_min_volume_ratio = _original_min_vol
+                self.config.momentum_min_gate_score = _original_min_gate_score
+                self.logger.info(
+                    f"✅ Drought broken — gate params restored "
+                    f"(support_tol={_original_support_tol:.3f}, min_vol={_original_min_vol:.2f}, "
+                    f"gate_score={_original_min_gate_score:.2f})"
+                )
             
             signals = self._dedupe_signals_by_symbol(signals)
             self.logger.info(f"✅ Generated {len(signals)} entry signals")
@@ -1310,6 +1454,12 @@ class BotV2Launcher:
                 ][:6]
                 top_text = ', '.join(top_reasons) if top_reasons else 'none'
                 self.logger.warning(f"⚠️ No entry signals this scan. Top rejection counts: {top_text}")
+            self._record_throughput_snapshot(
+                phase="entry_window",
+                candidates_in=len(candidates),
+                signals_out=len(signals),
+                rejection_stats=signal_rejections,
+            )
             self.session_data['signals_generated'] += len(signals)
             
             # Enhanced logging: Signal generation
@@ -1405,13 +1555,33 @@ class BotV2Launcher:
         - Focus on afternoon momentum continuation
         - Requires higher ADR for volatility
         """
-        conf_multiplier = getattr(self.config, 'late_entry_confidence_multiplier', 1.2)
+        conf_multiplier = float(getattr(self.config, 'late_entry_confidence_multiplier', 1.2))
+        drought_trigger = int(getattr(self.config, 'late_entry_drought_trigger_scans', 3))
+        drought_step = float(getattr(self.config, 'late_entry_drought_multiplier_step', 0.02))
+        drought_floor = float(getattr(self.config, 'late_entry_drought_multiplier_floor', 0.95))
+        drought_floor = min(drought_floor, conf_multiplier)
+        no_signal_streak = int(self.session_data.get('no_signal_streak', 0))
+
+        effective_conf_multiplier = conf_multiplier
+        if no_signal_streak >= drought_trigger:
+            drought_steps = (no_signal_streak - drought_trigger) + 1
+            drought_reduction = max(drought_steps, 0) * max(drought_step, 0.0)
+            effective_conf_multiplier = max(drought_floor, conf_multiplier - drought_reduction)
+
         size_pct = getattr(self.config, 'late_entry_position_size_pct', 0.75)
         min_adr = getattr(self.config, 'late_entry_min_adr_pct', 0.025)
         
         self.logger.info("=" * 80)
         self.logger.info("🌅 LATE ENTRY SCAN (1:00 PM - 2:30 PM)")
-        self.logger.info(f"   Confidence: {conf_multiplier:.1f}x | Size: {size_pct:.0%} | Min ADR: {min_adr:.1%}")
+        self.logger.info(
+            f"   Confidence: {effective_conf_multiplier:.2f}x (base {conf_multiplier:.2f}x) | "
+            f"Size: {size_pct:.0%} | Min ADR: {min_adr:.1%}"
+        )
+        if effective_conf_multiplier < conf_multiplier:
+            self.logger.info(
+                f"   Adaptive softening active: no-signal streak={no_signal_streak}, "
+                f"floor={drought_floor:.2f}x"
+            )
         self.logger.info("=" * 80)
         
         try:
@@ -1491,7 +1661,7 @@ class BotV2Launcher:
             
             # Temporarily adjust confidence threshold for late entry
             original_threshold = self.config.confidence_threshold
-            self.config.confidence_threshold = original_threshold * conf_multiplier
+            self.config.confidence_threshold = original_threshold * effective_conf_multiplier
             
             try:
                 signal_start = time.time()
@@ -1509,7 +1679,15 @@ class BotV2Launcher:
                 self.config.confidence_threshold = original_threshold
             
             signals = self._dedupe_signals_by_symbol(signals)
-            self.logger.info(f"✅ Late entry: {len(signals)} signals at {conf_multiplier:.1f}x confidence bar")
+            self.logger.info(
+                f"✅ Late entry: {len(signals)} signals at {effective_conf_multiplier:.2f}x confidence bar"
+            )
+            self._record_throughput_snapshot(
+                phase="late_entry",
+                candidates_in=len(high_adr_candidates),
+                signals_out=len(signals),
+                rejection_stats=signal_rejections,
+            )
             self.session_data['signals_generated'] += len(signals)
             
             # Enhanced logging
@@ -1746,6 +1924,14 @@ class BotV2Launcher:
                                 exit_tag=exit_tag,
                                 days_held=days_held
                             )
+                            
+                            # Track per-symbol loss cooldown: 3 trading days after a losing exit
+                            if pnl < 0:
+                                self._symbol_loss_cooldown[position.symbol.upper()] = dt.datetime.now(self.tz)
+                                self.logger.info(
+                                    f"⏳ Loss cooldown activated for {position.symbol}: "
+                                    f"3-day block after ${pnl:.2f} loss"
+                                )
                         else:
                             # ONLY log STUCK if this is a D+1 position that SHOULD have exited
                             # Don't log for same-day positions or early exits
@@ -1881,9 +2067,17 @@ class BotV2Launcher:
         """Run continuous trading loop with phase-based execution"""
         self.is_running = True
         self.logger.info("🔄 Starting continuous trading loop...")
-        
+
+        # Liveness tracking: detect silent hangs (e.g., blocked I/O, dead API)
+        self._last_loop_iteration = dt.datetime.now(self.tz)
+
         try:
             while self.is_running:
+                # Liveness heartbeat: log every iteration so a hang is visible in logs
+                _now = dt.datetime.now(self.tz)
+                self._last_loop_iteration = _now
+                self.logger.debug(f"💓 Loop heartbeat: {_now.strftime('%H:%M:%S')} | Phase check")
+
                 # Periodic connection health check (every 30 minutes)
                 now = dt.datetime.now(self.tz)
                 if self.last_health_check is None or \
