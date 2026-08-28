@@ -9,40 +9,39 @@ Design Philosophy:
 - 3-stage filter (price, volume, volatility)
 - Focus on quality over quantity
 
-Date: January 8, 2026
+Date: July 21, 2026 - QUALITY FOCUS UPDATE
 """
 
-# Simple 3-Stage PreFilter Configuration (DUAL-STRATEGY OPTIMIZED)
+# Simple 3-Stage PreFilter Configuration (QUALITY-FOCUSED)
 SIMPLE_PREFILTER_CONFIG = {
     # Stage 1: Price Range (Gap & Go optimized)
-    # Jun 23: Further widened to $100 to restore candidate throughput
-    # Lower bound allows quality $5-10 stocks; upper avoids penny gaps
-    'min_price': 5.0,           # $5 minimum (quality mid-caps, avoid penny stock gaps)
-    'max_price': 100.0,         # PERF TUNING (Jun 23): Widened to $100 to admit more liquid mid-caps
+    # Jul 21: Tightened for better quality - focus on proven movers
+    'min_price': 8.0,           # INCREASED: $8 minimum (avoid choppy low-priced stocks)
+    'max_price': 80.0,          # DECREASED: $80 maximum (focus on liquid mid-caps)
     
-    # Stage 2: Volume (conservative expansion for broader candidate flow)
-    # Jun 23: Further relaxed to increase candidate flow
-    'min_volume': 1_000_000,    # PERF TUNING (Jun 23): 1M shares minimum for broader opportunity set
-    'max_volume': 50_000_000,   # PERF TUNING (Jun 23): 50M shares maximum (allow more liquid names)
-    'min_dollar_volume': 5_000_000,  # PERF TUNING (Jun 23): $5M floor to avoid starving universe
+    # Stage 2: Volume (quality over quantity)
+    # Jul 21: Increased requirements for better liquidity
+    'min_volume': 1_500_000,    # INCREASED: 1.5M shares minimum (better liquidity)
+    'max_volume': 30_000_000,   # DECREASED: 30M shares maximum (avoid mega-cap choppiness)
+    'min_dollar_volume': 8_000_000,  # INCREASED: $8M floor for institutional interest
     
-    # Stage 3: Volatility (conservative expansion — Jun 23, 2026)
-    # Recovery mode: widen volatility band to increase candidate flow in mixed regimes
-    'min_atr_pct': 0.015,       # PERF TUNING (Jun 23): 1.5% minimum daily range (was 2.0%)
-    'max_atr_pct': 0.120,       # PERF TUNING (Jun 23): 12.0% maximum daily range (was 10.0%)
+    # Stage 3: Volatility (balanced for quality moves)
+    # Jul 21: Narrowed to focus on sustainable moves, not noise
+    'min_atr_pct': 0.020,       # INCREASED: 2.0% minimum daily range (ensure real movement)
+    'max_atr_pct': 0.100,       # DECREASED: 10.0% maximum daily range (avoid extreme volatility)
     
     # Data Requirements
-    'min_data_rows': 15,        # Minimum 15 days (yfinance limitation)
+    'min_data_rows': 20,        # INCREASED: 20 days for better statistical significance
     
-    # ENABLED Features for Gap & Go (Jan 8, 2026)
+    # ENABLED Features for Gap & Go (Jul 21, 2026)
     'enable_breakout': False,        # Not needed for gaps
-    'enable_momentum': True,         # Recovery mode: align prefilter flags with active momentum strategy
+    'enable_momentum': True,         # Keep momentum alignment
     'enable_gap_detection': True,    # ✅ ENABLED for Gap & Go strategy!
     'enable_regime': False,          # Not needed
     
-    # Target Candidate Range (dual-strategy optimized)
-    'target_min_candidates': 30,     # More candidates for gap scanning
-    'target_max_candidates': 100     # Recovery mode: broader pool for no-activity recovery
+    # Target Candidate Range (quality-focused)
+    'target_min_candidates': 20,     # DECREASED: Fewer but higher quality candidates
+    'target_max_candidates': 60      # DECREASED: Quality over quantity focus
 }
 
 

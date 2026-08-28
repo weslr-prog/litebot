@@ -10,6 +10,8 @@ from typing import Dict, List, Tuple
 import logging
 import pandas as pd
 
+from bot_v2.config.prefilter_config import SIMPLE_PREFILTER_CONFIG
+
 
 class UniverseHealthChecker:
     """Checks universe health quarterly and prompts for review"""
@@ -22,9 +24,11 @@ class UniverseHealthChecker:
         self.universe_file = Path(__file__).parent.parent / 'data' / 'mid_cap_universe.json'
         self.last_check_file = Path(__file__).parent.parent / 'data' / '.last_universe_check'
         
-        # Criteria from universe JSON
-        self.min_price = 5.0
-        self.max_price = 50.0
+        # Align health-check criteria with active prefilter policy to reduce noisy alerts.
+        self.min_price = float(SIMPLE_PREFILTER_CONFIG.get('min_price', 5.0))
+        self.max_price = float(SIMPLE_PREFILTER_CONFIG.get('max_price', 50.0))
+        # Keep health-check volume floor intentionally lower than trading min-volume; this is
+        # a universe hygiene check, not a tradability filter.
         self.min_volume = 100_000
         
     def should_run_check(self) -> Tuple[bool, str]:

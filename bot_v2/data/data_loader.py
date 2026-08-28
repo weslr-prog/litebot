@@ -105,7 +105,20 @@ class DataLoader:
             enable_multi_source_validation: Enable cross-validation with Alpaca IEX
         """
         self._yf_available = yf is not None
-        
+
+        # Initialize Polygon.io client
+        polygon_api_key = os.getenv("POLYGON_API_KEY")
+        if polygon_api_key:
+            try:
+                from polygon import RESTClient
+                self.polygon_client = RESTClient(polygon_api_key)
+                logger.info("��✅ Polygon.io client initialized")
+            except Exception as e:
+                logger.warning(f"��⚠��️  Failed to initialize Polygon.io client: {e}")
+                self.polygon_client = None
+        else:
+            self.polygon_client = None
+
         # Initialize Alpaca Market Data client if credentials are available
         self._alpaca_client = None
         api_key = os.getenv("APCA_API_KEY_ID")
@@ -129,6 +142,165 @@ class DataLoader:
                 logger.debug(f"Multi-source validation not available: {e}")
 
     @retry_on_connection_error(max_retries=3, base_delay=2.0)
+    def get_historical_data(
+        self, 
+        symbol: str, 
+        days: int = 30, 
+        use_cache: bool = False
+    ) -> pd.DataFrame:
+        """
+        Get historical OHLCV data for a symbol
+        
+        Args:
+            symbol: Stock symbol
+            days: Number of trading days to fetch
+            use_cache: Not used (kept for API compatibility)
+        
+        Returns:
+            DataFrame with columns: date, open, high, low, close, volume
+        """
+        # 1. Try Polygon.io
+        if self.polygon_client is not None:
+            try:
+                # Calculate date range
+                end_date = dt.datetime.utcnow().date()
+                calendar_days = max(int(days * 2.2), days + 10)
+                start_date = end_date - dt.timedelta(days=calendar_days)
+                
+                # Fetch from Polygon
+                aggs = self.polygon_client.get_aggs(
+                    ticker=symbol,
+                    multiplier=1,
+                    timespan="day",
+                    from_=start_date,
+                    to=end_date,
+                    adjusted=True,
+                    sort="asc",
+                    limit=50000
+                )
+                if aggs:
+                    # Convert to DataFrame
+                    data = []
+                    for agg in aggs:
+                        # agg.timestamp is in milliseconds
+                        date = dt.datetime.fromtimestamp(agg.timestamp / 1000.0)
+                        data.append({
+                            'date': date,
+                            'open': agg.open,
+                            'high': agg.high,
+                            'low': agg.low,
+                            'close': agg.close,
+                            'volume': agg.volume
+                        })
+                    df = pd.DataFrame(data)
+                    if not df.empty:
+                        # We have data, return the last 'days' trading days
+                        df = df.sort_values('date')
+                        if len(df) > days:
+                            df = df.tail(days)
+                        return df.reset_index(drop=True)
+            except Exception as e:
+                logger.debug(f"{symbol}: Polygon historical data fetch failed: {e}")
+                # Fall through to multi-source
+        
+        # 2. Try multi-source validation (if enabled)
+        if self._multi_source_loader:
+            try:
+                validated_data = self._multi_source_loader.get_validated_data(
+                    symbol, 
+                    days=days, 
+                    validate=True
+                )
+                if validated_data is not None and not validated_data.empty:
+                    # Ensure 'date' column exists
+                    if 'date' not in validated_data.columns:
+                        validated_data = validated_data.reset_index()
+                        for col in validated_data.columns:
+                            if col in ['Date', 'timestamp', 'Timestamp', 'index']:
+                                validated_data = validated_data.rename(columns={col: 'date'})
+                                break
+                        if 'date' not in validated_data.columns:
+                            validated_data['date'] = pd.to_datetime(validated_data.index)
+                    validated_data['date'] = pd.to_datetime(validated_data['date'])
+                    return validated_data
+            except Exception as e:
+                logger.debug(f"{symbol}: Multi-source validation failed: {e}")
+        
+        # 3. Fallback to standard yfinance fetch
+        if not self._yf_available:
+            logger.warning("��������������������������������������������������������������⚠��������������������������������������������������������������️  yfinance not available; returning empty DataFrame")
+            return pd.DataFrame()
+        
+        # Request a longer calendar range to account for weekends/holidays
+        calendar_days = max(int(days * 2.2), days + 10)
+        start = (dt.datetime.utcnow() - dt.timedelta(days=calendar_days)).date()
+        end = dt.datetime.utcnow().date()
+        
+        try:
+            # Rate limit yfinance calls
+            get_yfinance_limiter().acquire()
+            
+            tkr = yf.Ticker(symbol)
+            hist = tkr.history(start=start, end=end, interval="1d", auto_adjust=False)
+            
+            if hist is None or hist.empty:
+                return pd.DataFrame()
+            
+            # Normalize schema
+            hist = hist.rename(columns={
+                'Open': 'open',
+                'High': 'high',
+                'Low': 'low',
+                'Close': 'close',
+                'Volume': 'volume'
+            })
+            
+            # Ensure required columns present
+            required_cols = ['open', 'high', 'low', 'close', 'volume']
+            for c in required_cols:
+                if c not in hist.columns:
+                    logger.warning(f"{symbol}: Missing column '{c}'")
+                    return pd.DataFrame()
+            
+            # Ensure a date column
+            hist = hist.reset_index()
+            
+            # yfinance index column can be DatetimeIndex named 'Date'
+            if 'Date' in hist.columns:
+                hist = hist.rename(columns={'Date': 'date'})
+            elif 'date' not in hist.columns:
+                # Try to coerce any datetime index to 'date'
+                if isinstance(hist.index, pd.DatetimeIndex):
+                    hist['date'] = hist.index
+                    hist = hist.reset_index(drop=True)
+                else:
+                    hist['date'] = pd.to_datetime('today')
+            
+            # Keep only required columns, sort, and return last N trading rows
+            hist = hist[['date', 'open', 'high', 'low', 'close', 'volume']].copy()
+            hist['date'] = pd.to_datetime(hist['date'])
+            hist = hist.sort_values('date')
+            hist = hist.dropna(subset=['open', 'high', 'low', 'close', 'volume'])
+            
+            # Return last N rows (trading days)
+            if len(hist) > days:
+                hist = hist.tail(days)
+            
+            return hist.reset_index(drop=True)
+            
+        except Exception as e:
+            track_error(
+                module='data_loader',
+                function='get_historical_data',
+                error=e,
+                symbol=symbol,
+                severity=ErrorSeverity.MEDIUM,
+                context={'days': days},
+                recovered=True,
+                fallback_used='empty DataFrame'
+            )
+            logger.error(f"��������������������������������������������������������������❌ Error fetching historical data for {symbol}: {e}", exc_info=False)
+            return pd.DataFrame()
     def get_historical_data(
         self, 
         symbol: str, 

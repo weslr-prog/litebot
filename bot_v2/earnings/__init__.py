@@ -24,31 +24,54 @@ Usage:
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import Optional, Dict
-import yfinance as yf
+from datetime import datetime
 from functools import lru_cache
+from typing import Any, Dict, Optional
+
+try:
+    import yfinance as yf
+except Exception:
+    yf = None
 
 logger = logging.getLogger(__name__)
 
 
 class EarningsCalendar:
     """Fetches and manages earnings announcement dates."""
+    _missing_dependency_warning_logged = False
     
-    def __init__(self, 
+    def __init__(self,
                  entry_blackout_days: int = 3,
-                 exit_buffer_days: int = 1):
+                 exit_buffer_days: int = 1,
+                 days_before: Optional[int] = None,
+                 days_after: Optional[int] = None):
         """
         Initialize earnings calendar.
         
         Args:
             entry_blackout_days: Days before earnings to block entries (default: 3)
             exit_buffer_days: Days before earnings to force exits (default: 1)
+            days_before: Backward-compatible alias for entry_blackout_days
+            days_after: Backward-compatible alias for exit_buffer_days
         """
+        if days_before is not None:
+            entry_blackout_days = days_before
+        if days_after is not None:
+            exit_buffer_days = days_after
+
         self.entry_blackout_days = entry_blackout_days
         self.exit_buffer_days = exit_buffer_days
         self._earnings_cache: Dict[str, Optional[datetime]] = {}
         logger.info(f"✅ EarningsCalendar initialized: entry_blackout={entry_blackout_days}d, exit_buffer={exit_buffer_days}d")
+
+    @classmethod
+    def _log_missing_dependency_warning(cls) -> None:
+        if cls._missing_dependency_warning_logged:
+            return
+        logger.warning(
+            "⚠️ yfinance not installed - earnings protection disabled until dependencies are installed"
+        )
+        cls._missing_dependency_warning_logged = True
     
     @lru_cache(maxsize=100)
     def get_next_earnings_date(self, symbol: str) -> Optional[datetime]:
@@ -65,6 +88,11 @@ class EarningsCalendar:
         cache_key = f"{symbol}_{datetime.now().date()}"
         if cache_key in self._earnings_cache:
             return self._earnings_cache[cache_key]
+
+        if yf is None:
+            self._log_missing_dependency_warning()
+            self._earnings_cache[cache_key] = None
+            return None
         
         try:
             ticker = yf.Ticker(symbol)
@@ -161,7 +189,7 @@ class EarningsCalendar:
             return True
         return False
     
-    def get_earnings_info(self, symbol: str) -> Dict[str, any]:
+    def get_earnings_info(self, symbol: str) -> Dict[str, Any]:
         """
         Get comprehensive earnings information for a symbol.
         

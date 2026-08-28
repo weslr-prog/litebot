@@ -29,38 +29,38 @@ class SmallPortfolioConfig:
     thursday_pool_percent: float = 1.0  # All-in Thursday
     portfolio_threshold_large: float = 100000.0  # Threshold for "large" portfolio diversification rules
     
-    # Account Type Configuration (MARGIN ACCOUNT - PDT RESTRICTED)
-    cash_account_mode: bool = False  # False = Margin account with PDT restrictions
-    enable_same_day_exit: bool = False  # NO same-day exits (avoid PDT)
-    enable_same_day_reentry: bool = False  # NO re-entries (avoid PDT)
-    enable_intraday_scalping: bool = False  # NO intraday trading (avoid PDT)
+    # Account Type Configuration (CASH ACCOUNT - INTRADAY ENABLED)
+    cash_account_mode: bool = True  # True = Cash account with intraday trading enabled
+    enable_same_day_exit: bool = True  # Allow same-day exits
+    enable_same_day_reentry: bool = True  # Allow same-day re-entries
+    enable_intraday_scalping: bool = True  # Enable intraday trading
     
-    # Position Sizing (Conservative for Multi-Day Holds - Per Optimization Plan)
+    # Position Sizing (Aggressive Intraday)
     max_position_dollars: float = 200.0  # 20% max position (per optimization plan)
-    min_position_size_dollars: float = 100.0  # Meaningful minimum position (per optimization plan)
-    max_positions_per_day: int = 5  # Max 5 new positions per day (per optimization plan)
+    min_position_size_dollars: float = 50.0  # Lower minimum to keep small-account throughput viable
+    max_positions_per_day: int = 12  # Very aggressive target throughput
     max_positions_per_symbol_small: int = 1  # Only 1 position per symbol (simplify tracking)
     max_concentration_percent_small: float = 0.30  # Max 30% of positions in one symbol
     position_size_increment: float = 25.0  # $25 increments for clean sizing
     
-    # Risk Management (Adjusted for Overnight Risk - Per Optimization Plan)
+    # Risk Management (Intraday, high-throughput with hard daily guardrail)
     max_risk_per_trade_dollars: float = 20.0  # 2% portfolio risk per trade
     max_loss_per_trade_dollars: float = 50.0  # 5% hard stop per trade (per optimization plan)
-    max_daily_loss_percent: float = 0.03  # 3% daily loss limit (per optimization plan)
+    max_daily_loss_percent: float = 0.05  # 5% daily loss limit (user-selected)
     max_weekly_loss_percent: float = 0.10  # 10% weekly loss limit (per optimization plan)
     position_risk_percent: float = 0.02  # 2% default risk per position
     
     # Calculated Risk Limits (Initialized at runtime, updated dynamically)
     daily_pool_dollars: float = 800.0  # 80% of $1K = $800 (per optimization plan)
-    max_daily_loss_dollars: float = 30.0  # 3% of $1K = $30 (per optimization plan)
+    max_daily_loss_dollars: float = 50.0  # 5% of $1K = $50
     max_weekly_loss_dollars: float = 100.0  # 10% of $1K = $100 (per optimization plan)
     
     # Trailing Stop Configuration
     enable_trailing_stops: bool = True  # Enable trailing stops
     
-    # Stock Selection Filters (Mid-Cap Volatile Focus - Swing Trading Optimized)
-    min_price: float = 10.0  # Sweet spot for volatility + affordability
-    max_price: float = 30.0  # Sweet spot for daily 3-10% swings (per optimization plan)
+    # Stock Selection Filters (Aggressive Intraday Universe)
+    min_price: float = 5.0  # Expanded lower bound for higher opportunity count
+    max_price: float = 120.0  # OPTIMIZATION: Expanded from $100 to $120 to capture mid-caps (recovers 49% of prefilter rejections)
     min_volatility: float = 0.03  # 3% minimum ATR - need bigger daily swings
     max_volatility: float = 0.12  # 12% maximum ATR - avoid overnight gap risk (vs 15% intraday)
     
@@ -79,16 +79,16 @@ class SmallPortfolioConfig:
     breakout_window: int = 10  # Reduced from 20 (less data needed)
     vol_avg_window: int = 10  # Reduced from 20 (more responsive)
     
-    # ⚠️ SWING TRADING MODE - Balanced for Quality ⚠️
-    confidence_threshold: float = 0.04  # 4% threshold (balanced - not too tight, not too loose)
+    # ⚠️ OPTIMIZATION: Lowered confidence threshold to increase signal generation ⚠️
+    confidence_threshold: float = 0.02  # OPTIMIZATION: Lowered from 0.04 to 0.02 (2%) to broaden signal acceptance ~50% (target 1-2 trades/day)
     
     # Volume Requirements (Balanced for Liquidity & Access)
     min_avg_volume: int = 200_000  # 200K shares daily (quality + liquidity balance)
     min_dollar_volume: int = 1_000_000  # $1M daily dollar volume (ensure exit ability)
     
     # Watchlist Universe Size
-    max_universe_size: int = 15  # Max stocks in daily watchlist
-    min_universe_size: int = 8   # Min stocks in watchlist (quality over quantity)
+    max_universe_size: int = 40  # Higher scan breadth for intraday opportunity capture
+    min_universe_size: int = 12   # Keep enough candidates during slow sessions
     
     # Dynamic Position Sizing Multipliers (More Aggressive)
     high_confidence_multiplier_min: float = 2.5  # vs 1.6 current
@@ -98,12 +98,12 @@ class SmallPortfolioConfig:
     low_confidence_multiplier_min: float = 1.2  # vs 1.0 current
     low_confidence_multiplier_max: float = 1.8  # vs 1.2 current
     
-    # Swing Trading Parameters (D+1 to D+3 Holds - NO INTRADAY)
-    intraday_take_profit: float = 0.08  # +8% profit target for 2-3 day hold (vs 4% intraday)
-    intraday_stop_loss: float = -0.04  # -4% stop loss for overnight risk (vs -2.5% intraday)
-    intraday_max_hold_minutes: int = 4320  # 3 days max (72 hours vs 5 hours)
-    intraday_monitor_interval_seconds: int = 300  # Check every 5 minutes (vs 2 min)
-    intraday_capital_allocation: float = 0.8  # 80% of portfolio for swing trades (vs 100%)
+    # Intraday Parameters
+    intraday_take_profit: float = 0.03  # +3% target for faster turnover
+    intraday_stop_loss: float = -0.02  # -2% stop for faster loss containment
+    intraday_max_hold_minutes: int = 390  # Same-day only (regular session)
+    intraday_monitor_interval_seconds: int = 120  # Check every 2 minutes
+    intraday_capital_allocation: float = 0.9  # High deployment while preserving risk headroom
     
     # Swing Trading Exit Strategy (D+1 to D+3 - Multi-Day Holds)
     # Targets for 2-3 day momentum swing trades (PER OPTIMIZATION PLAN)
@@ -120,14 +120,14 @@ class SmallPortfolioConfig:
     trailing_min_profit_pct: float = 0.01  # Lock +1% minimum profit
     trailing_update_interval: int = 300  # Update every 5 minutes (vs 60 sec - less frequent)
     
-    # Trading Schedule (SWING TRADING - Multi-Day Holds)
+    # Trading Schedule (INTRADAY)
     trading_days: List[str] = field(default_factory=lambda: [
         "monday", "tuesday", "wednesday", "thursday", "friday"
     ])
     exit_only_days: List[str] = field(default_factory=lambda: [])  # Can exit any day
-    exit_time: str = "15:50"  # Exit near close on D+3 (if target hit)
-    max_hold_days: int = 3  # SWING TRADE: Hold up to 3 days (D+1, D+2, D+3)
-    force_exit_time: time = field(default_factory=lambda: time(15, 50))  # 3:50 PM exit D+3
+    exit_time: str = "15:45"  # Force-flat before close
+    max_hold_days: int = 0  # Same-day only
+    force_exit_time: time = field(default_factory=lambda: time(15, 45))  # 3:45 PM force-flat
     
     # T+2 Settlement Tracking (Cash Account Compliance)
     enable_settlement_tracking: bool = True  # Track T+2 settlement dates
@@ -135,15 +135,15 @@ class SmallPortfolioConfig:
     settlement_buffer_dollars: float = 50.0  # Emergency reserve (never trade)
     warn_unsettled_threshold: float = 0.8  # Warn if using >80% of settled cash
     
-    # All-Day Entry Settings (Swing Trade Opportunity Capture)
+    # All-Day Entry Settings (Aggressive Intraday Opportunity Capture)
     enable_all_day_entries: bool = True  # Allow entries throughout the day
-    allow_late_entries_after_minutes: int = 30  # Allow entries 30+ min after open (10:00 ET)
-    late_entry_confidence_multiplier: float = 1.2  # 1.2x higher bar for late entries (balanced)
-    max_late_entries_per_day: int = 2  # Allow up to 2 late entries (vs 5 for intraday)
+    allow_late_entries_after_minutes: int = 15  # Start late-entry logic shortly after open stabilization
+    late_entry_confidence_multiplier: float = 1.0  # No extra penalty for late entries in aggressive mode
+    max_late_entries_per_day: int = 8  # Higher late-entry capacity
     late_entry_position_size_pct: float = 1.0  # Use 100% of normal position size
-    all_day_entry_cutoff_time: str = "15:00"  # Stop new entries after 3:00 PM ET (vs 2:30 PM)
-    require_min_avg_volume_for_late: int = 750_000  # Stricter liquidity for late entries (750K shares)
-    late_entry_check_interval_minutes: int = 10  # Check for late opportunities every 10 minutes (vs 5)
+    all_day_entry_cutoff_time: str = "15:30"  # Continue entries longer into session
+    require_min_avg_volume_for_late: int = 500_000  # Keep liquidity control without over-starving entries
+    late_entry_check_interval_minutes: int = 5  # Frequent late-entry opportunity checks
     
     # Performance Targets (Swing Trading - Multi-Day Returns)
     daily_target_return_min: float = 0.005  # 0.5% daily minimum (slower than intraday)
@@ -176,8 +176,12 @@ class SmallPortfolioConfig:
             # All-in strategy: deploy all available cash
             return available_cash
         
-        else:  # Friday and weekends
-            # Exit only, no new positions
+        elif current_day.lower() == "friday":
+            # Intraday mode allows Friday deployment with controlled pool sizing
+            pool = portfolio_value * self.daily_pool_percent
+            return min(pool, available_cash)
+
+        else:  # Weekends
             return 0.0
     
     def get_position_size(self, stock_price: float, confidence_level: str, 

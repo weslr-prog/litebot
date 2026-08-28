@@ -18,9 +18,10 @@ except Exception:  # yfinance is listed in requirements.txt
 
 # Optional Alpaca Market Data (IEX) support
 try:
-    from alpaca.data import StockMarketDataClient, StockLatestTradeRequest
+    from alpaca.data.historical import StockHistoricalDataClient
+    from alpaca.data.requests import StockLatestTradeRequest
 except Exception:
-    StockMarketDataClient = None
+    StockHistoricalDataClient = None
     StockLatestTradeRequest = None
 
 logger = logging.getLogger(__name__)
@@ -33,9 +34,9 @@ class DataLoader:
         self._alpaca_client = None
         api_key = os.getenv("APCA_API_KEY_ID")
         secret_key = os.getenv("APCA_API_SECRET_KEY")
-        if api_key and secret_key and StockMarketDataClient is not None:
+        if api_key and secret_key and StockHistoricalDataClient is not None:
             try:
-                self._alpaca_client = StockMarketDataClient(api_key, secret_key)
+                self._alpaca_client = StockHistoricalDataClient(api_key, secret_key)
                 logger.info("Alpaca Market Data client initialized (IEX)")
             except Exception as e:
                 logger.warning(f"Failed to init Alpaca Market Data client: {e}")
@@ -151,7 +152,7 @@ class DataLoader:
         if self._alpaca_client is not None and StockLatestTradeRequest is not None:
             try:
                 req = StockLatestTradeRequest(symbol_or_symbols=symbol)
-                resp = self._alpaca_client.get_latest_trade(req)
+                resp = self._alpaca_client.get_stock_latest_trade(req)
                 # resp can be a dict (for multi-symbol) or a Trade object (single)
                 price = None
                 if hasattr(resp, 'price'):

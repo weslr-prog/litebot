@@ -555,19 +555,29 @@ class AISignalGenerator:
             data_normalized = data.copy()
             data_normalized.columns = [col.lower() for col in data_normalized.columns]
             
-            # TREND FILTER: 20-day SMA - Only buy stocks in uptrends (Nov 20 addition)
-            # This prevents buying "cheap stocks that are actually crashing"
+            # TREND FILTER: 20-day SMA - OPTIMIZATION: Relaxed to allow pullbacks
+            # CHANGED: Allow stocks within 3% below SMA (pullback bounce opportunities)
+            # Requires RSI confirmation when below SMA to avoid catching falling knives
             if len(data_normalized) >= 20:
                 sma_20 = data_normalized['close'].rolling(20).mean().iloc[-1]
                 current_price = data_normalized['close'].iloc[-1]
                 
-                if current_price < sma_20:
+                # OPTIMIZATION: Allow 3% pullback below SMA (was: hard reject if below)
+                pullback_threshold = sma_20 * 0.97  # 3% below SMA
+                
+                if current_price < pullback_threshold:
                     price_below_pct = ((sma_20 - current_price) / sma_20) * 100
                     self.logger.info(
                         f"❌ REJECT {symbol}: Price ${current_price:.2f} below 20-SMA ${sma_20:.2f} "
-                        f"({price_below_pct:.1f}% below - downtrend)"
+                        f"({price_below_pct:.1f}% below - exceeds 3% pullback threshold)"
                     )
                     return None
+                elif current_price < sma_20:
+                    # Within 3% pullback zone - will require RSI 30-50 confirmation in strategies
+                    price_below_pct = ((sma_20 - current_price) / sma_20) * 100
+                    self.logger.debug(
+                        f"🟡 {symbol}: Pullback zone ${current_price:.2f} ({price_below_pct:.1f}% below SMA) - requires RSI confirmation"
+                    )
             
             # ═══════════════════════════════════════════════════════════════
             # 3-STRATEGY STACK FOR D+1 SWING TRADING (Nov 24, 2025)
@@ -597,27 +607,27 @@ class AISignalGenerator:
             # STRATEGY 1: MEAN REVERSION RSI (PRIMARY)
             # ───────────────────────────────────────────────────────────────
             # Backtest: +2.62% (5 years), 56.2% win rate, 1.54 profit factor
-            # Entry: RSI(7) <= 30 (oversold) + 1.5x volume
+            # Entry: RSI(7) <= 35 (oversold) + 0.85x volume  # OPTIMIZATION: Widened from <= 30, reduced volume
             # Exit: RSI >= 70 (overbought) OR +3% profit OR -3% stop
             # Frequency: 0.92 trades/week on 11 stocks → ~42 trades/week on 500 stocks
             
             mean_reversion_signal = False
             mean_reversion_confidence = 0.0
             
-            # Entry: RSI <= 30 = oversold (matches backtest threshold)
-            if current_rsi <= 30:
+            # Entry: RSI <= 35 = oversold (OPTIMIZATION: widened from <= 30 to capture more signals)
+            if current_rsi <= 35:
                 # More oversold = higher confidence
-                # RSI 10 = 1.0, RSI 20 = 0.5, RSI 30 = 0.0
-                rsi_confidence = (30 - current_rsi) / 20.0  # 10-30 RSI → 0-1.0 confidence
-                volume_confidence = min(volume_ratio / 1.5, 1.0)  # 1.5x volume → 1.0 conf
+                # RSI 10 = 1.0, RSI 25 = 0.5, RSI 35 = 0.2
+                rsi_confidence = max(0, (35 - current_rsi) / 25.0)  # 10-35 RSI → 1.0-0.2 confidence
+                volume_confidence = min(volume_ratio / 0.85, 1.0)  # OPTIMIZATION: 0.85x volume → 1.0 conf (was 1.5x)
                 mean_reversion_confidence = min(rsi_confidence * volume_confidence, 1.0)
-                mean_reversion_signal = volume_ratio >= 1.5  # Require 1.5x volume minimum
+                mean_reversion_signal = volume_ratio >= 0.85  # OPTIMIZATION: Require 0.85x volume minimum (was 1.5x)
             
             # ───────────────────────────────────────────────────────────────
             # STRATEGY 2: GAP & GO (SECONDARY)
             # ───────────────────────────────────────────────────────────────
             # Backtest: +2.78% (5 years), 45.2% win rate, 1.52 profit factor
-            # Entry: 2%+ gap up with volume confirmation
+            # Entry: 2%+ gap up with volume confirmation (OPTIMIZATION: reduced volume requirement)
             # Exit: Gap fill OR +3% profit OR -2% stop OR D+1
             # Frequency: 1.71 trades/week on 11 stocks → ~78 trades/week on 500 stocks
             
@@ -635,15 +645,15 @@ class AISignalGenerator:
                     # Larger gap = higher confidence (up to 5% gap)
                     # 2% gap = 0.0, 3.5% gap = 0.5, 5% gap = 1.0
                     gap_confidence = min((gap_pct - 0.02) / 0.03, 1.0)  # 2-5% → 0-1.0
-                    volume_confidence = min(volume_ratio / 1.5, 1.0)  # 1.5x volume → 1.0 conf
+                    volume_confidence = min(volume_ratio / 0.85, 1.0)  # OPTIMIZATION: 0.85x volume → 1.0 conf (was 1.5x)
                     gap_and_go_confidence = min(gap_confidence * volume_confidence, 1.0)
-                    gap_and_go_signal = volume_ratio >= 1.5 and gap_pct <= 0.05  # Max 5% gap (avoid blow-off)
+                    gap_and_go_signal = volume_ratio >= 0.85 and gap_pct <= 0.05  # OPTIMIZATION: 0.85x min (was 1.5x), Max 5% gap (avoid blow-off)
             
             # ───────────────────────────────────────────────────────────────
             # STRATEGY 3: DOUBLE BOTTOM PATTERN (TERTIARY)
             # ───────────────────────────────────────────────────────────────
             # Backtest: +3.17% (5 years), 45.7% win rate, 1.38 profit factor
-            # Entry: Second test of support + RSI <= 35 + volume
+            # Entry: Second test of support + RSI <= 40 + volume  # OPTIMIZATION: Widened from <= 35
             # Exit: +5% profit OR -2% stop OR D+1
             # Frequency: 1.11 trades/week on 11 stocks → ~50 trades/week on 500 stocks
             
@@ -660,13 +670,14 @@ class AISignalGenerator:
                 support_tests = (recent_lows <= min_low * 1.02).sum()  # Count lows within 2% of minimum
                 
                 # Double bottom: 2+ tests of support + RSI oversold + volume
-                if support_tests >= 2 and current_rsi <= 35:
+                # OPTIMIZATION: Widened RSI threshold from <= 35 to <= 40 for more captures
+                if support_tests >= 2 and current_rsi <= 40:
                     # More tests + lower RSI = higher confidence
                     support_confidence = min(support_tests / 3.0, 1.0)  # 2 tests = 0.67, 3+ tests = 1.0
-                    rsi_confidence = (35 - current_rsi) / 20.0  # RSI 15 = 1.0, RSI 30 = 0.25
-                    volume_confidence = min(volume_ratio / 1.5, 1.0)
+                    rsi_confidence = max(0, (40 - current_rsi) / 25.0)  # RSI 15 = 1.0, RSI 35 = 0.2
+                    volume_confidence = min(volume_ratio / 0.85, 1.0)  # OPTIMIZATION: 0.85x volume (was 1.5x)
                     double_bottom_confidence = min(support_confidence * rsi_confidence * volume_confidence, 1.0)
-                    double_bottom_signal = volume_ratio >= 1.5
+                    double_bottom_signal = volume_ratio >= 0.85  # OPTIMIZATION: 0.85x min (was 1.5x)
             
             # ───────────────────────────────────────────────────────────────
             # STRATEGY SELECTION: Choose best signal from 3 strategies
@@ -1431,21 +1442,26 @@ class ShortCycleTrader:
                     time.sleep(sleep_sec)
                     continue
 
-                # --- Opening 15 min: allow new entries (except Friday unless emergency trades available) - 15 min after market opens ---
+                # --- Opening window: allow new entries after initial stabilization ---
                 if is_open:
                     open_et = next_open.astimezone(ET)
                     now_et = now.astimezone(ET)
                     minutes_since_open = (now_et - open_et).total_seconds() / 60
-                    # Wait 15 minutes after market open before placing orders
+                    # Wait for initial stabilization before placing orders
                     if 15 <= minutes_since_open < 30:
                         if weekday == 4:
-                            # Friday: check if emergency day trades available
-                            emergency_remaining = self.day_trade_tracker.trades_remaining() if self.day_trade_tracker else 0
-                            if emergency_remaining > 0:
-                                logger.info(f"⚠️ Friday emergency mode: {emergency_remaining} day trades available - running entry logic")
+                            cash_mode = getattr(self.config, 'cash_account_mode', False)
+                            if cash_mode:
+                                logger.info("🚀 Friday cash-mode: running entry logic")
                                 self.run_daily_cycle()
                             else:
-                                logger.info("🛑 Friday: entry freeze (no emergency day trades remaining)")
+                                # Friday margin mode: check if emergency day trades available
+                                emergency_remaining = self.day_trade_tracker.trades_remaining() if self.day_trade_tracker else 0
+                                if emergency_remaining > 0:
+                                    logger.info(f"⚠️ Friday emergency mode: {emergency_remaining} day trades available - running entry logic")
+                                    self.run_daily_cycle()
+                                else:
+                                    logger.info("🛑 Friday: entry freeze (no emergency day trades remaining)")
                         else:
                             logger.info("🚀 Market stabilized: running entry logic (15-30 min after open)...")
                             self.run_daily_cycle()
@@ -2398,18 +2414,15 @@ class ShortCycleTrader:
                 self.logger.warning("🚫 TRADE BLOCKED: Market is closed - no orders will be executed")
                 return
             
-            # Additional validation: Check if within trading window (15-30 min after open)
+            # Additional validation: Require a short stabilization period after open.
             sess = market_hours.rth_session_for_date(now)
             minutes_since_open = (now - sess.open_utc).total_seconds() / 60
             
-            if minutes_since_open < 15:
-                self.logger.warning("🚫 TRADE BLOCKED: Market still stabilizing (< 15 min after open)")
-                return
-            elif minutes_since_open > 30:
-                self.logger.warning("🚫 TRADE BLOCKED: Outside entry window (> 30 min after open)")
+            if minutes_since_open < 5:
+                self.logger.warning("🚫 TRADE BLOCKED: Market still stabilizing (< 5 min after open)")
                 return
             
-            self.logger.info(f"✅ Market hours validated: {minutes_since_open:.1f} min after open")
+            self.logger.info(f"✅ Market hours validated: {minutes_since_open:.1f} min after open (all-session entries enabled)")
             
             # Get market regime
             market_data = self._get_market_data()
@@ -2525,23 +2538,35 @@ class ShortCycleTrader:
                 self.logger.info(f"   Regular market hours: 9:30 AM - 4:00 PM ET")
                 return
             
-            # CRITICAL: Duplicate Position Check - Block if ANY position exists today (Nov 17 fix)
-            # Prevents: Entry #1 → Exit (PORTFOLIO_MISMATCH) → Entry #2 (11 min later)
+            # Duplicate-position check: in intraday cash mode, block only duplicate ACTIVE entries.
+            # In non-cash/PDT mode, keep original stricter same-day behavior.
             today = dt.date.today()
+            cash_mode = getattr(self.config, 'cash_account_mode', False)
             same_day_positions = [
-                p for p in self.positions 
+                p for p in self.positions
                 if p.symbol == signal.symbol and p.entry_date == today
             ]
-            
+
             if same_day_positions:
-                active_count = sum(1 for p in same_day_positions if p.status in [PositionStatus.ENTERED, PositionStatus.PENDING])
-                exited_count = len(same_day_positions) - active_count
-                
-                self.logger.warning(
-                    f"🚫 {signal.symbol}: BLOCKED - Duplicate position prevention "
-                    f"({active_count} active, {exited_count} exited today)"
+                active_count = sum(
+                    1 for p in same_day_positions
+                    if p.status in [PositionStatus.ENTERED, PositionStatus.PENDING]
                 )
-                return
+                exited_count = len(same_day_positions) - active_count
+
+                if cash_mode:
+                    if active_count > 0:
+                        self.logger.warning(
+                            f"🚫 {signal.symbol}: BLOCKED - Active duplicate position prevention "
+                            f"({active_count} active, {exited_count} exited today)"
+                        )
+                        return
+                else:
+                    self.logger.warning(
+                        f"🚫 {signal.symbol}: BLOCKED - Duplicate position prevention "
+                        f"({active_count} active, {exited_count} exited today)"
+                    )
+                    return
             
             # CRITICAL: Earnings Protection - Block entries before earnings
             if self.earnings_calendar.should_avoid_entry(signal.symbol):
@@ -2879,7 +2904,6 @@ class ShortCycleTrader:
         
         # MARGIN ACCOUNT MODE: PDT-compliant logic with same-day re-entry
         today = dt.date.today()
-        now = dt.datetime.now(pytz.UTC)
         
         # PDT Protection Rule #1: Prevent multiple ACTIVE positions same symbol same day
         # This prevents: Buy → Buy more (same symbol, same day, both active)
@@ -2978,7 +3002,8 @@ class ShortCycleTrader:
             except Exception:
                 intraday_mode = False
 
-            if intraday_mode and getattr(self, 'day_trade_tracker', None):
+            cash_mode = getattr(self.config, 'cash_account_mode', False)
+            if intraday_mode and not cash_mode and getattr(self, 'day_trade_tracker', None):
                 remaining = self.day_trade_tracker.trades_remaining()
                 # Special Friday logic: allow only emergency intraday entries if remaining > 0
                 try:
@@ -3033,9 +3058,9 @@ class ShortCycleTrader:
                         position.filled_at = order_result['filled_at']
                         self.logger.info(f"   Filled: {order_result['filled_at']}")
 
-                    # Record day trade in tracker when in intraday mode
+                    # Record day trade in tracker only for non-cash intraday mode.
                     try:
-                        if intraday_mode and getattr(self, 'day_trade_tracker', None):
+                        if intraday_mode and not cash_mode and getattr(self, 'day_trade_tracker', None):
                             when = position.filled_at if position.filled_at else dt.datetime.now(pytz.UTC)
                             self.day_trade_tracker.record_trade(when)
                     except Exception:
@@ -3765,9 +3790,11 @@ class ShortCycleTrader:
                 # Provides true sector diversification across all 11 GICS sectors
                 # Updates daily, auto-discovers IPOs, auto-removes delisted stocks
                 try:
+                    min_price = float(getattr(self.config, 'min_price', 5.0))
+                    max_price = float(getattr(self.config, 'max_price', 100.0))
                     candidates = get_dynamic_universe(
-                        min_price=10.0,
-                        max_price=45.0,  # Nov 18 - Expanded to $45 for growth stocks
+                        min_price=min_price,
+                        max_price=max_price,
                         min_volume=100_000,
                         max_candidates=500,  # Nov 18 - Increased to 500 for better diversity
                         save_to_file=True
@@ -3836,20 +3863,34 @@ class ShortCycleTrader:
                     return final_list if max_symbols is None else final_list[:max_symbols]
                 else:
                     self.logger.warning(
-                        f"⚠️ PreFilter returned zero symbols - check market conditions or filter settings"
+                        f"⚠️ PreFilter returned zero symbols - activating fallback universe tiers"
                     )
-                    # Return empty list rather than falling back to unvetted stocks
-                    return []
+                    fallback_cap = max(min_symbols, 12)
+                    if max_symbols is not None:
+                        fallback_cap = min(fallback_cap, max_symbols)
+                    dynamic_fallback = candidates[:fallback_cap]
+                    static_fallback = static_universe[:fallback_cap]
+                    final_fallback = dynamic_fallback if dynamic_fallback else static_fallback
+                    self.logger.warning(
+                        f"⚠️ Using fallback universe with {len(final_fallback)} symbols to preserve signal throughput"
+                    )
+                    return final_fallback
             except Exception as e:
                 self.logger.error(f"PreFilter failed: {e}")
-                # Return empty rather than fall back to unvetted stocks
-                return []
+                fallback_cap = max(min_symbols, 12)
+                if max_symbols is not None:
+                    fallback_cap = min(fallback_cap, max_symbols)
+                fallback_symbols = static_universe[:fallback_cap]
+                self.logger.warning(
+                    f"⚠️ Using static fallback universe ({len(fallback_symbols)} symbols) after PreFilter failure"
+                )
+                return fallback_symbols
 
         except Exception as e:
             self.logger.error(f"Error building trading universe: {e}")
-            # Return empty list to prevent trading with emergency fallback stocks
-            self.logger.critical("⚠️ Critical: Unable to build universe - trading will be skipped")
-            return []
+            emergency = ["SPY", "QQQ", "IWM", "AAPL", "MSFT", "NVDA", "AMZN", "TSLA"]
+            self.logger.critical("⚠️ Critical: Unable to build universe - using emergency fallback symbols")
+            return emergency
     
     def _update_risk_limits(self):
         """Update risk limits based on current portfolio value"""

@@ -61,7 +61,7 @@ class ShortCycleConfig:
     # Risk parameters (Dual-Strategy System: Gap & Go + Fade/Short)
     max_daily_loss_percent: float = 0.08  # 8% daily loss limit
     max_weekly_loss_percent: float = 0.15   # 15% weekly loss limit
-    confidence_threshold: float = 0.18  # OPTIMIZATION (May 19): Lowered from 0.25 to restore signal throughput (recovery mode continuation)
+    confidence_threshold: float = 0.22  # INCREASED: 0.22 from 0.18 for better quality entries (reduced false signals)
     
     # Triple-Strategy Configuration (Jan 13, 2026: Gap & Go + Fade + Momentum)
     # Gap & Go: 830% return / 748 trades = 1.11% per trade

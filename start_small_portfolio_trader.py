@@ -140,6 +140,9 @@ def start_trader():
         logger.info(f"📈 Same-Day Exit: {'ENABLED' if config.enable_same_day_exit else 'DISABLED'}")
         logger.info(f"🔄 Same-Day Re-Entry: {'ENABLED' if config.enable_same_day_reentry else 'DISABLED'}")
         logger.info(f"⚡ Intraday Scalping: {'ENABLED' if config.enable_intraday_scalping else 'DISABLED'}")
+        logger.info(f"🛑 Daily Loss Guardrail: {config.max_daily_loss_percent:.1%}")
+        logger.info(f"🧭 Universe Range: ${config.min_price:.0f}-${config.max_price:.0f}")
+        logger.info(f"🎯 Max Positions/Day: {config.max_positions_per_day}")
         
         # Initialize trader
         trader = ShortCycleTrader(config)
@@ -165,9 +168,9 @@ def start_trader():
         # Run market-aware continuous cycle (handles all scheduling internally)
         # This will:
         # - Sleep until market hours
-        # - Run PreFilter during 15-30 min entry window (Mon-Thu)
+        # - Run PreFilter and signal scans throughout session (after initial stabilization)
         # - Monitor positions intraday every 5 minutes
-        # - Exit D+1 positions at market open
+        # - Exit positions intraday using strategy and force-flat rules
         # - Allow same-day exits when profit targets hit
         # - Enable re-entries after exits (cash account only)
         # - Refresh watchlist post-market
