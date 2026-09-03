@@ -1,0 +1,21 @@
+[
+  {
+    "date": "2026-01-13",
+    "day_of_week": "Tuesday",
+    "realized_pnl": 0,
+    "unrealized_pnl": 0,
+    "total_pnl": 0,
+    "pnl_pct": 0.0,
+    "trades": 0,
+    "entries": 0,
+    "exits": 0,
+    "wins": 0,
+    "losses": 0,
+    "win_rate": 0.0,
+    "deployed_capital": 0,
+    "account_equity": 992.13,
+    "strategy_breakdown": {},
+    "notes": "",
+    "recorded_at": "2026-01-13T16:30:14.899472-05:00"
+  }
+]

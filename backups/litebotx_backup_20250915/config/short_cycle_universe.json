@@ -1,0 +1,9 @@
+{
+  "base_universe": [
+    "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA",
+    "NVDA", "META", "NFLX", "AMD", "AVGO"
+  ],
+  "augment_from_prefilter": true,
+  "min_symbols": 15,
+  "max_symbols": 25
+}

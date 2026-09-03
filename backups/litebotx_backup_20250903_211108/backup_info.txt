@@ -1,0 +1,29 @@
+LiteBotX Backup Information
+===========================
+Backup Created: Wed 03 Sep 2025 09:11:08 PM EDT
+Backup Name: litebotx_backup_20250903_211108
+Source Directory: /home/wes/Desktop/litebotx-usb-deployment
+System: Linux wes-OptiPlex-7080 6.14.0-28-generic #28~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Jul 25 10:47:01 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+
+Portfolio Value: $928,271.39 (as of backup time)
+Trading Strategy: Aggressive Swing Trading
+Risk Per Trade: 2.0%
+Max Positions: 5
+
+Files Backed Up:
+- Core trading bot (automated_momentum_trader_v2.py)  
+- Web dashboard (stock_dashboard.py)
+- Desktop dashboard (enhanced_trading_dashboard.py)
+- All strategy files
+- Risk management modules
+- Configuration files
+- Documentation
+- Launch scripts
+- Core directories
+
+To Restore:
+1. Copy files from this backup to your deployment directory
+2. Ensure Python environment is set up (pip install -r requirements.txt)
+3. Configure API keys in .env file
+4. Run ./start_ubuntu.sh to launch system
+

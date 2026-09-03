@@ -1,0 +1,55 @@
+{
+  "backtest_config": {
+    "start_date": "2023-01-01",
+    "end_date": "2024-01-01",
+    "initial_capital": 1000.0,
+    "commission_per_trade": 0.0,
+    "spread_bp": 5.0,
+    "slippage_bp": 2.0,
+    "market_impact_threshold": 0.01,
+    "force_d1_exit": true,
+    "weekend_gap_modeling": true,
+    "overnight_gap_std": 0.008,
+    "min_trades_for_validation": 50,
+    "max_drawdown_threshold": 0.15,
+    "min_sharpe_threshold": 1.0,
+    "enable_paper_trading": false,
+    "paper_trading_duration_weeks": 12
+  },
+  "trading_config": {
+    "portfolio_value": 1000.0,
+    "daily_pool_percent": 0.33,
+    "max_risk_per_trade_dollars": 6.0,
+    "max_positions_per_day": 2,
+    "min_position_size_dollars": 50.0,
+    "max_position_size_percent": 0.15,
+    "max_hold_days": 2,
+    "trading_days": [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday"
+    ],
+    "exit_time": "15:45",
+    "max_daily_loss_percent": 0.008,
+    "max_weekly_loss_percent": 0.025,
+    "confidence_threshold": 0.75,
+    "enable_forced_d1_exit": true,
+    "model_transaction_costs": true,
+    "commission_per_trade": 0.0,
+    "spread_bp": 5.0
+  },
+  "performance_summary": {
+    "total_return": "0.0%",
+    "annual_return": "0.0%",
+    "sharpe_ratio": "0.00",
+    "max_drawdown": "0.0%",
+    "win_rate": "0.0%",
+    "profit_factor": "0.00",
+    "total_trades": 0,
+    "avg_weekly_return": "0.00%",
+    "weekly_sharpe": "0.00",
+    "d1_exit_compliance": "0.0%",
+    "capital_recycling_efficiency": "0.0 trades/week"
+  }
+}

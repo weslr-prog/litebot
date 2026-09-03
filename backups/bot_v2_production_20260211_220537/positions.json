@@ -1,0 +1,58 @@
+[
+  {
+    "symbol": "LCID",
+    "entry_date": "2026-02-09",
+    "exit_date": "2026-02-14",
+    "entry_price": 10.95,
+    "position_size_shares": 13,
+    "position_size_dollars": 142.35,
+    "stop_price": 10.731,
+    "target_price": null,
+    "status": "entered",
+    "max_risk_dollars": 0.0,
+    "entry_timestamp": null,
+    "filled_at": "2026-02-09T15:05:10.203083+00:00",
+    "exit_timestamp": null,
+    "order_id": null,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5,
+      "time_horizon_days": 1.0,
+      "entry_price": null,
+      "target_price": null,
+      "features_used": {},
+      "timestamp": "2026-02-11T21:53:26.254440-05:00"
+    },
+    "exit_price": null,
+    "exit_reason": null,
+    "realized_pnl": null
+  },
+  {
+    "symbol": "NCLH",
+    "entry_date": "2026-02-11",
+    "exit_date": "2026-02-16",
+    "entry_price": 23.036667,
+    "position_size_shares": 6,
+    "position_size_dollars": 138.22000200000002,
+    "stop_price": 22.57593366,
+    "target_price": null,
+    "status": "entered",
+    "max_risk_dollars": 0.0,
+    "entry_timestamp": null,
+    "filled_at": "2026-02-11T15:04:54.351242+00:00",
+    "exit_timestamp": null,
+    "order_id": null,
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.5,
+      "time_horizon_days": 1.0,
+      "entry_price": null,
+      "target_price": null,
+      "features_used": {},
+      "timestamp": "2026-02-11T21:53:26.357712-05:00"
+    },
+    "exit_price": null,
+    "exit_reason": null,
+    "realized_pnl": null
+  }
+]

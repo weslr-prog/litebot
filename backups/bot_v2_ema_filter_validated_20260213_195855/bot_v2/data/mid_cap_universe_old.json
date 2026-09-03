@@ -1,0 +1,97 @@
+{
+  "version": "2.3",
+  "description": "Expanded 250-stock universe with mean-reverting stocks (staples, utilities, REITs) for improved trade frequency",
+  "last_updated": "2025-12-04",
+  "total_stocks": 262,
+  
+  "technology": [
+    "SOFI", "UPST", "LC", "AFRM", "PINS", "HOOD", "COIN",
+    "RBLX", "U", "DOCU", "ZM", "OKTA", "TWLO"
+  ],
+  
+  "consumer_discretionary": [
+    "HOOD", "DKNG", "PENN", "CHWY", "ETSY", "W", "CVNA", "RIVN", "LCID", "NIO",
+    "XPEV", "LI", "F", "GM", "UBER", "LYFT", "DASH", "ABNB", "BKNG", "MAR",
+    "HLT", "SBUX", "CMG", "MCD", "YUM", "DPZ", "WING", "TXRH"
+  ],
+  
+  "healthcare_biotech": [
+    "MRNA", "BNTX", "NVAX", "VRTX", "REGN", "BIIB", "AMGN", "GILD", "BMY", "LLY",
+    "ABBV", "JNJ", "PFE", "MRK", "NRIX", "CRSP", "EDIT", "NTLA", "BEAM", "ARKG",
+    "IONS", "SRPT", "BMRN", "ALNY", "FATE"
+  ],
+  
+  "financials": [
+    "JPM", "BAC", "WFC", "C", "GS", "MS", "SCHW", "BLK", "BX", "KKR",
+    "APO", "ARES", "V", "MA", "AXP", "COF", "SYF", "ALLY", "SOFI"
+  ],
+  
+  "energy_clean": [
+    "XOM", "CVX", "COP", "SLB", "HAL", "DVN", "OXY", "APA", "EOG",
+    "ENPH", "SEDG", "RUN", "FSLR", "PLUG", "BE", "BLNK", "CHPT", "QS"
+  ],
+  
+  "industrials": [
+    "CAT", "DE", "BA", "RTX", "LMT", "NOC", "GD", "HON", "UNP", "CSX",
+    "NSC", "UAL", "DAL", "AAL", "LUV", "JBLU"
+  ],
+  
+  "communication": [
+    "DIS", "NFLX", "ROKU", "SPOT", "SNAP", "PINS", "MTCH", "BMBL", "WBD"
+  ],
+  
+  "materials_commodities": [
+    "FCX", "NEM", "AA", "CENX", "CLF", "NUE", "STLD", "MT"
+  ],
+  
+  "consumer_staples": [
+    "KO", "PEP", "PG", "CL", "KMB", "GIS", "K", "CAG", "SJM", "CPB",
+    "HSY", "MKC", "HRL", "TSN", "KHC", "MDLZ", "WMT", "COST", "TGT", "DG",
+    "DLTR", "KR", "SYY", "CVS", "EL", "CLX", "CHD", "NWL"
+  ],
+  
+  "utilities": [
+    "NEE", "DUK", "SO", "D", "AEP", "EXC", "XEL", "WEC", "ES", "ED",
+    "DTE", "PPL", "FE", "AEE", "CMS", "CNP", "NI", "EVRG", "PNW", "ATO",
+    "OGE", "NRG", "VST", "POR", "BKH"
+  ],
+  
+  "reits": [
+    "O", "VICI", "SPG", "AMT", "PLD", "CCI", "EQIX", "PSA", "DLR", "AVB",
+    "EQR", "ESS", "UDR", "MAA", "CPT", "INVH", "SUI", "ELS", "SBAC", "WY",
+    "ARE", "BXP", "VTR", "OHI", "DOC", "HR", "MPW", "STAG", "COLD"
+  ],
+  
+  "dividend_aristocrats": [
+    "T", "VZ", "IBM", "MMM", "EMR", "ITW", "SWK", "GPC", "ADM", "APD",
+    "SHW", "ECL", "PPG", "LIN", "AFL", "CB", "TRV", "PGR", "ALL", "MET"
+  ],
+
+  "metadata": {
+    "selection_criteria": {
+      "market_cap_min": 2000000000,
+      "market_cap_max": 50000000000,
+      "avg_volume_min": 200000,
+      "institutional_ownership_min": 0.40,
+      "institutional_ownership_max": 0.85,
+      "note": "Nov 28: Expanded to include large-cap staples/utilities for mean reversion"
+    },
+    "sector_weights": {
+      "technology": 0.25,
+      "consumer_discretionary": 0.15,
+      "healthcare_biotech": 0.12,
+      "financials": 0.10,
+      "energy_clean": 0.08,
+      "industrials": 0.05,
+      "communication": 0.03,
+      "materials_commodities": 0.02,
+      "consumer_staples": 0.08,
+      "utilities": 0.06,
+      "reits": 0.08,
+      "dividend_aristocrats": 0.08
+    },
+    "rebalance_frequency": "quarterly",
+    "last_rebalance": "2025-11-28",
+    "update_notes": "Nov 28: Added 90 mean-reverting stocks (staples, utilities, REITs, dividend aristocrats) for improved trade frequency"
+  }
+}

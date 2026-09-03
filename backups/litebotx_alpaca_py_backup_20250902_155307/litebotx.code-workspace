@@ -1,0 +1,61 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "./venv/bin/python",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/venv": true,
+      "**/node_modules": true,
+      "**/.git": true
+    },
+    "terminal.integrated.env.linux": {
+      "PYTHONPATH": "${workspaceFolder}"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-toolsai.jupyter",
+      "ms-vscode.vscode-json"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Run Trading Bot",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/automated_momentum_trader_v2.py",
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}"
+        }
+      },
+      {
+        "name": "Run Dashboard",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/enhanced_trading_dashboard.py",
+        "console": "integratedTerminal"
+      },
+      {
+        "name": "Health Check",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/quick_health_check.py",
+        "console": "integratedTerminal"
+      }
+    ]
+  }
+}

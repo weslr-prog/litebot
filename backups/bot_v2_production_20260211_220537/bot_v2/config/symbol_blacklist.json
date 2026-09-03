@@ -1,0 +1,184 @@
+{
+  "permanent": [
+    "NI",
+    "OGE",
+    "T",
+    "JD",
+    "TU",
+    "VIRT",
+    "BXMT",
+    "VIPS"
+  ],
+  "temporary": {},
+  "last_updated": "2025-12-26T17:40:40.031582",
+  "performance": {
+    "CNP": {
+      "trades": 7,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 0.2857142857142857,
+      "pnl": -0.6500000000000128,
+      "last_analyzed": "2025-12-26T17:40:40.031365"
+    },
+    "EXC": {
+      "trades": 7,
+      "wins": 5,
+      "losses": 2,
+      "win_rate": 0.7142857142857143,
+      "pnl": 1.420000000000016,
+      "last_analyzed": "2025-12-26T17:40:40.031374"
+    },
+    "FE": {
+      "trades": 7,
+      "wins": 3,
+      "losses": 3,
+      "win_rate": 0.42857142857142855,
+      "pnl": -1.6799999999999997,
+      "last_analyzed": "2025-12-26T17:40:40.031376"
+    },
+    "GIS": {
+      "trades": 5,
+      "wins": 2,
+      "losses": 3,
+      "win_rate": 0.4,
+      "pnl": 1.6800000000000068,
+      "last_analyzed": "2025-12-26T17:40:40.031378"
+    },
+    "NI": {
+      "trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "pnl": -1.1400000000000006,
+      "last_analyzed": "2025-12-26T17:40:40.031379"
+    },
+    "OGE": {
+      "trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "pnl": -0.6200000000000117,
+      "last_analyzed": "2025-12-26T17:40:40.031381"
+    },
+    "POR": {
+      "trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 0.6666666666666666,
+      "pnl": 1.1600000000000037,
+      "last_analyzed": "2025-12-26T17:40:40.031383"
+    },
+    "VICI": {
+      "trades": 10,
+      "wins": 8,
+      "losses": 2,
+      "win_rate": 0.8,
+      "pnl": 0.06000199999999367,
+      "last_analyzed": "2025-12-26T17:40:40.031384"
+    },
+    "INVH": {
+      "trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 0.6666666666666666,
+      "pnl": 1.0100000000000016,
+      "last_analyzed": "2025-12-26T17:40:40.031386"
+    },
+    "T": {
+      "trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "pnl": -0.8800000000000097,
+      "last_analyzed": "2025-12-26T17:40:40.031388"
+    },
+    "OHI": {
+      "trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 0.6666666666666666,
+      "pnl": 0.020000000000003126,
+      "last_analyzed": "2025-12-26T17:40:40.031389"
+    },
+    "PPL": {
+      "trades": 3,
+      "wins": 3,
+      "losses": 0,
+      "win_rate": 1.0,
+      "pnl": 1.0400000000000063,
+      "last_analyzed": "2025-12-26T17:40:40.031391"
+    },
+    "JD": {
+      "trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "pnl": -1.0500000000000007,
+      "last_analyzed": "2025-12-26T17:40:40.031393"
+    },
+    "TU": {
+      "trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "pnl": -1.6799999999999855,
+      "last_analyzed": "2025-12-26T17:40:40.031394"
+    },
+    "CTRA": {
+      "trades": 5,
+      "wins": 5,
+      "losses": 0,
+      "win_rate": 1.0,
+      "pnl": 1.6999999999999957,
+      "last_analyzed": "2025-12-26T17:40:40.031396"
+    },
+    "VIRT": {
+      "trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "pnl": -1.5700000000000145,
+      "last_analyzed": "2025-12-26T17:40:40.031398"
+    },
+    "VIPS": {
+      "trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 0.2,
+      "pnl": -1.2000000000000028,
+      "last_analyzed": "2025-12-26T17:40:40.031399"
+    },
+    "BEKE": {
+      "trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 0.5,
+      "pnl": 0.48000000000000576,
+      "last_analyzed": "2025-12-26T17:40:40.031401"
+    },
+    "VZ": {
+      "trades": 7,
+      "wins": 7,
+      "losses": 0,
+      "win_rate": 1.0,
+      "pnl": 2.2800000000000225,
+      "last_analyzed": "2025-12-26T17:40:40.031403"
+    },
+    "CAG": {
+      "trades": 13,
+      "wins": 13,
+      "losses": 0,
+      "win_rate": 1.0,
+      "pnl": 3.6299999999999883,
+      "last_analyzed": "2025-12-26T17:40:40.031404"
+    },
+    "BXMT": {
+      "trades": 13,
+      "wins": 0,
+      "losses": 12,
+      "win_rate": 0.0,
+      "pnl": -1.530000000000058,
+      "last_analyzed": "2025-12-26T17:40:40.031406"
+    }
+  }
+}

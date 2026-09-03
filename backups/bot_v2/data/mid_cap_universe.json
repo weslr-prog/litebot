@@ -1,0 +1,77 @@
+{
+  "version": "3.2",
+  "description": "Expanded verified $5-$50 stocks - 107 stocks across 16 sectors",
+  "last_updated": "2025-12-12",
+  "price_range": "$5-$50",
+  "min_volume": 100000,
+  "total_stocks": 107,
+  
+  "technology_and_software": [
+    "SOFI", "UPST", "LC", "PINS", "PATH", "GTLB", "S", "AI", "SOUN", "BBAI", "QMCO"
+  ],
+  
+  "consumer_and_ecommerce": [
+    "DKNG", "PENN", "CHWY", "JD", "BEKE", "VIPS", "MOMO", "TAL", "CPNG"
+  ],
+  
+  "ev_and_auto": [
+    "RIVN", "LCID", "NIO", "XPEV", "LI", "F", "STLA"
+  ],
+  
+  "rideshare_and_delivery": [
+    "LYFT", "GRAB"
+  ],
+  
+  "biotech_and_healthcare": [
+    "NRIX", "NTLA", "BEAM", "VCYT", "CDNA", "SDGR", "ARCT", "MRNA", "VCEL", "SANA"
+  ],
+  
+  "financials_and_fintech": [
+    "ALLY", "VIRT"
+  ],
+  
+  "energy": [
+    "SLB", "HAL", "NOV", "DVN", "OXY", "APA", "MTDR", "SM", "MGY", "CTRA", "PR", "AR", "MUR"
+  ],
+  
+  "materials_and_mining": [
+    "FCX", "GOLD", "CLF", "AA", "CENX", "LAC", "TX"
+  ],
+  
+  "utilities": [
+    "AES", "CNP", "EXC", "FE", "AVA", "NI", "OGE", "POR", "CWT"
+  ],
+  
+  "reits": [
+    "INVH", "OHI", "VICI", "AGNC", "NLY", "STWD", "TWO", "MFA", "PMT", 
+    "IVR", "ARR", "CIM", "MITT", "DX", "BXMT", "RITM", "GOOD", "EARN"
+  ],
+  
+  "consumer_staples": [
+    "GIS", "CAG", "CPB", "HRL", "KHC"
+  ],
+  
+  "telecom": [
+    "T", "VZ", "VOD", "TU"
+  ],
+  
+  "retail_and_apparel": [
+    "PLCE", "AEO", "SCVL"
+  ],
+  
+  "cannabis": [
+    "TLRY", "ACB"
+  ],
+  
+  "aerospace_and_defense": [
+    "PL"
+  ],
+  
+  "media_and_entertainment": [
+    "WBD", "NWSA"
+  ],
+  
+  "semiconductors": [
+    "INTC", "WOLF"
+  ]
+}

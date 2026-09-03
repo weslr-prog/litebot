@@ -1,0 +1,112 @@
+LiteBotX System Backup (Post alpaca-py Migration)
+==================================================
+
+Backup Created: 2025-09-23 09:35:15
+Backup Name: litebotx_alpaca_py_backup_20250923_093515
+Source Directory: /home/wes/Desktop/litebotx-usb-deployment
+Migration Status: ✅ Successfully migrated to alpaca-py
+
+System Status at Backup:
+- Portfolio Value: $928,126.97
+- Strategy: Enhanced Multi-Sector Momentum Trading
+- Version: Phase 3A ML-Enhanced with alpaca-py
+- API: Alpaca Paper Trading (alpaca-py v0.42.1)
+- Data Sources: Alpaca + yfinance + Polygon
+- Active Positions: 12 symbols
+- Websockets: v15.0.1 (compatible)
+
+Recent Migration Completed:
+✅ Migrated from deprecated alpaca-trade-api to modern alpaca-py
+✅ Restored full yfinance functionality
+✅ Resolved websockets dependency conflicts
+✅ Updated all DataLoader methods to use alpaca-py API
+✅ Maintained backward compatibility with existing strategies
+
+Critical Components Backed Up:
+✅ Core trading bot (automated_momentum_trader_v2.py)
+✅ Updated DataLoader with alpaca-py integration
+✅ Professional dashboard (stock_dashboard.py)  
+✅ Emergency control system (stop_litebotx.py, emergency_monitor.py)
+✅ Enhanced API integration (stock_api.py)
+✅ Risk management and ML components
+✅ Configuration files and environment templates
+✅ Complete documentation suite
+✅ Core utilities and data directories
+✅ Virtual environment backup information
+
+Files Successfully Backed Up:
+✅ connect_real_trading.py
+✅ stock_api.py
+✅ stock_metrics.py
+✅ stock_config.py
+✅ emergency_monitor.py
+✅ quick_health_check.py
+✅ risk.py
+✅ risk_adjusted_sizing.py
+✅ trade_executor.py
+✅ execution_engine.py
+✅ data_loader.py
+✅ indicator_calculator.py
+✅ indicator_cache.py
+✅ ml_signal_enhancer.py
+✅ reinforcement.py
+✅ rl_position_optimizer.py
+✅ signal_confidence.py
+✅ signal_generator.py
+✅ adaptive_threshold_manager.py
+✅ config.py
+✅ requirements.txt
+✅ .env.template
+✅ logger.py
+✅ backup_system.py
+✅ refresh_universe.py
+✅ tuner.py
+✅ pre_filter.py
+✅ litebotx.service
+✅ litebotx.code-workspace
+✅ core/
+✅ utils/
+✅ config/
+✅ data/
+✅ docs/
+✅ scripts/
+✅ test/
+✅ validators/
+✅ market/
+✅ backtest/
+✅ cache/
+✅ logs/
+
+Restoration Instructions:
+1. Copy all files to a new directory
+2. Create virtual environment: python -m venv litebotx_env
+3. Activate: source litebotx_env/bin/activate
+4. Install dependencies: pip install -r requirements.txt
+5. Install alpaca-py: pip install alpaca-py
+6. Configure .env file with your API keys
+7. Run: python start_litebotx.py
+
+Key Dependencies (Post Migration):
+- alpaca-py>=0.42.1 (NEW - replaces alpaca-trade-api)
+- yfinance>=0.2.65 (RESTORED)
+- websockets>=15.0.1 (UPDATED for compatibility)
+- pandas>=1.5.0
+- numpy>=1.21.0
+- python-dotenv>=1.0.0
+
+Emergency Procedures:
+- Stop trading: python stop_litebotx.py
+- Emergency monitor: python emergency_monitor.py --emergency  
+- Dashboard access: http://127.0.0.1:8055
+- Quick health check: python quick_health_check.py
+
+Migration Notes:
+- All self.alpaca.get_bars() calls updated to use alpaca-py StockBarsRequest
+- TradingClient and StockHistoricalDataClient now used instead of REST
+- TimeFrame.Day and TimeFrame.Minute replace string timeframes
+- Full yfinance integration restored (no more conditional imports)
+- Better error handling and modern API patterns implemented
+
+Support:
+This backup contains the complete system after successful migration to alpaca-py.
+All functionality has been tested and verified working.

@@ -1,0 +1,51 @@
+{
+  "version": "3.0",
+  "description": "Curated universe of $5-$50 stocks only - optimized for small portfolio mean reversion trading",
+  "last_updated": "2025-12-12",
+  "price_range": "$5-$50",
+  "total_stocks": 80,
+  
+  "technology": [
+    "SOFI", "UPST", "LC", "AFRM", "PINS", "HOOD", "RBLX", "U", "DOCU", "ZM", "OKTA", "TWLO"
+  ],
+  
+  "consumer_discretionary": [
+    "DKNG", "PENN", "CHWY", "ETSY", "W", "CVNA", "RIVN", "LCID", "NIO", "XPEV", "LI", "F", "UBER", "LYFT", "DASH"
+  ],
+  
+  "healthcare_biotech": [
+    "NRIX", "IONS", "BMRN", "ALNY", "FATE", "EDIT", "NTLA", "CRSP"
+  ],
+  
+  "financials": [
+    "SOFI", "ALLY", "SYF", "COF"
+  ],
+  
+  "energy": [
+    "SLB", "HAL", "NOV", "RIG", "MRO", "DVN", "FANG", "OXY", "EOG"
+  ],
+  
+  "materials": [
+    "FCX", "NEM", "GOLD", "CLF", "X", "NUE"
+  ],
+  
+  "industrials": [
+    "BA", "GE", "CAT", "DE", "HON", "UPS", "FDX"
+  ],
+  
+  "utilities": [
+    "AES", "CNP", "EXC", "FE", "ED", "DUK", "SO", "NEE", "D", "XEL", "WEC", "ES", "ETR", "CMS", "NI", "LNT", "OGE", "POR", "NWE", "AVA"
+  ],
+  
+  "real_estate": [
+    "INVH", "OHI", "VICI", "MPW", "AGNC", "NLY", "STWD", "TWO", "MFA", "PMT"
+  ],
+  
+  "consumer_staples": [
+    "GIS", "K", "CAG", "CPB", "HRL", "SJM", "BGS"
+  ],
+  
+  "communications": [
+    "T", "PARA", "NFLX", "DIS"
+  ]
+}

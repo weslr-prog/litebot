@@ -1,0 +1,212 @@
+[
+  {
+    "date": "Saturday, January 03, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Saturday, January 03, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Saturday, January 03, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Saturday, January 03, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Saturday, January 03, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Monday, January 05, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Tuesday, January 06, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Tuesday, January 13, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Wednesday, January 14, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Monday, January 19, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Tuesday, January 20, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Monday, January 26, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Monday, February 02, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 0,
+    "pnl": -12.660000076293947,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 0,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 1,
+    "pnl": 0,
+    "win_rate": 0,
+    "setup_quality": 5
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 1,
+    "pnl": -12.660000076293947,
+    "win_rate": 0.0,
+    "setup_quality": 5
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 1,
+    "pnl": -12.660000076293947,
+    "win_rate": 0.0,
+    "setup_quality": 5
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 1,
+    "pnl": -12.660000076293947,
+    "win_rate": 0.0,
+    "setup_quality": 5
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 0,
+    "pnl": -12.660000076293947,
+    "win_rate": 0.0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 0,
+    "pnl": -12.660000076293947,
+    "win_rate": 0.0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 0,
+    "pnl": -12.660000076293947,
+    "win_rate": 0.0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Thursday, February 05, 2026",
+    "trades": 0,
+    "pnl": -12.660000076293947,
+    "win_rate": 0.0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Friday, February 06, 2026",
+    "trades": 0,
+    "pnl": 6.339997880126962,
+    "win_rate": 36.36363636363637,
+    "setup_quality": 1
+  },
+  {
+    "date": "Monday, February 09, 2026",
+    "trades": 0,
+    "pnl": 0.0,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Tuesday, February 10, 2026",
+    "trades": 0,
+    "pnl": -0.6599991607666045,
+    "win_rate": 0,
+    "setup_quality": 1
+  },
+  {
+    "date": "Wednesday, February 11, 2026",
+    "trades": 0,
+    "pnl": -1.5400041961669828,
+    "win_rate": 0.0,
+    "setup_quality": 1
+  }
+]

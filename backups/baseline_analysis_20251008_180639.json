@@ -1,0 +1,163 @@
+{
+  "performance": {
+    "total_trades": 12,
+    "total_pnl": 2793.934229274535,
+    "win_rate": 0.25,
+    "profit_taking_rate": 0,
+    "avg_win": 1155.0490162106119,
+    "avg_loss": -111.86880322621671,
+    "profit_factor": 10.325032385256835,
+    "recent_trades_sample": [
+      {
+        "symbol": "PFE",
+        "entry_time": "2025-10-07 00:00:00",
+        "exit_time": "2025-10-08",
+        "entry_price": 27.3700008392334,
+        "exit_price": 26.365000000000002,
+        "quantity": 219,
+        "side": "long",
+        "pnl": -220.09518379211383,
+        "status": "exited"
+      },
+      {
+        "symbol": "INTC",
+        "entry_time": "2025-10-07 00:00:00",
+        "exit_time": "2025-10-08",
+        "entry_price": 36.59000015258789,
+        "exit_price": 36.504999999999995,
+        "quantity": 163,
+        "side": "long",
+        "pnl": -13.855024871826913,
+        "status": "exited"
+      },
+      {
+        "symbol": "SHOP",
+        "entry_time": "2025-10-07 00:00:00",
+        "exit_time": "2025-10-08",
+        "entry_price": 164.5,
+        "exit_price": 165.38,
+        "quantity": 36,
+        "side": "long",
+        "pnl": 31.679999999999836,
+        "status": "exited"
+      },
+      {
+        "symbol": "GOOGL",
+        "entry_time": "2025-10-07 00:00:00",
+        "exit_time": "2025-10-08",
+        "entry_price": 250.42999267578125,
+        "exit_price": 244.65,
+        "quantity": 23,
+        "side": "long",
+        "pnl": -132.93983154296862,
+        "status": "exited"
+      },
+      {
+        "symbol": "MSFT",
+        "entry_time": "2025-10-07 00:00:00",
+        "exit_time": "2025-10-08",
+        "entry_price": 528.5700073242188,
+        "exit_price": 526.22,
+        "quantity": 11,
+        "side": "long",
+        "pnl": -25.85008056640595,
+        "status": "exited"
+      },
+      {
+        "symbol": "TSLA",
+        "entry_time": "2025-10-07 00:00:00",
+        "exit_time": "2025-10-08",
+        "entry_price": 453.25,
+        "exit_price": 430.2799,
+        "quantity": 9,
+        "side": "long",
+        "pnl": -206.73090000000002,
+        "status": "exited"
+      },
+      {
+        "symbol": "BA",
+        "entry_time": "2025-10-07 00:00:00",
+        "exit_time": "2025-10-08",
+        "entry_price": 219.72999572753906,
+        "exit_price": 222.1,
+        "quantity": 17,
+        "side": "long",
+        "pnl": 40.29007263183584,
+        "status": "exited"
+      },
+      {
+        "symbol": "NFLX",
+        "entry_time": "2025-10-08 00:00:00",
+        "exit_time": "2025-10-09",
+        "entry_price": 1191.06005859375,
+        "exit_price": NaN,
+        "quantity": 3,
+        "side": "long",
+        "pnl": 0.0,
+        "status": "entered"
+      },
+      {
+        "symbol": "CRM",
+        "entry_time": "2025-10-08 00:00:00",
+        "exit_time": "2025-10-09",
+        "entry_price": 239.74000549316406,
+        "exit_price": NaN,
+        "quantity": 16,
+        "side": "long",
+        "pnl": 0.0,
+        "status": "entered"
+      },
+      {
+        "symbol": "AVGO",
+        "entry_time": "2025-10-08 00:00:00",
+        "exit_time": "2025-10-09",
+        "entry_price": 336.4100036621094,
+        "exit_price": NaN,
+        "quantity": 4,
+        "side": "long",
+        "pnl": 0.0,
+        "status": "entered"
+      }
+    ]
+  },
+  "signals": {
+    "signal_generator_exists": true,
+    "signal_filters": "Basic filters detected",
+    "enhancement_needed": true,
+    "current_approach": "Standard momentum-based signals"
+  },
+  "exit_logic": {
+    "exit_logic_exists": true,
+    "current_approach": "D+1 strategic exit timing",
+    "enhancement_opportunities": [
+      "Dynamic profit targets needed",
+      "Trailing stop implementation",
+      "Multi-level exit scaling"
+    ]
+  },
+  "system_health": {
+    "health_checks": {
+      "positions_file": true,
+      "config_file": true,
+      "main_trader": false,
+      "backup_system": true,
+      "data_access": false
+    },
+    "health_score": 0.6,
+    "system_ready": false,
+    "missing_components": [
+      "main_trader",
+      "data_access"
+    ]
+  },
+  "readiness": {
+    "score": 75,
+    "factors": [
+      "\u2705 Performance data available",
+      "\u274c System components missing",
+      "\u2705 Signal system accessible",
+      "\u2705 Exit logic accessible"
+    ],
+    "ready_to_proceed": true
+  }
+}

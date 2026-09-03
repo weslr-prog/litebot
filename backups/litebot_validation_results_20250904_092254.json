@@ -1,0 +1,47 @@
+{
+  "base_test": null,
+  "stress_tests": {
+    "COVID_CRASH": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    },
+    "RATE_HIKE_2022": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    },
+    "BANKING_CRISIS_2023": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    }
+  },
+  "regime_tests": {
+    "BULL_MARKET": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    },
+    "BEAR_MARKET": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    },
+    "SIDEWAYS_MARKET": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    }
+  },
+  "cost_tests": {
+    "LOW_COST": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    },
+    "MODERATE_COST": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    },
+    "HIGH_COST": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    }
+  },
+  "sizing_tests": {
+    "CONSERVATIVE": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    },
+    "MODERATE": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    },
+    "AGGRESSIVE": {
+      "error": "LiteBotBacktestConfig.__init__() got an unexpected keyword argument 'vol_multiplier'"
+    }
+  }
+}

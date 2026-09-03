@@ -1,0 +1,30 @@
+[
+  {
+    "symbol": "AAPL",
+    "entry_date": "2026-02-13",
+    "exit_date": "2026-02-19",
+    "entry_price": 100.0,
+    "position_size_shares": 1,
+    "position_size_dollars": 150.0,
+    "stop_price": 142.0,
+    "target_price": 160.0,
+    "status": "entered",
+    "max_risk_dollars": 30.0,
+    "entry_timestamp": "2026-02-13T19:50:10.979712",
+    "filled_at": "2026-02-13T19:50:10.979715",
+    "exit_timestamp": null,
+    "order_id": "test123",
+    "ai_signal": {
+      "action": "BUY",
+      "confidence": 0.75,
+      "time_horizon_days": 1.5,
+      "entry_price": 150.0,
+      "target_price": 160.0,
+      "features_used": {},
+      "timestamp": "2026-02-14T00:50:10.982761+00:00"
+    },
+    "exit_price": null,
+    "exit_reason": null,
+    "realized_pnl": null
+  }
+]

@@ -1,0 +1,15 @@
+[Unit]
+Description=LiteBotX Trading System
+After=network.target
+
+[Service]
+Type=simple
+User=wes
+WorkingDirectory=/home/wes/Desktop/litebotx-usb-deployment
+Environment=PATH=/home/wes/Desktop/litebotx-usb-deployment/litebotx_env/bin
+ExecStart=/home/wes/Desktop/litebotx-usb-deployment/litebotx_env/bin/python3 /home/wes/Desktop/litebotx-usb-deployment/start_litebotx.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

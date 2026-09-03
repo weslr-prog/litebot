@@ -1,0 +1,12 @@
+{
+  "python_version": "3.11",
+  "key_packages": {
+    "alpaca-py": "0.42.1",
+    "yfinance": "0.2.65",
+    "websockets": "15.0.1",
+    "pandas": "2.3.2",
+    "numpy": "2.3.2"
+  },
+  "migration_date": "2025-09-02T15:53:07.888173",
+  "migration_notes": "Successfully migrated from alpaca-trade-api to alpaca-py"
+}

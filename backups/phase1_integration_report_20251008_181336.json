@@ -1,0 +1,89 @@
+{
+  "timestamp": "20251008_181336",
+  "test_results": {
+    "signals_generated": 12,
+    "signals_filtered": 0,
+    "positions_opened": 2,
+    "targets_created": 6,
+    "targets_hit": 0,
+    "system_conflicts": 0,
+    "performance_improvement": {
+      "baseline": {
+        "win_rate": 0.25,
+        "profit_taking_rate": 0.0,
+        "avg_profit": 1155.05,
+        "avg_loss": -111.87
+      },
+      "enhanced": {
+        "win_rate": 0.25,
+        "profit_taking_rate": 0.0,
+        "signal_filter_rate": 0.0,
+        "target_hit_rate": 0.0
+      },
+      "win_rate_improvement": 0.0,
+      "profit_taking_improvement": 0.0,
+      "meets_targets": {
+        "win_rate": false,
+        "profit_taking": false
+      }
+    }
+  },
+  "integration_results": {
+    "normal": {
+      "signal_generated": false,
+      "signal_filtered": false,
+      "targets_created": 0,
+      "targets_hit": 0,
+      "conflicts_detected": 1
+    },
+    "trending_up": {
+      "signal_generated": false,
+      "signal_filtered": false,
+      "targets_created": 0,
+      "targets_hit": 0,
+      "conflicts_detected": 1
+    },
+    "trending_down": {
+      "signal_generated": false,
+      "signal_filtered": false,
+      "targets_created": 0,
+      "targets_hit": 0,
+      "conflicts_detected": 1
+    },
+    "high_volatility": {
+      "signal_generated": false,
+      "signal_filtered": false,
+      "targets_created": 0,
+      "targets_hit": 0,
+      "conflicts_detected": 1
+    },
+    "low_volume": {
+      "signal_generated": false,
+      "signal_filtered": false,
+      "targets_created": 0,
+      "targets_hit": 0,
+      "conflicts_detected": 1
+    }
+  },
+  "performance_results": {
+    "baseline": {
+      "win_rate": 0.25,
+      "profit_taking_rate": 0.0,
+      "avg_profit": 1155.05,
+      "avg_loss": -111.87
+    },
+    "enhanced": {
+      "win_rate": 0.25,
+      "profit_taking_rate": 0.0,
+      "signal_filter_rate": 0.0,
+      "target_hit_rate": 0.0
+    },
+    "win_rate_improvement": 0.0,
+    "profit_taking_improvement": 0.0,
+    "meets_targets": {
+      "win_rate": false,
+      "profit_taking": false
+    }
+  },
+  "overall_success": false
+}
