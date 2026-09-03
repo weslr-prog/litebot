@@ -31,6 +31,13 @@ class ShortCycleConfig:
     min_position_size_dollars: float = 50.0  # Minimum $50 per position (meaningful trades only)
     max_position_size_percent: float = 0.15  # 15% max position size per trade
     max_universe_size: int = 500  # Maximum number of symbols in trading universe (scaled for 3-strategy stack)
+
+    # PORTFOLIO EXPOSURE CAPS (Sep 3, 2026 - prevent over-commitment)
+    # Problem: Bot was hitting 93% utilization (exceeding the 75% daily target)
+    # Solution: Add hard caps on total exposure and minimum cash reserve
+    max_total_exposure_percent: float = 0.75  # HARD CAP: never exceed 75% of equity in positions
+    min_cash_reserve_percent: float = 0.20  # Keep at least 20% of equity as cash reserve
+    max_concurrent_positions: int = 5  # HARD CAP: never hold more than 5 positions at once
     
     # Diversification parameters
     max_positions_per_symbol_small: int = 2  # Max positions per symbol for portfolios < $100K
