@@ -28,3 +28,4 @@ bot_v2/data/*.json
 !bot_v2/data/fallback_universe.py
 bot_v2/data/.last_universe_check
 bot_v2/data/*.bak_*
+backups/*.tar.gz
