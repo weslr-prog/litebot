@@ -119,13 +119,23 @@ class ShortCycleConfig:
     enable_dynamic_trailing: bool = True
     dynamic_trailing_tiers: tuple = (
         # (min_gain%, trail%)
-        (0.015, 0.010),  # +1.5% gain → 1.0% trail (default)
-        (0.05, 0.020),   # +5% gain → 2.0% trail
-        (0.10, 0.030),   # +10% gain → 3.0% trail
-        (0.15, 0.035),   # +15% gain → 3.5% trail
-        (0.20, 0.040),   # +20% gain → 4.0% trail (MRNA scenario)
-        (0.30, 0.050),   # +30% gain → 5.0% trail (big winner protection)
+        (0.015, 0.008),  # TIGHTER TRAIL (Sep 3): +1.5% gain → 0.8% trail (lock in gains faster)
+        (0.04, 0.012),   # TIGHTER: +4% gain → 1.2% trail (was 2.0% - prevents 9% giveback to -1%)
+        (0.08, 0.020),   # +8% gain → 2.0% trail
+        (0.12, 0.025),   # +12% gain → 2.5% trail
+        (0.18, 0.030),   # +18% gain → 3.0% trail
+        (0.25, 0.040),   # +25% gain → 4.0% trail (big winner protection)
     )
+
+    # AGGRESSIVE PROFIT-TAKING (Sep 3, 2026 - capture large gains before giveback)
+    # Problem: Bot was letting winners run until max-hold, then they'd give back gains
+    # Solution: Lock in 50% of position at first target, let remaining 50% run with tighter trail
+    enable_partial_profit_taking: bool = True  # TIER 1: Lock in partial gains
+    partial_profit_take_pct: float = 0.50  # Sell 50% of position
+    partial_profit_target: float = 0.04  # Trigger at +4% gain (was implicit in dynamic trail)
+    # TIER 2: Take additional profits at higher levels
+    second_partial_profit_target: float = 0.10  # Trigger at +10% gain (take another 25%)
+    second_partial_profit_pct: float = 0.25  # Sell another 25% (cumulative 75% sold)
     
     # Weekend Hold Protection (Feb 11, 2026 - ALLOW WEEKEND HOLDS)
     # Winners hold through weekend. Only exit big losers on Friday.
