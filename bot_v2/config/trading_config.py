@@ -68,7 +68,7 @@ class ShortCycleConfig:
     # Risk parameters (Dual-Strategy System: Gap & Go + Fade/Short)
     max_daily_loss_percent: float = 0.08  # 8% daily loss limit
     max_weekly_loss_percent: float = 0.15   # 15% weekly loss limit
-    confidence_threshold: float = 0.22  # INCREASED: 0.22 from 0.18 for better quality entries (reduced false signals)
+    confidence_threshold: float = 0.26  # INCREASED (Sep 13): 0.26 from 0.22 to filter marginal signals
     
     # Triple-Strategy Configuration (Jan 13, 2026: Gap & Go + Fade + Momentum)
     # Gap & Go: 830% return / 748 trades = 1.11% per trade
@@ -89,12 +89,13 @@ class ShortCycleConfig:
     # CRITICAL: Old 2% stop was getting hit by normal mid-cap daily noise
     # Mid-caps with ADR > 2% routinely swing 2-4% before continuing
     # Widened to 4% structure stops, sized down to keep same $ risk
-    gap_and_go_profit_target_pct: float = 0.06  # 6% profit target (raised from 3%)
-    gap_and_go_stop_loss_pct: float = 0.05  # PERF TUNING (Jun 11): Widened to 5% to reduce premature stops on volatile gap names
+    # Sep 13: Further widened stops to 6.5% for mid-cap volatility, raised targets to 8% for better R:R
+    gap_and_go_profit_target_pct: float = 0.08  # 8% profit target (raised from 6% for better R:R)
+    gap_and_go_stop_loss_pct: float = 0.065  # WIDENED (Sep 13): 6.5% stop for mid-cap volatility (was 5%)
     fade_short_profit_target_pct: float = 0.04  # 4% profit target (raised from 2%)
     fade_short_stop_loss_pct: float = 0.03  # 3% stop loss (raised from 1.5%)
-    momentum_profit_target_pct: float = 0.06  # 6% profit target (raised from 2.5%)
-    momentum_stop_loss_pct: float = 0.05  # PERF TUNING (Jun 11): Widened to 5% to reduce noise-driven exits on mid-caps
+    momentum_profit_target_pct: float = 0.08  # 8% profit target (raised from 6% for better R:R)
+    momentum_stop_loss_pct: float = 0.065  # WIDENED (Sep 13): 6.5% stop for mid-cap volatility (was 5%)
     
     # High-Volatility Stocks - Special Handling (Jan 14, 2026)
     # These stocks have high intraday volatility and benefit from longer holds
@@ -144,12 +145,13 @@ class ShortCycleConfig:
     second_partial_profit_target: float = 0.10  # Trigger at +10% gain (take another 25%)
     second_partial_profit_pct: float = 0.25  # Sell another 25% (cumulative 75% sold)
     
-    # Weekend Hold Protection (Feb 11, 2026 - ALLOW WEEKEND HOLDS)
-    # Winners hold through weekend. Only exit big losers on Friday.
-    weekend_hold_enabled: bool = True  # Allow weekend holds
-    friday_force_exit_enabled: bool = False  # DISABLED - let winners ride
-    friday_exit_losers_only: bool = True  # Only force exit positions losing >3%
-    friday_loser_threshold: float = -0.03  # Exit if down more than 3% on Friday EOD
+    # Weekend Hold Protection (Sep 13, 2026 - PROTECTIVE FRIDAY EXITS)
+    # Winners hold through weekend only if strong. Exit losers and marginal positions on Friday.
+    weekend_hold_enabled: bool = True  # Allow weekend holds for strong winners
+    friday_force_exit_enabled: bool = True  # ENABLED (Sep 13): Force exits on Friday for risk management
+    friday_exit_losers_only: bool = False  # Exit ALL positions on Friday unless strong winner
+    friday_loser_threshold: float = -0.02  # Exit if down more than 2% on Friday EOD
+    friday_winner_threshold: float = 0.04  # Hold through weekend only if up >4%
     weekend_early_exit_threshold: float = 0.05  # Only exit early if +5% profit
     
     # Gap & Go parameters

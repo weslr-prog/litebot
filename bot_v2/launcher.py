@@ -1511,6 +1511,33 @@ class BotV2Launcher:
                         self._record_rejection('sector_cap', signal.symbol)
                         continue
                     
+                    # PORTFOLIO EXPOSURE CAPS (Sep 13, 2026)
+                    # Check total exposure cap
+                    active_positions = self.position_tracker.get_active_positions()
+                    total_exposure = sum(p.position_size_dollars for p in active_positions)
+                    equity = self.trading_engine.get_account_info().get('portfolio_value', 1000.0)
+                    exposure_pct = total_exposure / equity if equity > 0 else 0
+                    if exposure_pct >= self.config.max_total_exposure_percent:
+                        self.logger.info(f"📊 Total exposure cap reached ({exposure_pct:.1%} >= {self.config.max_total_exposure_percent:.0%}) - skipping entry")
+                        self._record_rejection('exposure_cap', signal.symbol)
+                        continue
+                    
+                    # Check cash reserve floor
+                    account_info = self.trading_engine.get_account_info()
+                    cash = account_info.get('cash', 0)
+                    equity = account_info.get('portfolio_value', equity)
+                    cash_pct = cash / equity if equity > 0 else 0
+                    if cash_pct <= self.config.min_cash_reserve_percent:
+                        self.logger.info(f"📊 Cash reserve floor reached ({cash_pct:.1%} <= {self.config.min_cash_reserve_percent:.0%}) - skipping entry")
+                        self._record_rejection('cash_reserve_floor', signal.symbol)
+                        continue
+                    
+                    # Check max concurrent positions
+                    if len(active_positions) >= self.config.max_concurrent_positions:
+                        self.logger.info(f"📊 Max concurrent positions reached ({len(active_positions)} >= {self.config.max_concurrent_positions}) - skipping entry")
+                        self._record_rejection('max_positions_cap', signal.symbol)
+                        continue
+                    
                     # Execute entry
                     position = self.order_manager.execute_entry(signal)
                     if position:
@@ -1964,16 +1991,17 @@ class BotV2Launcher:
             self.logger.error(f"❌ Exit monitoring failed: {e}")
     
     def _force_exit_losers_only(self, reason: str = "Friday losers cleanup"):
-        """Force exit only losing positions (Jan 23, 2026 - protect winners over weekend)
+        """Force exit losing positions AND marginal winners on Friday (Sep 13, 2026 - protective Friday exits)
         
         This replaces the old "force exit all" on Friday 3:30 PM.
-        Winners stay protected by dynamic trailing stops.
-        Only positions with P&L below threshold (-3% default) get force exited.
+        Winners hold through weekend only if strong (>4% gain).
+        Losers and marginal positions (<4% gain) get force exited.
         """
-        loser_threshold = getattr(self.config, 'friday_loser_threshold', -0.03)
+        loser_threshold = getattr(self.config, 'friday_loser_threshold', -0.02)
+        winner_threshold = getattr(self.config, 'friday_winner_threshold', 0.04)
         
         self.logger.info("=" * 80)
-        self.logger.info(f"🔍 FRIDAY LOSER CHECK: Exiting positions below {loser_threshold*100:.1f}%")
+        self.logger.info(f"🔍 FRIDAY PROTECTIVE CHECK: Exiting losers <{loser_threshold*100:.1f}% and marginal <{winner_threshold*100:.1f}%")
         self.logger.info("=" * 80)
         
         try:
@@ -1991,9 +2019,11 @@ class BotV2Launcher:
                     # Calculate P&L
                     profit_pct = (current_price - position.entry_price) / position.entry_price
                     
-                    if profit_pct < loser_threshold:
-                        # This is a loser - exit it
-                        self.logger.info(f"🔴 Exiting loser: {position.symbol} ({profit_pct*100:+.1f}%)")
+                    # Exit if loser OR marginal winner (below winner threshold)
+                    if profit_pct < loser_threshold or profit_pct < winner_threshold:
+                        # This is a loser or marginal - exit it
+                        exit_reason = "loser" if profit_pct < loser_threshold else "marginal"
+                        self.logger.info(f"🔴 Exiting {exit_reason}: {position.symbol} ({profit_pct*100:+.1f}%)")
                         success = self.order_manager.execute_sell_order(position, current_price, reason)
                         if success:
                             self.logger.info(f"✅ {position.symbol} exited @ ${current_price:.2f}")
@@ -2012,17 +2042,17 @@ class BotV2Launcher:
                             )
                             exited_count += 1
                     else:
-                        # Winner or breakeven - keep holding with dynamic trailing protection
-                        self.logger.info(f"🟢 Holding winner: {position.symbol} ({profit_pct*100:+.1f}%) - Dynamic trail active")
+                        # Strong winner - keep holding with dynamic trailing protection
+                        self.logger.info(f"🟢 Holding strong winner: {position.symbol} ({profit_pct*100:+.1f}%) - Dynamic trail active")
                         holding_count += 1
                         
                 except Exception as e:
                     self.logger.error(f"❌ Check failed for {position.symbol}: {e}")
             
-            self.logger.info(f"📊 Friday summary: {exited_count} losers exited, {holding_count} winners holding")
+            self.logger.info(f"📊 Friday summary: {exited_count} exited (losers + marginal), {holding_count} strong winners holding")
             
         except Exception as e:
-            self.logger.error(f"❌ Friday loser check failed: {e}")
+            self.logger.error(f"❌ Friday protective check failed: {e}")
     
     def _force_exit_all(self, reason: str = "End of day"):
         """Force exit all positions (Friday 3:45 PM or D+1)"""
