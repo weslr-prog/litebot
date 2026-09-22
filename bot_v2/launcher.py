@@ -1538,6 +1538,23 @@ class BotV2Launcher:
                         self._record_rejection('max_positions_cap', signal.symbol)
                         continue
                     
+                    # EXTENSION CHECK (Sep 22, 2026): Prevent buying too far above support
+                    # Get market data for this symbol to check extension from support
+                    try:
+                        data = self.data_loader.get_historical_data(signal.symbol, days=30)
+                        if data is not None and len(data) >= 20:
+                            current_price = signal.entry_price
+                            # Find recent support (lowest low in last 20 days)
+                            recent_low = data['low'].tail(20).min()
+                            extension_from_support = (current_price - recent_low) / recent_low
+                            # If price is more than 8% above recent support, it's extended
+                            if extension_from_support > 0.08:
+                                self.logger.info(f"📊 {signal.symbol}: Price {extension_from_support*100:.1f}% above recent support - too extended, skipping entry")
+                                self._record_rejection('extension_from_support', signal.symbol)
+                                continue
+                    except Exception as e:
+                        self.logger.debug(f"Extension check failed for {signal.symbol}: {e}")
+                    
                     # Execute entry
                     position = self.order_manager.execute_entry(signal)
                     if position:

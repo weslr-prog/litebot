@@ -68,7 +68,7 @@ class ShortCycleConfig:
     # Risk parameters (Dual-Strategy System: Gap & Go + Fade/Short)
     max_daily_loss_percent: float = 0.08  # 8% daily loss limit
     max_weekly_loss_percent: float = 0.15   # 15% weekly loss limit
-    confidence_threshold: float = 0.26  # INCREASED (Sep 13): 0.26 from 0.22 to filter marginal signals
+    confidence_threshold: float = 0.35  # INCREASED (Sep 22): 0.35 from 0.26 to filter marginal signals
     
     # Triple-Strategy Configuration (Jan 13, 2026: Gap & Go + Fade + Momentum)
     # Gap & Go: 830% return / 748 trades = 1.11% per trade
@@ -90,12 +90,13 @@ class ShortCycleConfig:
     # Mid-caps with ADR > 2% routinely swing 2-4% before continuing
     # Widened to 4% structure stops, sized down to keep same $ risk
     # Sep 13: Further widened stops to 6.5% for mid-cap volatility, raised targets to 8% for better R:R
-    gap_and_go_profit_target_pct: float = 0.08  # 8% profit target (raised from 6% for better R:R)
-    gap_and_go_stop_loss_pct: float = 0.065  # WIDENED (Sep 13): 6.5% stop for mid-cap volatility (was 5%)
+    # Sep 22: Further widened stops to 7.5% and targets to 10% for better R:R and fewer premature stops
+    gap_and_go_profit_target_pct: float = 0.10  # 10% profit target (raised from 8% for better R:R)
+    gap_and_go_stop_loss_pct: float = 0.075  # WIDENED (Sep 22): 7.5% stop for mid-cap volatility (was 6.5%)
     fade_short_profit_target_pct: float = 0.04  # 4% profit target (raised from 2%)
     fade_short_stop_loss_pct: float = 0.03  # 3% stop loss (raised from 1.5%)
-    momentum_profit_target_pct: float = 0.08  # 8% profit target (raised from 6% for better R:R)
-    momentum_stop_loss_pct: float = 0.065  # WIDENED (Sep 13): 6.5% stop for mid-cap volatility (was 5%)
+    momentum_profit_target_pct: float = 0.10  # 10% profit target (raised from 8% for better R:R)
+    momentum_stop_loss_pct: float = 0.075  # WIDENED (Sep 22): 7.5% stop for mid-cap volatility (was 6.5%)
     
     # High-Volatility Stocks - Special Handling (Jan 14, 2026)
     # These stocks have high intraday volatility and benefit from longer holds
@@ -127,11 +128,11 @@ class ShortCycleConfig:
     enable_dynamic_trailing: bool = True
     dynamic_trailing_tiers: tuple = (
         # (min_gain%, trail%)
-        (0.015, 0.008),  # TIGHTER TRAIL (Sep 3): +1.5% gain → 0.8% trail (lock in gains faster)
-        (0.04, 0.012),   # TIGHTER: +4% gain → 1.2% trail (was 2.0% - prevents 9% giveback to -1%)
-        (0.08, 0.020),   # +8% gain → 2.0% trail
-        (0.12, 0.025),   # +12% gain → 2.5% trail
-        (0.18, 0.030),   # +18% gain → 3.0% trail
+        (0.015, 0.015),  # FIXED (Sep 22): +1.5% gain → 1.5% trail (was 0.8% - too tight for mid-caps)
+        (0.04, 0.020),   # FIXED: +4% gain → 2.0% trail (was 1.2% - too tight)
+        (0.08, 0.025),   # +8% gain → 2.5% trail
+        (0.12, 0.030),   # +12% gain → 3.0% trail
+        (0.18, 0.035),   # +18% gain → 3.5% trail
         (0.25, 0.040),   # +25% gain → 4.0% trail (big winner protection)
     )
 
@@ -145,13 +146,13 @@ class ShortCycleConfig:
     second_partial_profit_target: float = 0.10  # Trigger at +10% gain (take another 25%)
     second_partial_profit_pct: float = 0.25  # Sell another 25% (cumulative 75% sold)
     
-    # Weekend Hold Protection (Sep 13, 2026 - PROTECTIVE FRIDAY EXITS)
+    # Weekend Hold Protection (Sep 22, 2026 - STRICTER FRIDAY EXITS)
     # Winners hold through weekend only if strong. Exit losers and marginal positions on Friday.
     weekend_hold_enabled: bool = True  # Allow weekend holds for strong winners
     friday_force_exit_enabled: bool = True  # ENABLED (Sep 13): Force exits on Friday for risk management
     friday_exit_losers_only: bool = False  # Exit ALL positions on Friday unless strong winner
-    friday_loser_threshold: float = -0.02  # Exit if down more than 2% on Friday EOD
-    friday_winner_threshold: float = 0.04  # Hold through weekend only if up >4%
+    friday_loser_threshold: float = -0.015  # TIGHTENED (Sep 22): Exit if down more than 1.5% on Friday EOD
+    friday_winner_threshold: float = 0.05  # TIGHTENED (Sep 22): Hold through weekend only if up >5%
     weekend_early_exit_threshold: float = 0.05  # Only exit early if +5% profit
     
     # Gap & Go parameters
@@ -172,39 +173,39 @@ class ShortCycleConfig:
     # Entry: Price above SMA20, RSI 45-70, ADR > 2%
     # Best for: Stocks with established uptrend, looking for continuation
     momentum_sma_period: int = 20  # SMA for trend confirmation
-    momentum_rsi_min: float = 30.0  # PERF TUNING (Jul 15): Widened floor to 30 to admit more continuation setups
-    momentum_rsi_max: float = 80.0  # PERF TUNING (Jun 11): Widened ceiling to 80 to admit strong momentum near overbought
-    momentum_ema_break_tolerance_pct: float = 0.10  # OPTIMIZATION (May 19): Increased from 0.04 to 0.10 (allow 10% below EMA for corrective markets)
-    momentum_trend_soft_mode: bool = True  # PERF TUNING (Jun 11): Allow price slightly below SMA20 when EMA9>EMA20 and RSI>45
-    momentum_min_adr_pct: float = 0.015  # Recovery mode: include moderate-volatility symbols
-    momentum_min_5d_return: float = 0.02  # Allow earlier trend continuation (+2% in 5 days)
-    momentum_max_5d_return: float = 0.22  # Recovery mode: avoid over-filtering stronger momentum legs
-    momentum_min_volume_ratio: float = 0.50  # PERF TUNING (Jul 15): Reduced to 0.50 to admit more setups in low-vol regimes
-    momentum_pullback_ema_tolerance: float = 0.04  # PERF TUNING (Jul 15): Loosened to 0.04 for looser EMA pullback
-    momentum_support_tolerance: float = 0.080  # PERF TUNING (Jul 15): Widened to 8% to admit more pullback entries
-    momentum_pullback_volume_max_ratio: float = 1.05  # Recovery mode: allow less strict pullback contraction
-    momentum_bounce_volume_min_ratio: float = 0.85  # PERF TUNING (Jul 15): Softer bounce confirmation
-    momentum_extension_reject_pct: float = 0.15  # PERF TUNING (Jul 15): Wider extension tolerance
+    momentum_rsi_min: float = 40.0  # TIGHTENED (Sep 22): Raised from 30 to 40 to filter weak momentum
+    momentum_rsi_max: float = 70.0  # TIGHTENED (Sep 22): Lowered from 80 to 70 to avoid overbought
+    momentum_ema_break_tolerance_pct: float = 0.05  # TIGHTENED (Sep 22): Reduced from 0.10 to 0.05 (stricter EMA)
+    momentum_trend_soft_mode: bool = False  # DISABLED (Sep 22): Require strict trend structure
+    momentum_min_adr_pct: float = 0.025  # TIGHTENED (Sep 22): Raised from 0.015 to 0.025 (need more volatility)
+    momentum_min_5d_return: float = 0.03  # TIGHTENED (Sep 22): Raised from 0.02 to 0.03 (stronger momentum)
+    momentum_max_5d_return: float = 0.18  # TIGHTENED (Sep 22): Lowered from 0.22 to 0.18 (avoid extended)
+    momentum_min_volume_ratio: float = 0.75  # TIGHTENED (Sep 22): Raised from 0.50 to 0.75 (need volume)
+    momentum_pullback_ema_tolerance: float = 0.03  # TIGHTENED (Sep 22): Reduced from 0.04 to 0.03 (stricter pullback)
+    momentum_support_tolerance: float = 0.060  # TIGHTENED (Sep 22): Reduced from 0.080 to 0.060 (stricter support)
+    momentum_pullback_volume_max_ratio: float = 0.95  # TIGHTENED (Sep 22): Reduced from 1.05 to 0.95 (stricter contraction)
+    momentum_bounce_volume_min_ratio: float = 1.0  # TIGHTENED (Sep 22): Raised from 0.85 to 1.0 (stronger bounce)
+    momentum_extension_reject_pct: float = 0.10  # TIGHTENED (Sep 22): Reduced from 0.15 to 0.10 (stricter extension)
     momentum_scan_start: str = "09:35"  # Recovery mode: include early post-open opportunities
     momentum_scan_end: str = "15:30"  # Recovery mode: include late-day continuation scans
     # Scored gate mode: instead of hard-conjunction (all gates must pass),
     # accumulate a quality score and pass if score >= momentum_min_gate_score
     momentum_scored_mode: bool = True  # PERF TUNING (Jul 15): Enable scored gate instead of all-or-nothing
-    momentum_min_gate_score: float = 0.60  # PERF TUNING (Jul 15): Pass if >=60% of gates pass
+    momentum_min_gate_score: float = 0.70  # TIGHTENED (Sep 22): Raised from 0.60 to 0.70 (stricter gate)
 
     # Swing pullback fallback (for choppy / weak-trend regimes)
     enable_swing_pullback: bool = True
     # Regime routing thresholds for swing fallback activation.
-    # Slightly broadened to capture mixed tape while preserving expectancy discipline.
-    swing_weak_trend_abs_5d_return_max: float = 0.04  # Was implicit 3%; allow up to +/-4% drift over 5d
-    swing_weak_trend_dist_to_sma_max: float = 0.05  # Was implicit 4%; allow modestly wider distance to SMA20
-    swing_pullback_rsi_min: float = 38.0  # Lower bound for weak/choppy pullback context
-    swing_pullback_rsi_max: float = 58.0  # PERF TUNING (Jun 11): Widened to 58 to admit more borderline pullback resets
-    swing_pullback_min_volume_ratio: float = 0.65  # OPTIMIZATION (May 19): Reduced from 0.85 to 0.65 (accept lighter volume in low-vol regimes)
-    swing_pullback_support_tolerance: float = 0.045  # OPTIMIZATION (May 19): Increased from 0.035 to 0.045 (wider support proximity)
-    swing_pullback_volume_max_ratio: float = 1.05  # Pullback volume should stay controlled, not distributive
-    swing_pullback_bounce_volume_min_ratio: float = 0.85  # PERF TUNING (Jun 23): Softer bounce confirmation
-    swing_pullback_extension_reject_pct: float = 0.06  # PERF TUNING (Jun 23): Wider extension tolerance
+    # TIGHTENED (Sep 22): Stricter criteria to avoid marginal pullback trades
+    swing_weak_trend_abs_5d_return_max: float = 0.03  # TIGHTENED (Sep 22): Reduced from 0.04 to 0.03 (stricter weak trend)
+    swing_weak_trend_dist_to_sma_max: float = 0.04  # TIGHTENED (Sep 22): Reduced from 0.05 to 0.04 (stricter SMA distance)
+    swing_pullback_rsi_min: float = 40.0  # TIGHTENED (Sep 22): Raised from 38 to 40 (avoid oversold traps)
+    swing_pullback_rsi_max: float = 55.0  # TIGHTENED (Sep 22): Lowered from 58 to 55 (avoid overbought)
+    swing_pullback_min_volume_ratio: float = 0.75  # TIGHTENED (Sep 22): Raised from 0.65 to 0.75 (need volume)
+    swing_pullback_support_tolerance: float = 0.035  # TIGHTENED (Sep 22): Reduced from 0.045 to 0.035 (stricter support)
+    swing_pullback_volume_max_ratio: float = 0.95  # TIGHTENED (Sep 22): Reduced from 1.05 to 0.95 (stricter contraction)
+    swing_pullback_bounce_volume_min_ratio: float = 1.0  # TIGHTENED (Sep 22): Raised from 0.85 to 1.0 (stronger bounce)
+    swing_pullback_extension_reject_pct: float = 0.05  # TIGHTENED (Sep 22): Reduced from 0.06 to 0.05 (stricter extension)
     swing_pullback_scan_start: str = "09:35"  # Start earlier to capture opening pullback reversals
     swing_pullback_scan_end: str = "15:30"  # PERF TUNING (Jun 23): Extended to 15:30 for more afternoon pullback opportunities
     
