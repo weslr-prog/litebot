@@ -68,6 +68,8 @@ from bot_v2.reporting import MarketBrief, DailySummary
 # Import core LiteBotX components (for data and execution)
 try:
     from bot_v2.data.data_loader import DataLoader  # Standalone bot_v2 data loader
+    from bot_v2.data.polygon_ws import PolygonWebSocket, create_polygon_ws_from_env
+    from bot_v2.data.alpaca_ws import AlpacaWebSocket, create_alpaca_ws_from_env
     from logger import setup_logger
     from connect_real_trading import RealPaperTradingEngine
 except ImportError as e:
@@ -117,6 +119,18 @@ class BotV2Launcher:
         self._entered_symbols_today = set()
         self._rejected_symbols_today = {}
         self._symbol_loss_cooldown = {}  # symbol -> datetime of last loss (for 3-day cooldown)
+        
+        # WebSocket clients for real-time data (Phase 1: Free upgrades)
+        self._polygon_ws: Optional['PolygonWebSocket'] = None
+        self._alpaca_ws: Optional['AlpacaWebSocket'] = None
+        self._ws_symbols: List[str] = []  # Symbols subscribed to WebSockets
+        self._ws_enabled = True  # Master switch for WebSocket usage
+        # Sequential rollout: Polygon first, Alpaca only after Polygon is validated.
+        # Defaults to OFF so the bot is never silently changed by a missing key.
+        self._polygon_ws_enabled = os.getenv('ENABLE_POLYGON_WEBSOCKET', 'false').lower() == 'true'
+        self._alpaca_ws_enabled = os.getenv('ENABLE_ALPACA_WEBSOCKET', 'false').lower() == 'true'
+        # Reject cached prices older than this (seconds) and fall through to REST.
+        self._ws_max_age = float(os.getenv('WS_MAX_AGE_SECONDS', '60'))
         
         # Session tracking for daily summary
         self.session_data = self._new_session_data()
@@ -400,6 +414,9 @@ class BotV2Launcher:
                 config=self.config,
                 price_fetcher=self._get_realtime_price
             )
+            
+            # Initialize WebSocket clients for real-time data (Phase 1: Free upgrades)
+            self._initialize_websocket_clients()
             
             # Portfolio management
             self.portfolio_manager = AIPortfolioManager(config=self.config)
@@ -872,16 +889,117 @@ class BotV2Launcher:
         except Exception as e:
             self.logger.error(f"❌ Position sync failed: {e}", exc_info=True)
     
+    def _initialize_websocket_clients(self):
+        """Create and start WebSocket clients according to the sequential rollout flags.
+
+        Polygon is enabled first and independently. Alpaca WebSocket stays off until
+        Polygon has been validated, so a failure in one provider never affects the other.
+        Any failure here is non-fatal: the REST fallbacks remain in place.
+        """
+        if not self._ws_enabled:
+            self.logger.info("⏭️ WebSocket clients disabled (master switch off)")
+            return
+
+        # --- Provider 1: Polygon WebSocket ---
+        if self._polygon_ws_enabled and self._polygon_ws is None:
+            try:
+                symbols = self._get_ws_symbols()
+                if not symbols:
+                    self.logger.info("⏭️ Polygon WebSocket skipped (no symbols)")
+                else:
+                    self._polygon_ws = create_polygon_ws_from_env(symbols)
+                    if self._polygon_ws:
+                        started = self._polygon_ws.start()
+                        if started:
+                            self._ws_symbols = symbols
+                            self.logger.info(
+                                f"✅ Polygon WebSocket connected ({self._polygon_ws.feed} feed, "
+                                f"{len(symbols)} symbols)"
+                            )
+                        else:
+                            self.logger.warning("⚠️ Polygon WebSocket failed to connect - using REST fallback")
+                            self._polygon_ws = None
+            except Exception as e:
+                self.logger.error(f"❌ Polygon WebSocket init failed: {e}", exc_info=True)
+                self._polygon_ws = None
+
+        # --- Provider 2: Alpaca WebSocket (secondary, off by default) ---
+        if self._alpaca_ws_enabled and self._alpaca_ws is None:
+            try:
+                symbols = self._ws_symbols or self._get_ws_symbols()
+                if not symbols:
+                    self.logger.info("⏭️ Alpaca WebSocket skipped (no symbols)")
+                else:
+                    self._alpaca_ws = create_alpaca_ws_from_env(symbols, paper=True)
+                    if self._alpaca_ws:
+                        started = self._alpaca_ws.start()
+                        if started:
+                            if not self._ws_symbols:
+                                self._ws_symbols = symbols
+                            self.logger.info(
+                                f"✅ Alpaca WebSocket connected ({len(symbols)} symbols)"
+                            )
+                        else:
+                            self.logger.warning("⚠️ Alpaca WebSocket failed to connect - using REST fallback")
+                            self._alpaca_ws = None
+            except Exception as e:
+                self.logger.error(f"❌ Alpaca WebSocket init failed: {e}", exc_info=True)
+                self._alpaca_ws = None
+
+    def _ensure_websocket_clients(self):
+        """Lazily (re)initialize WebSocket clients on first price lookup.
+
+        Kept cheap and non-blocking so a dropped connection or a late universe
+        refresh cannot stall the main scan loop.
+        """
+        if not self._ws_enabled:
+            return
+
+        if self._polygon_ws_enabled and self._polygon_ws is None:
+            self._initialize_websocket_clients()
+        elif self._alpaca_ws_enabled and self._alpaca_ws is None and not self._polygon_ws_enabled:
+            self._initialize_websocket_clients()
+
+    def _get_ws_symbols(self) -> List[str]:
+        """Symbols to subscribe to: the trading universe, capped to respect free-tier limits."""
+        try:
+            max_symbols = int(os.getenv('WS_MAX_SYMBOLS', '100'))
+        except (TypeError, ValueError):
+            max_symbols = 100
+
+        symbols = [s.upper() for s in (self._get_universe() or []) if isinstance(s, str)]
+        # De-duplicate while preserving order
+        seen = set()
+        unique: List[str] = []
+        for s in symbols:
+            if s not in seen:
+                seen.add(s)
+                unique.append(s)
+
+        if len(unique) > max_symbols:
+            self.logger.info(f"ℹ️ WebSocket symbols capped to {max_symbols} (universe={len(unique)})")
+            unique = unique[:max_symbols]
+
+        return unique
+
+    def _get_ws_price(self, client, symbol: str) -> Optional[float]:
+        """Return a WebSocket price only if it is fresh; otherwise None (caller falls back)."""
+        price = client.get_latest_price(symbol)
+        if price is None or price <= 0:
+            return None
+        age = client.get_data_age(symbol)
+        if age is not None and age > self._ws_max_age:
+            return None
+        return price
+
     def _get_realtime_price(self, symbol: str) -> Optional[float]:
-        """Get real-time price for a symbol via Alpaca IEX.
+        """Get real-time price for a symbol via WebSocket clients (primary) with REST fallback.
 
-        TIER 2 FIX (Feb 25, 2026): Previously referenced self.trading_engine.api
-        which doesn't exist (engine has self.client), and TradingClient doesn't
-        have get_latest_quote(). So this method ALWAYS returned None, causing
-        exit monitoring to fall back to yfinance daily close (1-day stale).
-
-        Now uses alpaca_data_helper → StockHistoricalDataClient.get_stock_latest_trade()
-        (confirmed working), with data_loader.get_current_price() as secondary fallback.
+        Priority order (Phase 1: Free upgrades):
+        1. Polygon WebSocket (primary - real-time trades/quotes)
+        2. Alpaca WebSocket (secondary - real-time quotes)
+        3. Alpaca REST via alpaca_data_helper (fallback)
+        4. DataLoader.get_current_price (also uses Alpaca, with yfinance fallback)
 
         Args:
             symbol: Stock symbol
@@ -889,19 +1007,38 @@ class BotV2Launcher:
         Returns:
             Current price or None if unavailable
         """
-        # Primary: Alpaca IEX latest trade (real-time)
+        # Ensure WebSocket clients are initialized with current symbols
+        self._ensure_websocket_clients()
+        
+        # 1. Primary: Polygon WebSocket (real-time trades/quotes)
+        if self._ws_enabled and self._polygon_ws and self._polygon_ws.is_connected():
+            price = self._get_ws_price(self._polygon_ws, symbol)
+            if price is not None:
+                self.logger.debug(f"Price from Polygon WS for {symbol}: ${price:.2f}")
+                return price
+        
+        # 2. Secondary: Alpaca WebSocket (real-time quotes)
+        if self._ws_enabled and self._alpaca_ws and self._alpaca_ws.is_connected():
+            price = self._get_ws_price(self._alpaca_ws, symbol)
+            if price is not None:
+                self.logger.debug(f"Price from Alpaca WS for {symbol}: ${price:.2f}")
+                return price
+        
+        # 3. Tertiary: Alpaca REST via alpaca_data_helper
         try:
             from bot_v2.data.alpaca_data_helper import get_realtime_price
             price = get_realtime_price(symbol)
             if price is not None:
+                self.logger.debug(f"Price from Alpaca REST for {symbol}: ${price:.2f}")
                 return price
         except Exception as e:
             self.logger.debug(f"Alpaca helper price failed for {symbol}: {e}")
 
-        # Secondary: DataLoader.get_current_price (also uses Alpaca, with yfinance fallback)
+        # 4. Fallback: DataLoader.get_current_price (also uses Alpaca, with yfinance fallback)
         try:
             price = self.data_loader.get_current_price(symbol)
             if price is not None:
+                self.logger.debug(f"Price from DataLoader for {symbol}: ${price:.2f}")
                 return price
         except Exception as e:
             self.logger.debug(f"DataLoader price failed for {symbol}: {e}")
@@ -2434,6 +2571,17 @@ class BotV2Launcher:
         self.logger.info("=" * 80)
         
         self.is_running = False
+        
+        # Stop WebSocket clients cleanly
+        for name, client in (("Polygon", self._polygon_ws), ("Alpaca", self._alpaca_ws)):
+            if client:
+                try:
+                    client.stop()
+                    self.logger.info(f"🛑 {name} WebSocket stopped")
+                except Exception as e:
+                    self.logger.debug(f"{name} WebSocket stop error: {e}")
+        self._polygon_ws = None
+        self._alpaca_ws = None
         
         # DISABLED: Force exit all positions (safety)
         # Emergency exits disabled per user request (Dec 29, 2025)
