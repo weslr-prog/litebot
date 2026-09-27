@@ -130,6 +130,13 @@ class AlpacaWebSocket:
                 self._connect_and_run()
             except Exception as e:
                 self._stats['errors'] += 1
+                # Auth/quota failures are permanent: retrying only opens more
+                # connections and can worsen the limit error. Fail fast.
+                if self._is_fatal_error(e):
+                    logger.error(f"Alpaca WebSocket fatal error (not retrying): {e}")
+                    self._running = False
+                    self._connected = False
+                    break
                 logger.error(f"Alpaca WebSocket error: {e}")
                 if self._running:
                     self._reconnect_count += 1
@@ -139,7 +146,22 @@ class AlpacaWebSocket:
         
         if self._reconnect_count >= self.max_reconnect_attempts:
             logger.error("Max reconnection attempts reached. Alpaca WebSocket stopped.")
-            self._connected = False
+        self._connected = False
+
+    @staticmethod
+    def _is_fatal_error(e: Exception) -> bool:
+        """Errors that will never succeed on retry."""
+        msg = str(e).lower()
+        fatal_markers = (
+            'connection limit exceeded',
+            'auth failed',
+            'unauthorized',
+            'forbidden',
+            '401',
+            '403',
+            'invalid api key',
+        )
+        return any(m in msg for m in fatal_markers)
     
     def _connect_and_run(self):
         """Establish connection and process messages."""

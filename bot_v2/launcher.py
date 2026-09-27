@@ -102,6 +102,20 @@ class BotV2Launcher:
         # ✅ Startup Settings Verification (prevents config drift)
         verify_settings_on_startup(self.logger)
         
+        # WebSocket clients for real-time data (Phase 1: Free upgrades)
+        # NOTE: must be initialized BEFORE _initialize_components(), which
+        # starts the clients via _initialize_websocket_clients().
+        self._polygon_ws: Optional['PolygonWebSocket'] = None
+        self._alpaca_ws: Optional['AlpacaWebSocket'] = None
+        self._ws_symbols: List[str] = []  # Symbols subscribed to WebSockets
+        self._ws_enabled = True  # Master switch for WebSocket usage
+        # Sequential rollout: Polygon first, Alpaca only after Polygon is validated.
+        # Defaults to OFF so the bot is never silently changed by a missing key.
+        self._polygon_ws_enabled = os.getenv('ENABLE_POLYGON_WEBSOCKET', 'false').lower() == 'true'
+        self._alpaca_ws_enabled = os.getenv('ENABLE_ALPACA_WEBSOCKET', 'false').lower() == 'true'
+        # Reject cached prices older than this (seconds) and fall through to REST.
+        self._ws_max_age = float(os.getenv('WS_MAX_AGE_SECONDS', '60'))
+        
         # Initialize core components
         self._initialize_components()
         
@@ -119,18 +133,6 @@ class BotV2Launcher:
         self._entered_symbols_today = set()
         self._rejected_symbols_today = {}
         self._symbol_loss_cooldown = {}  # symbol -> datetime of last loss (for 3-day cooldown)
-        
-        # WebSocket clients for real-time data (Phase 1: Free upgrades)
-        self._polygon_ws: Optional['PolygonWebSocket'] = None
-        self._alpaca_ws: Optional['AlpacaWebSocket'] = None
-        self._ws_symbols: List[str] = []  # Symbols subscribed to WebSockets
-        self._ws_enabled = True  # Master switch for WebSocket usage
-        # Sequential rollout: Polygon first, Alpaca only after Polygon is validated.
-        # Defaults to OFF so the bot is never silently changed by a missing key.
-        self._polygon_ws_enabled = os.getenv('ENABLE_POLYGON_WEBSOCKET', 'false').lower() == 'true'
-        self._alpaca_ws_enabled = os.getenv('ENABLE_ALPACA_WEBSOCKET', 'false').lower() == 'true'
-        # Reject cached prices older than this (seconds) and fall through to REST.
-        self._ws_max_age = float(os.getenv('WS_MAX_AGE_SECONDS', '60'))
         
         # Session tracking for daily summary
         self.session_data = self._new_session_data()
@@ -896,7 +898,7 @@ class BotV2Launcher:
         Polygon has been validated, so a failure in one provider never affects the other.
         Any failure here is non-fatal: the REST fallbacks remain in place.
         """
-        if not self._ws_enabled:
+        if not getattr(self, '_ws_enabled', False):
             self.logger.info("⏭️ WebSocket clients disabled (master switch off)")
             return
 
@@ -952,12 +954,13 @@ class BotV2Launcher:
         Kept cheap and non-blocking so a dropped connection or a late universe
         refresh cannot stall the main scan loop.
         """
-        if not self._ws_enabled:
+        if not getattr(self, '_ws_enabled', False):
             return
 
-        if self._polygon_ws_enabled and self._polygon_ws is None:
+        if getattr(self, '_polygon_ws_enabled', False) and getattr(self, '_polygon_ws', None) is None:
             self._initialize_websocket_clients()
-        elif self._alpaca_ws_enabled and self._alpaca_ws is None and not self._polygon_ws_enabled:
+        elif (getattr(self, '_alpaca_ws_enabled', False) and getattr(self, '_alpaca_ws', None) is None
+              and not getattr(self, '_polygon_ws_enabled', False)):
             self._initialize_websocket_clients()
 
     def _get_ws_symbols(self) -> List[str]:
@@ -1008,17 +1011,21 @@ class BotV2Launcher:
             Current price or None if unavailable
         """
         # Ensure WebSocket clients are initialized with current symbols
-        self._ensure_websocket_clients()
+        # getattr guards keep pricing working even if init order ever changes.
+        if hasattr(self, '_ws_enabled') and hasattr(self, '_ws_max_age'):
+            self._ensure_websocket_clients()
         
         # 1. Primary: Polygon WebSocket (real-time trades/quotes)
-        if self._ws_enabled and self._polygon_ws and self._polygon_ws.is_connected():
+        if (getattr(self, '_ws_enabled', False) and getattr(self, '_polygon_ws', None)
+                and self._polygon_ws.is_connected()):
             price = self._get_ws_price(self._polygon_ws, symbol)
             if price is not None:
                 self.logger.debug(f"Price from Polygon WS for {symbol}: ${price:.2f}")
                 return price
         
         # 2. Secondary: Alpaca WebSocket (real-time quotes)
-        if self._ws_enabled and self._alpaca_ws and self._alpaca_ws.is_connected():
+        if (getattr(self, '_ws_enabled', False) and getattr(self, '_alpaca_ws', None)
+                and self._alpaca_ws.is_connected()):
             price = self._get_ws_price(self._alpaca_ws, symbol)
             if price is not None:
                 self.logger.debug(f"Price from Alpaca WS for {symbol}: ${price:.2f}")

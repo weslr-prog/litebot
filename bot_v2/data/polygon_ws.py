@@ -171,6 +171,13 @@ class PolygonWebSocket:
                 self._connect_and_run()
             except Exception as e:
                 self._stats['errors'] += 1
+                # Auth/plan-entitlement failures are permanent: retrying only
+                # opens more connections. Fail fast and fall back to REST.
+                if self._is_fatal_error(e):
+                    logger.error(f"Polygon WebSocket fatal error (not retrying): {e}")
+                    self._running = False
+                    self._connected = False
+                    break
                 logger.error(f"WebSocket error: {e}")
                 if self._running:
                     self._reconnect_count += 1
@@ -180,7 +187,22 @@ class PolygonWebSocket:
         
         if self._reconnect_count >= self.max_reconnect_attempts:
             logger.error("Max reconnection attempts reached. WebSocket stopped.")
-            self._connected = False
+        self._connected = False
+
+    @staticmethod
+    def _is_fatal_error(e: Exception) -> bool:
+        """Errors that will never succeed on retry (auth, plan limits)."""
+        msg = str(e).lower()
+        fatal_markers = (
+            "doesn't include websocket access",
+            "auth_failed",
+            "unauthorized",
+            "forbidden",
+            "not entitled",
+            "401",
+            "403",
+        )
+        return any(m in msg for m in fatal_markers)
     
     def _connect_and_run(self):
         """Establish connection and process messages."""
