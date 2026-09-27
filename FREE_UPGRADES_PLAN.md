@@ -34,22 +34,59 @@ Code is complete and compiles. Real bugs found and fixed during testing:
 3. **Feed must be a full hostname** — passing `feed="delayed"` built
    `wss://delayed/stocks`, which failed DNS resolution (`socket.gaierror`).
    Added a `FEED_HOSTNAMES` map so `delayed` → `delayed.polygon.io`.
-4. **Optimistic `_connected` flag** — both clients set "connected" *before* the server
+4. **Optimistic `_connected` flag** — both clients set "connected" _before_ the server
    confirmed. Now `start()` waits for a real `status: connected` (Polygon) or the
    first inbound message (Alpaca), and returns the truthful result.
 5. **alpaca-py requires coroutine handlers** — `_handle_quote` / `_handle_trade` were
    sync, failing with `handler must be a coroutine function`. Made both `async`.
 
-**Polygon outcome: blocked by plan, not by code.** The endpoint and auth succeed
-(`status: connected`), but subscribing returns:
+**Polygon outcome: WebSocket blocked by plan, but REST historical still works.**
+The WebSocket endpoint and auth succeed (`status: connected`), but subscribing returns:
 `"Your plan doesn't include websocket access. Visit https://massive.com/pricing"`.
-The same key is also `403 NOT_AUTHORIZED` on REST `/v2/last/trade`.
-Polygon stays **off by default** until the plan is upgraded.
 
-**Alpaca outcome: working.** Connects to `wss://stream.data.alpaca.markets/v2/iex` and
-subscribes successfully. Handlers, price extraction (trade → quote mid), and
-`get_data_age()` staleness were verified with synthetic messages because the test ran
-**Saturday 20:28 ET, market closed**, so no live trades were flowing.
+Per Polygon's published pricing, the free **Stocks Basic** plan is 5 calls/min with
+end-of-day data only. **WebSockets are not in the free tier** — the cheapest plan that
+includes them is **Stocks Starter at $29/month**.
+
+Measured entitlement of the current key (2026-09-26):
+
+| Polygon endpoint                                          | Result  |
+| --------------------------------------------------------- | ------- |
+| `v2/aggs/ticker/.../range/1/day` (historical aggregates)   | ✅ 200  |
+| `v2/aggs/ticker/AAPL/prev` (previous daily bar)            | ✅ 200  |
+| `v2/last/trade/AAPL` (real-time)                           | ❌ 403  |
+| `wss://` subscribe                                        | ❌ 403  |
+
+**Decision: no change needed to the historical path.** `DataLoader.get_historical_data()`
+uses only `get_aggs(...)` daily aggregates, which the free tier permits, and it already
+falls back to yfinance + Alpaca IEX. Verified 60 rows for AAPL/MSFT/SPY/TSLA.
+So Polygon remains the primary **historical** source and is correctly left out of the
+**real-time** WebSocket path. `ENABLE_POLYGON_WEBSOCKET` stays `false`.
+
+### Free alternatives to a Polygon WebSocket
+
+Alpaca is the answer, and it is already wired up. Its **IEX** feed is free on the paper
+account (confirmed active, HTTP 200), and it provides both a WebSocket stream and REST.
+
+| Provider                    | Free? | Real-time           | WebSocket | Notes                          |
+| --------------------------- | ----- | ------------------- | --------- | ------------------------------ |
+| **Alpaca IEX**              | ✅    | ✅ (IEX-only book)  | ✅        | **Best free option. In use.**  |
+| Alpaca SIP                  | ❌    | ❌ (paid)            | —         | `subscription does not permit` |
+| Polygon (free)              | ✅    | ❌ EOD only          | ❌ $29/mo | Historical only               |
+| yfinance                    | ✅    | ❌ ~15-min delay     | ❌        | Already a fallback             |
+| Alpha Vantage               | ✅    | ❌ 25 req/min        | ❌        | Key present; REST only, slow   |
+| Finnhub                     | ✅    | ⚠️ limited           | ✅        | Usable for *news/fundamentals*, not a price stream |
+
+**Recommendation: stay on Alpaca IEX.** It is free, streaming, and already validated.
+The only caveat is that IEX is a single exchange (~2.5% of US volume), so it is thinner
+than SIP — acceptable for the bot's intraday entries but worth knowing.
+
+> ⚠️ **IEX is thin and can return malformed quotes.** Measured live: AAPL returned
+> `bid=319.05, ask=0.0` while the correct trade was `341.02`. A naive quote-midpoint
+> would have produced **$159.53** — a ~51% error that would corrupt any signal built
+> on it. Both WebSocket clients now reject quotes with a missing, zero, or crossed
+> side, and require `bid <= ask` before using a midpoint. Verified: a zero-ask quote
+> returns `None` (falls through to REST) instead of a bad price.
 
 **Launcher routing verified:** WebSocket path returned the cached price `123.45`; with
 the cache aged 999s the call correctly fell through to REST and returned a live quote.
@@ -57,13 +94,13 @@ REST fallbacks are intact, so behavior is unchanged while both providers are off
 
 ### Phase 1 Activation (both default to `false`)
 
-| Variable                   | Default  | Purpose                          |
-| -------------------------- | -------- | -------------------------------- |
-| `ENABLE_POLYGON_WEBSOCKET` | `false`  | Polygon WS primary               |
-| `ENABLE_ALPACA_WEBSOCKET`  | `false`  | Alpaca WS secondary fallback     |
-| `WS_MAX_SYMBOLS`           | `100`    | Cap subscriptions (free tier)    |
-| `WS_MAX_AGE_SECONDS`       | `60`     | Reject stale quotes, use REST    |
-| `POLYGON_FEED`             | `delayed`| `delayed` or `real-time`         |
+| Variable                   | Default   | Purpose                       |
+| -------------------------- | --------- | ----------------------------- |
+| `ENABLE_POLYGON_WEBSOCKET` | `false`   | Polygon WS primary            |
+| `ENABLE_ALPACA_WEBSOCKET`  | `false`   | Alpaca WS secondary fallback  |
+| `WS_MAX_SYMBOLS`           | `100`     | Cap subscriptions (free tier) |
+| `WS_MAX_AGE_SECONDS`       | `60`      | Reject stale quotes, use REST |
+| `POLYGON_FEED`             | `delayed` | `delayed` or `real-time`      |
 
 To enable Alpaca only (Polygon is blocked by plan):
 

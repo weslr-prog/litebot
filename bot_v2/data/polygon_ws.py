@@ -268,17 +268,27 @@ class PolygonWebSocket:
             return self._latest_quotes.get(symbol.upper(), {}).copy() if symbol.upper() in self._latest_quotes else None
     
     def get_latest_price(self, symbol: str) -> Optional[float]:
-        """Get latest price (prefers trade, falls back to quote mid)."""
+        """Get latest price (prefers trade; quote mid only when the quote is sane).
+
+        A missing quote side (0.0) would make the midpoint badly wrong, so a
+        quote is only used when BOTH sides are positive and properly ordered.
+        """
         with self._lock:
             symbol = symbol.upper()
             # Prefer latest trade
             trade = self._latest_trades.get(symbol)
-            if trade and trade.get('price') is not None:
+            if trade and trade.get('price') is not None and trade['price'] > 0:
                 return trade['price']
-            # Fallback to quote mid
+            # Fallback to quote mid, but only for a valid two-sided quote
             quote = self._latest_quotes.get(symbol)
-            if quote and quote.get('bid') is not None and quote.get('ask') is not None:
-                return (quote['bid'] + quote['ask']) / 2.0
+            if quote:
+                bid = quote.get('bid') or 0.0
+                ask = quote.get('ask') or 0.0
+                if bid > 0 and ask > 0:
+                    mid = (bid + ask) / 2.0
+                    # Reject crossed/implausible quotes that would poison pricing
+                    if 0.01 <= bid <= ask:
+                        return mid
             return None
     
     def is_connected(self) -> bool:
