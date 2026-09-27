@@ -50,12 +50,12 @@ includes them is **Stocks Starter at $29/month**.
 
 Measured entitlement of the current key (2026-09-26):
 
-| Polygon endpoint                                          | Result  |
-| --------------------------------------------------------- | ------- |
-| `v2/aggs/ticker/.../range/1/day` (historical aggregates)   | ✅ 200  |
-| `v2/aggs/ticker/AAPL/prev` (previous daily bar)            | ✅ 200  |
-| `v2/last/trade/AAPL` (real-time)                           | ❌ 403  |
-| `wss://` subscribe                                        | ❌ 403  |
+| Polygon endpoint                                         | Result |
+| -------------------------------------------------------- | ------ |
+| `v2/aggs/ticker/.../range/1/day` (historical aggregates) | ✅ 200 |
+| `v2/aggs/ticker/AAPL/prev` (previous daily bar)          | ✅ 200 |
+| `v2/last/trade/AAPL` (real-time)                         | ❌ 403 |
+| `wss://` subscribe                                       | ❌ 403 |
 
 **Decision: no change needed to the historical path.** `DataLoader.get_historical_data()`
 uses only `get_aggs(...)` daily aggregates, which the free tier permits, and it already
@@ -68,14 +68,14 @@ So Polygon remains the primary **historical** source and is correctly left out o
 Alpaca is the answer, and it is already wired up. Its **IEX** feed is free on the paper
 account (confirmed active, HTTP 200), and it provides both a WebSocket stream and REST.
 
-| Provider                    | Free? | Real-time           | WebSocket | Notes                          |
-| --------------------------- | ----- | ------------------- | --------- | ------------------------------ |
-| **Alpaca IEX**              | ✅    | ✅ (IEX-only book)  | ✅        | **Best free option. In use.**  |
-| Alpaca SIP                  | ❌    | ❌ (paid)            | —         | `subscription does not permit` |
-| Polygon (free)              | ✅    | ❌ EOD only          | ❌ $29/mo | Historical only               |
-| yfinance                    | ✅    | ❌ ~15-min delay     | ❌        | Already a fallback             |
-| Alpha Vantage               | ✅    | ❌ 25 req/min        | ❌        | Key present; REST only, slow   |
-| Finnhub                     | ✅    | ⚠️ limited           | ✅        | Usable for *news/fundamentals*, not a price stream |
+| Provider       | Free? | Real-time          | WebSocket | Notes                                              |
+| -------------- | ----- | ------------------ | --------- | -------------------------------------------------- |
+| **Alpaca IEX** | ✅    | ✅ (IEX-only book) | ✅        | **Best free option. In use.**                      |
+| Alpaca SIP     | ❌    | ❌ (paid)          | —         | `subscription does not permit`                     |
+| Polygon (free) | ✅    | ❌ EOD only        | ❌ $29/mo | Historical only                                    |
+| yfinance       | ✅    | ❌ ~15-min delay   | ❌        | Already a fallback                                 |
+| Alpha Vantage  | ✅    | ❌ 25 req/min      | ❌        | Key present; REST only, slow                       |
+| Finnhub        | ✅    | ⚠️ limited         | ✅        | Usable for _news/fundamentals_, not a price stream |
 
 **Recommendation: stay on Alpaca IEX.** It is free, streaming, and already validated.
 The only caveat is that IEX is a single exchange (~2.5% of US volume), so it is thinner
