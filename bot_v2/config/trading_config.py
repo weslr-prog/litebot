@@ -219,6 +219,12 @@ class ShortCycleConfig:
     # rather than using a flat percentage from entry.  The calculated stop is capped at
     # stop_loss_pct so account-risk hard limits are never exceeded.
     support_stop_buffer_pct: float = 0.01  # 1% below the identified support level
+    # Sep 28, 2026: support-aware stops had no minimum width and produced stops of
+    # 0.6-1.2%, well inside normal mid-cap daily noise (ATR is often 2-3%). Those
+    # positions were stopped out before the thesis could develop. Stops are now
+    # clamped between these bounds. Matches AIStopLossManager's ATR floor/ceiling.
+    min_stop_loss_pct: float = 0.02  # 2% floor - never tighter than the noise band
+    max_stop_loss_pct: float = 0.06  # 6% ceiling - never wider than the ATR cap
     
     # Trailing Stop Parameters
     # TIER 1 FIX (Feb 25, 2026): RE-ENABLED trailing stops.

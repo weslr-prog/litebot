@@ -1167,6 +1167,23 @@ class AISignalGenerator:
                         sp = result_with_support['support_price']
                         buffer = getattr(self.config, 'support_stop_buffer_pct', 0.01)
                         candidate_stop = sp * (1 - buffer)
+                        # Sep 28, 2026 FIX: support-aware stops used a flat 1% buffer
+                        # with no minimum width, producing stops of 0.6-1.2% on names
+                        # whose ATR is far larger. Those stops were inside normal daily
+                        # noise, so the position was knocked out before the thesis could
+                        # play out. Enforce a minimum stop width so the stop sits
+                        # outside the noise band, while still honouring tighter
+                        # structural support when it is genuinely wide enough.
+                        min_stop_pct = getattr(self.config, 'min_stop_loss_pct', 0.02)
+                        max_stop_pct = getattr(self.config, 'max_stop_loss_pct', 0.06)
+                        candidate_stop = min(
+                            candidate_stop,
+                            realtime_price * (1 - min_stop_pct)   # never tighter than the floor
+                        )
+                        candidate_stop = max(
+                            candidate_stop,
+                            realtime_price * (1 - max_stop_pct)   # never wider than the ceiling
+                        )
                         hard_stop_floor = realtime_price * (1 - stop_loss_pct)
                         if candidate_stop > hard_stop_floor and candidate_stop < realtime_price:
                             stop_price = candidate_stop

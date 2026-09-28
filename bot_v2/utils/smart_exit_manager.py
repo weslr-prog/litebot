@@ -26,6 +26,12 @@ class SmartExitManager:
         self.STANDARD_PROFIT_TARGET = 0.06  # 6% - raised from 4% (let winners develop)
         self.RSI_NORMALIZATION = 80  # Raised from 75 (only exit at true exhaustion)
         self.RSI_QUICK_EXIT = 85  # Raised from 80 (extreme exhaustion only)
+        # Sep 28, 2026: volume-exhaustion thresholds were inconsistent with the RSI
+        # rules (fired at RSI>70 while every other RSI exit needs 80+). Align them and
+        # raise the profit bar so this exit can only bank a real gain.
+        self.VOLUME_EXHAUSTION_RATIO = 0.5  # Intraday ratio alone is unreliable
+        self.VOLUME_EXHAUSTION_RSI = 80  # Match RSI_NORMALIZATION
+        self.VOLUME_EXHAUSTION_PROFIT = 0.04  # Only bank a meaningful gain (4%)
         # TIER 1 FIX (Feb 25, 2026): RE-ENABLED trailing stops at 3% trigger / 2% trail.
         # Previous 99% setting effectively disabled them. With Momentum-only strategy,
         # trailing stops lock in gains on trend continuation trades.
@@ -34,6 +40,9 @@ class SmartExitManager:
         self.MIN_HOLD_HOURS = 48  # CRITICAL FIX: 48h minimum before RSI/signal exits (was 4h)
         # Keep max hold aligned with config profile (e.g., 1-3 day swing mode).
         self.MAX_HOLD_HOURS = int(getattr(config, 'max_hold_days', 5) * 24)
+        # Sep 28, 2026: time stop only frees capital for positions that are
+        # essentially flat. A real loss is left to the -4% stop.
+        self.TIME_STOP_LOSS_FLOOR = -0.01
         
         # Emergency exit thresholds (Feb 13 SWING FIX)
         # Hard stop widened to 4% to survive normal mid-cap daily swings
@@ -138,6 +147,14 @@ class SmartExitManager:
         
         # LET WINNERS RUN CHECK
         if profit_pct >= self.LET_WINNERS_RUN_THRESHOLD:
+            # Sep 28, 2026 FIX: the profit target (STRATEGY 4) sits BELOW this
+            # branch, so any position reaching +3% returned early and the 6%
+            # target could never fire. Winners were only ever closed by a
+            # trailing-stop pullback or the 72h time stop, which is exactly how
+            # DAL/HIMS/MCHP banked +0.75% to +1.22% against an 8% target.
+            # Take the target first, then fall through to trailing protection.
+            if profit_pct >= self.STANDARD_PROFIT_TARGET:
+                return (True, f"Profit target {profit_pct*100:.1f}% hit", current_price)
             if hasattr(position, 'highest_price') and position.highest_price:
                 drawdown_from_high = (current_price - position.highest_price) / position.highest_price
                 dynamic_trail = self.get_dynamic_trail_pct(profit_pct)
@@ -167,20 +184,35 @@ class SmartExitManager:
         if profit_pct >= self.STANDARD_PROFIT_TARGET:
             return (True, f"Profit target {profit_pct*100:.1f}% hit", current_price)
         
-        # STRATEGY 5: Volume Exhaustion Exit (low volume + RSI > 70, AFTER 48h)
-        # SWING FIX Feb 13: Raised RSI threshold from 60 to 70, profit from 1% to 2%
+        # STRATEGY 5: Volume Exhaustion Exit (low volume + RSI high, AFTER 48h)
+        # Sep 28, 2026 FIX: volume_ratio is measured against a FULL-DAY average, so
+        # mid-session it is naturally 0.1-0.4x. The old `volume_ratio < 0.5` therefore
+        # fired on almost every intraday check and cut winners dead at ~+2%
+        # (DAL exited at +2.27% of a 6.6% target on a 0.1x reading).
+        # Now requires: a genuinely thin tape, RSI consistent with the 80 threshold,
+        # and a gain large enough to be worth banking.
         if hours_held >= self.MIN_HOLD_HOURS:
-            if volume_ratio < 0.5 and rsi > 70 and profit_pct > 0.02:
+            if (volume_ratio < self.VOLUME_EXHAUSTION_RATIO
+                    and rsi >= self.VOLUME_EXHAUSTION_RSI
+                    and profit_pct >= self.VOLUME_EXHAUSTION_PROFIT):
                 return (True, f"Volume exhaustion ({volume_ratio:.1f}x) at RSI {rsi:.0f}", current_price)
         
-        # STRATEGY 6: Time-Based Safety Exit (MAX_HOLD_HOURS = 120h / ~5 days)
+        # STRATEGY 6: Time-Based Safety Exit (MAX_HOLD_HOURS)
+        # Sep 28, 2026 FIX: this used to force-exit ANY position past max hold,
+        # including losers at -1.3%/-1.7%/-1.9% (FOXA, DOCS, PYPL all closed
+        # this way). Those were small losses that had not yet reached the -4%
+        # stop, so the time stop was converting "hold and let it work" into
+        # "book a certain small loss". Now it only exits on time when the
+        # position is actually green; otherwise the -4% stop governs.
         if hours_held >= self.MAX_HOLD_HOURS:
             if profit_pct > 0:
                 return (True, f"Max hold {hours_held:.0f}h with {profit_pct*100:.1f}% profit", current_price)
-            elif profit_pct > -0.01:
-                return (True, f"Max hold {hours_held:.0f}h - breakeven exit", current_price)
-            # Deep loss after max hold - force exit to free capital
-            return (True, f"Max hold {hours_held:.0f}h - cut loss {profit_pct*100:.1f}%", current_price)
+            if profit_pct >= self.TIME_STOP_LOSS_FLOOR:
+                # Dead capital: exit to free the slot, but only for a tiny loss
+                # that is genuinely no longer worth holding.
+                return (True, f"Max hold {hours_held:.0f}h - flat exit {profit_pct*100:.1f}%", current_price)
+            # Still inside normal risk: let the stop/thesis decide, not the clock.
+            return (False, f"Max hold {hours_held:.0f}h reached, holding for stop/target (P&L {profit_pct*100:+.1f}%)", current_price)
         
         # STRATEGY 7: Stop Loss (4% for swing trades - matches emergency stop)
         # SWING FIX Feb 13: This was -3% but emergency stop at -2% made it unreachable
