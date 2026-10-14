@@ -35,9 +35,10 @@ class ShortCycleConfig:
     # PORTFOLIO EXPOSURE CAPS (Sep 3, 2026 - prevent over-commitment)
     # Problem: Bot was hitting 93% utilization (exceeding the 75% daily target)
     # Solution: Add hard caps on total exposure and minimum cash reserve
-    max_total_exposure_percent: float = 0.75  # HARD CAP: never exceed 75% of equity in positions
-    min_cash_reserve_percent: float = 0.20  # Keep at least 20% of equity as cash reserve
-    max_concurrent_positions: int = 5  # HARD CAP: never hold more than 5 positions at once
+    # Adjusted Oct 14, 2026: Relaxed for small account ($832 equity) - was too restrictive
+    max_total_exposure_percent: float = 0.90  # HARD CAP: never exceed 90% of equity in positions (was 75%)
+    min_cash_reserve_percent: float = 0.05  # Keep at least 5% of equity as cash reserve (was 20%)
+    max_concurrent_positions: int = 6  # HARD CAP: never hold more than 6 positions at once (was 5)
     
     # Diversification parameters
     max_positions_per_symbol_small: int = 2  # Max positions per symbol for portfolios < $100K
