@@ -64,7 +64,7 @@ class ShortCycleConfig:
     
     # Profit targets (SWING FIX Feb 13, 2026)
     # Raised targets to let winners develop. Old 4% target was clipping gains.
-    profit_target_pct: float = 0.06  # 6% profit target (raised from 4% - let winners run)
+    profit_target_pct: float = 0.08  # 8% profit target (raised from 6% - let winners run further)
     
     # Risk parameters (Dual-Strategy System: Gap & Go + Fade/Short)
     max_daily_loss_percent: float = 0.08  # 8% daily loss limit
@@ -151,9 +151,9 @@ class ShortCycleConfig:
     # Winners hold through weekend only if strong. Exit losers and marginal positions on Friday.
     weekend_hold_enabled: bool = True  # Allow weekend holds for strong winners
     friday_force_exit_enabled: bool = True  # ENABLED (Sep 13): Force exits on Friday for risk management
-    friday_exit_losers_only: bool = False  # Exit ALL positions on Friday unless strong winner
-    friday_loser_threshold: float = -0.015  # TIGHTENED (Sep 22): Exit if down more than 1.5% on Friday EOD
-    friday_winner_threshold: float = 0.05  # TIGHTENED (Sep 22): Hold through weekend only if up >5%
+    friday_exit_losers_only: bool = True  # Exit ONLY losers on Friday; let winners ride (was False - exited ALL)
+    friday_loser_threshold: float = -0.02  # Exit if down more than 2% on Friday EOD (was -1.5%)
+    friday_winner_threshold: float = 0.04  # Hold through weekend if up >4% (was 5%)
     weekend_early_exit_threshold: float = 0.05  # Only exit early if +5% profit
     
     # Gap & Go parameters
@@ -212,20 +212,20 @@ class ShortCycleConfig:
     
     # Default targets (SWING FIX Feb 13, 2026: UNIFIED for weekly swing strategy)
     # Single source of truth - wider stops survive mid-cap volatility
-    profit_target_pct: float = 0.06  # 6% profit target (raised from 4%)
+    profit_target_pct: float = 0.08  # 8% profit target (raised from 6% - let winners run further)
     stop_loss_pct: float = 0.04  # 4% stop loss (raised from 2% - key fix for bleeding)
 
     # Support-aware stop placement (Phase 2: align exits with support-based entries)
     # When a support level is known at entry time, place the stop just below that level
     # rather than using a flat percentage from entry.  The calculated stop is capped at
     # stop_loss_pct so account-risk hard limits are never exceeded.
-    support_stop_buffer_pct: float = 0.01  # 1% below the identified support level
+    support_stop_buffer_pct: float = 0.015  # 1.5% below the identified support level (was 1% - too tight for mid-cap noise)
     # Sep 28, 2026: support-aware stops had no minimum width and produced stops of
     # 0.6-1.2%, well inside normal mid-cap daily noise (ATR is often 2-3%). Those
     # positions were stopped out before the thesis could develop. Stops are now
     # clamped between these bounds. Matches AIStopLossManager's ATR floor/ceiling.
-    min_stop_loss_pct: float = 0.02  # 2% floor - never tighter than the noise band
-    max_stop_loss_pct: float = 0.06  # 6% ceiling - never wider than the ATR cap
+    min_stop_loss_pct: float = 0.03  # 3% floor - never tighter than the noise band (was 2%)
+    max_stop_loss_pct: float = 0.08  # 8% ceiling - never wider than the ATR cap (was 6%)
     
     # Trailing Stop Parameters
     # TIER 1 FIX (Feb 25, 2026): RE-ENABLED trailing stops.

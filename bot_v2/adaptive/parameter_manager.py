@@ -233,7 +233,7 @@ class AdaptiveParameterManager:
         - Normal VIX (15-25): 2.0× ATR
         - High VIX (>25): 2.5× ATR (wider stops)
         
-        Bounds: 1.5% - 5.0%
+        Bounds: 3.0% - 8.0% (Oct 22: raised from 1.5-5.0% to match stop_loss_manager)
         """
         # Determine multiplier based on VIX
         if vix_proxy < 15:
@@ -247,7 +247,7 @@ class AdaptiveParameterManager:
         stop_pct = atr_pct * multiplier
         
         # Apply bounds
-        stop_pct = max(0.015, min(stop_pct, 0.05))
+        stop_pct = max(0.03, min(stop_pct, 0.08))
         
         return stop_pct
     
@@ -260,7 +260,7 @@ class AdaptiveParameterManager:
         - Win rate 50-60%: 1.0× (normal)
         - Win rate > 60%: 1.2× (higher targets)
         
-        Bounds: 2.0% - 8.0%
+        Bounds: 3.0% - 10.0% (Oct 22: raised from 2-8% to match 8% config target)
         """
         # Base target: 2.5× ATR
         base_target = atr_pct * 2.5
@@ -276,7 +276,7 @@ class AdaptiveParameterManager:
         target_pct = base_target * adjustment
         
         # Apply bounds
-        target_pct = max(0.02, min(target_pct, 0.08))
+        target_pct = max(0.03, min(target_pct, 0.10))
         
         return target_pct
     
