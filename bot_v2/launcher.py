@@ -2156,13 +2156,14 @@ class BotV2Launcher:
         
         This replaces the old "force exit all" on Friday 3:30 PM.
         Winners hold through weekend only if strong (>4% gain).
-        Losers and marginal positions (<4% gain) get force exited.
+        Losers (< -2%) and marginal winners (0% to <4%) get force exited.
+        Strong winners (>= 4%) hold through weekend with dynamic trailing protection.
         """
         loser_threshold = getattr(self.config, 'friday_loser_threshold', -0.02)
         winner_threshold = getattr(self.config, 'friday_winner_threshold', 0.04)
         
         self.logger.info("=" * 80)
-        self.logger.info(f"🔍 FRIDAY PROTECTIVE CHECK: Exiting losers <{loser_threshold*100:.1f}% and marginal <{winner_threshold*100:.1f}%")
+        self.logger.info(f"🔍 FRIDAY PROTECTIVE CHECK: Exiting losers <{loser_threshold*100:.1f}% and marginal winners <{winner_threshold*100:.1f}%")
         self.logger.info("=" * 80)
         
         try:
@@ -2180,30 +2181,54 @@ class BotV2Launcher:
                     # Calculate P&L
                     profit_pct = (current_price - position.entry_price) / position.entry_price
                     
-                    # Exit if loser OR marginal winner (below winner threshold)
-                    if profit_pct < loser_threshold or profit_pct < winner_threshold:
-                        # This is a loser or marginal - exit it
-                        exit_reason = "loser" if profit_pct < loser_threshold else "marginal"
-                        self.logger.info(f"🔴 Exiting {exit_reason}: {position.symbol} ({profit_pct*100:+.1f}%)")
+                    # Exit logic:
+                    # 1. Losers: P&L < -2% -> exit
+                    # 2. Marginal winners: 0% <= P&L < 4% -> exit
+                    # 3. Strong winners: P&L >= 4% -> hold with trailing protection
+                    if profit_pct < loser_threshold:
+                        # Loser: exit
+                        exit_reason = "loser"
+                        self.logger.info(f"🔴 Exiting loser: {position.symbol} ({profit_pct*100:+.1f}%)")
                         success = self.order_manager.execute_sell_order(position, current_price, reason)
                         if success:
                             self.logger.info(f"✅ {position.symbol} exited @ ${current_price:.2f}")
                             pnl = (current_price - position.entry_price) * position.position_size_shares
                             days_held = (dt.date.today() - position.entry_date).days
-                            exit_tag = self._record_exit_reason(reason)
+                            exit_tag = self._record_exit_reason("loser")
                             self.enhanced_logger.log_position_exit(
                                 symbol=position.symbol,
                                 entry_price=position.entry_price,
                                 exit_price=current_price,
                                 shares=position.position_size_shares,
                                 pnl=pnl,
-                                reason=reason,
+                                reason="loser",
+                                exit_tag=exit_tag,
+                                days_held=days_held
+                            )
+                            exited_count += 1
+                    elif profit_pct < winner_threshold:
+                        # Marginal winner (0% to <4%): exit
+                        exit_reason = "marginal"
+                        self.logger.info(f"🟡 Exiting marginal winner: {position.symbol} ({profit_pct*100:+.1f}%)")
+                        success = self.order_manager.execute_sell_order(position, current_price, reason)
+                        if success:
+                            self.logger.info(f"✅ {position.symbol} exited @ ${current_price:.2f}")
+                            pnl = (current_price - position.entry_price) * position.position_size_shares
+                            days_held = (dt.date.today() - position.entry_date).days
+                            exit_tag = self._record_exit_reason("marginal")
+                            self.enhanced_logger.log_position_exit(
+                                symbol=position.symbol,
+                                entry_price=position.entry_price,
+                                exit_price=current_price,
+                                shares=position.position_size_shares,
+                                pnl=pnl,
+                                reason="marginal",
                                 exit_tag=exit_tag,
                                 days_held=days_held
                             )
                             exited_count += 1
                     else:
-                        # Strong winner - keep holding with dynamic trailing protection
+                        # Strong winner (>= 4%): hold with dynamic trailing protection
                         self.logger.info(f"🟢 Holding strong winner: {position.symbol} ({profit_pct*100:+.1f}%) - Dynamic trail active")
                         holding_count += 1
                         

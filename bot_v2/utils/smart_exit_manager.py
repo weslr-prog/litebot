@@ -22,16 +22,18 @@ class SmartExitManager:
         # Smart exit thresholds (SWING FIX Feb 13, 2026)
         # Analysis of 68 trades showed: 88% of losses exit within 24h due to tight stops
         # and premature RSI exits. Widening stops + removing early RSI exits.
-        self.QUICK_PROFIT_TARGET = 0.04  # 4% - raised from 2% (stop cutting winners early)
-        self.STANDARD_PROFIT_TARGET = 0.06  # 6% - raised from 4% (let winners develop)
+        # Nov 11, 2026: Aligned with config/adaptive targets (8-10%). QUICK was 4% - cutting winners at 2 days.
+        self.QUICK_PROFIT_TARGET = 0.06  # 6% - was 4% (stop cutting winners at 2 days)
+        self.STANDARD_PROFIT_TARGET = 0.08  # 8% - was 6% (aligned with config profit_target_pct)
         self.RSI_NORMALIZATION = 80  # Raised from 75 (only exit at true exhaustion)
         self.RSI_QUICK_EXIT = 85  # Raised from 80 (extreme exhaustion only)
         # Sep 28, 2026: volume-exhaustion thresholds were inconsistent with the RSI
         # rules (fired at RSI>70 while every other RSI exit needs 80+). Align them and
         # raise the profit bar so this exit can only bank a real gain.
+        # Nov 11, 2026: Raised from 4% to 6% to match QUICK_PROFIT_TARGET.
         self.VOLUME_EXHAUSTION_RATIO = 0.5  # Intraday ratio alone is unreliable
         self.VOLUME_EXHAUSTION_RSI = 80  # Match RSI_NORMALIZATION
-        self.VOLUME_EXHAUSTION_PROFIT = 0.04  # Only bank a meaningful gain (4%)
+        self.VOLUME_EXHAUSTION_PROFIT = 0.06  # Only bank a meaningful gain (6%)
         # TIER 1 FIX (Feb 25, 2026): RE-ENABLED trailing stops at 3% trigger / 2% trail.
         # Previous 99% setting effectively disabled them. With Momentum-only strategy,
         # trailing stops lock in gains on trend continuation trades.
