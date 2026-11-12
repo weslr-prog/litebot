@@ -224,8 +224,10 @@ class ShortCycleConfig:
     # 0.6-1.2%, well inside normal mid-cap daily noise (ATR is often 2-3%). Those
     # positions were stopped out before the thesis could develop. Stops are now
     # clamped between these bounds. Matches AIStopLossManager's ATR floor/ceiling.
-    min_stop_loss_pct: float = 0.03  # 3% floor - never tighter than the noise band (was 2%)
-    max_stop_loss_pct: float = 0.08  # 8% ceiling - never wider than the ATR cap (was 6%)
+    # Nov 12, 2026: Raised floor from 3% to 4% - 3% was still inside noise band
+    # for mid-caps with 3-7% ATR (1x ATR = 3-7%). 4% floor = 0.6-1.3x ATR.
+    min_stop_loss_pct: float = 0.04  # 4% floor - never tighter than the noise band (was 3%)
+    max_stop_loss_pct: float = 0.10  # 10% ceiling - never wider than the ATR cap (was 8%)
     
     # Trailing Stop Parameters
     # TIER 1 FIX (Feb 25, 2026): RE-ENABLED trailing stops.

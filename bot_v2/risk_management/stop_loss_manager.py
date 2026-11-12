@@ -23,8 +23,10 @@ class AIStopLossManager:
         # Widened to survive normal mid-cap daily swings (ADR > 2%)
         # Oct 22, 2026: Raised floor from 2% to 3% - 2% floor was inside noise band
         # for mid-caps with 3-5% ATR (2x ATR = 6-10%). 3% floor = 0.5-0.6x ATR.
-        self.min_stop_percent = 0.03  # 3% floor (was 2% - was noise-stopping)
-        self.max_stop_percent = 0.08  # 8% ceiling (was 6% - mid-caps need room)
+        # Nov 12, 2026: Raised floor from 3% to 4% - 3% was still inside noise band
+        # for mid-caps with 3-7% ATR (1x ATR = 3-7%). 4% floor = 0.6-1.3x ATR.
+        self.min_stop_percent = 0.04  # 4% floor (was 3% - was noise-stopping)
+        self.max_stop_percent = 0.10  # 10% ceiling (was 8% - mid-caps need room)
         self.atr_multiplier = 2.0  # 2.0x ATR (raised from 1.5x for swing holds)
         
         # Fast exit for small position protection.

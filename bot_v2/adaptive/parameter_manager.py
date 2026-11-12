@@ -233,7 +233,7 @@ class AdaptiveParameterManager:
         - Normal VIX (15-25): 2.0× ATR
         - High VIX (>25): 2.5× ATR (wider stops)
         
-        Bounds: 3.0% - 8.0% (Oct 22: raised from 1.5-5.0% to match stop_loss_manager)
+        Bounds: 4.0% - 10.0% (Nov 12: raised from 3-8% to match stop_loss_manager)
         """
         # Determine multiplier based on VIX
         if vix_proxy < 15:
@@ -247,7 +247,7 @@ class AdaptiveParameterManager:
         stop_pct = atr_pct * multiplier
         
         # Apply bounds
-        stop_pct = max(0.03, min(stop_pct, 0.08))
+        stop_pct = max(0.04, min(stop_pct, 0.10))
         
         return stop_pct
     

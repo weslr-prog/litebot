@@ -1174,8 +1174,9 @@ class AISignalGenerator:
                         # play out. Enforce a minimum stop width so the stop sits
                         # outside the noise band, while still honouring tighter
                         # structural support when it is genuinely wide enough.
-                        min_stop_pct = getattr(self.config, 'min_stop_loss_pct', 0.02)
-                        max_stop_pct = getattr(self.config, 'max_stop_loss_pct', 0.06)
+                        # Nov 12, 2026: Updated to use new 4-10% bounds.
+                        min_stop_pct = getattr(self.config, 'min_stop_loss_pct', 0.04)
+                        max_stop_pct = getattr(self.config, 'max_stop_loss_pct', 0.10)
                         candidate_stop = min(
                             candidate_stop,
                             realtime_price * (1 - min_stop_pct)   # never tighter than the floor
